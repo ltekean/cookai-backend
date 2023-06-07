@@ -6,7 +6,7 @@ authors = ["2017250297-choi <97ckdtn@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.8.6"
+python = "3.8.*"
 django = "^4.2.2"
 django-rest-framework = "^0.1.0"
 django-dotenv = "^1.4.2"
