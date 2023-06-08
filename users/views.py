@@ -60,7 +60,7 @@ class UserSignUpPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 User.objects.filter(pk=uid).update(is_active=True)
-                return redirect({settings.FRONT_DEVELOP_URL} + "/login.html")
+                return redirect(f"{settings.FRONT_DEVELOP_URL}/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
@@ -84,7 +84,7 @@ class KakaoLoginView(APIView):
                 data={
                     "grant_type": "authorization_code",
                     "client_id": "5c41d07be161c81979b0eb05ec72f14b",
-                    "redirect_uri": {settings.FRONT_DEVELOP_URL} + "/oauth/kakao",
+                    "redirect_uri": f"{settings.FRONT_DEVELOP_URL}/oauth/kakao",
                     "code": code,
                 },
             )
@@ -122,10 +122,7 @@ class GoogleLoginView(APIView):
         try:
             code = request.data.get("code")
             access_token = requests.post(
-                f"https://oauth2.googleapis.com/token?code={code}&client_id={settings.GC_ID}&client_secret={settings.GC_SECRET}&redirect_uri="
-                + {settings.FRONT_DEVELOP_URL}
-                + "/oauth/google"
-                + "&grant_type=authorization_code",
+                f"https://oauth2.googleapis.com/token?code={code}&client_id={settings.GC_ID}&client_secret={settings.GC_SECRET}&redirect_uri={settings.FRONT_DEVELOP_URL}/oauth/google&grant_type=authorization_code",
                 headers={"Accept": "application/json"},
             )
             access_token = access_token.json().get("access_token")
@@ -174,7 +171,6 @@ class NaverLoginView(APIView):
                 },
             )
             user_data = user_data.json()
-            print(user_data)
             try:
                 user = User.objects.get(avatar=user_data["response"]["profile_image"])
                 login(request, user)
@@ -228,7 +224,7 @@ class UserResetPasswordPermitView(APIView):
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
-                return redirect({settings.FRONT_DEVELOP_URL} + "/login.html")
+                return redirect(f"{settings.FRONT_DEVELOP_URL}/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
