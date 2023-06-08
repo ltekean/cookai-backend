@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [tool.poetry]
 name = "cookai"
 version = "0.1.0"
@@ -20,3 +21,5 @@ tensorflow_io_gcs_filesystem = "*"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+=======
+>>>>>>> dev
