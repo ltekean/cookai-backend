@@ -3,6 +3,8 @@ from .models import ArticlePhoto, UserPhoto
 
 
 class ArticlePhotoSerializer(serializers.ModelSerializer):
+    """article 사진 crud용 시리얼라이저"""
+
     class Meta:
         model = ArticlePhoto
         fields = (
@@ -12,6 +14,8 @@ class ArticlePhotoSerializer(serializers.ModelSerializer):
 
 
 class UserPhotoSerializer(serializers.ModelSerializer):
+    """user 사진 crud용 시리얼라이저"""
+
     class Meta:
         model = UserPhoto
         fields = (
