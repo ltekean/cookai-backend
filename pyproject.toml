@@ -6,7 +6,8 @@ authors = ["2017250297-choi <97ckdtn@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.8.*"
+
+python = ">=3.8,<3.9.dev0"
 django = "^4.2.2"
 django-rest-framework = "^0.1.0"
 django-dotenv = "^1.4.2"
@@ -14,8 +15,9 @@ djangorestframework-simplejwt = "^5.2.2"
 django-cors-headers = "^4.0.0"
 requests = "^2.31.0"
 opencv-python = "^4.7.0.72"
-tensorflow-macos = "^2.12.0"
-
+tensorflow-macos = { version = "^2.12.0", markers = "sys_platform == 'darwin' and platform_machine != 'x86_64'" }
+tensorflow = { version = "^2.12.0", markers = "sys_platform != 'darwin' or platform_machine == 'x86_64'" }
+tensorflow_io_gcs_filesystem =  { version = "*", markers = "sys_platform != 'darwin' or platform_machine == 'x86_64'" }
 
 
 [build-system]
