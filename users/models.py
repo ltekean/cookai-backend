@@ -31,8 +31,7 @@ class User(AbstractUser):
 
     email = models.EmailField(
         max_length=255,
-        default="",
-        unique=False,
+        unique=True,
     )
     nickname = models.CharField(
         max_length=150,
