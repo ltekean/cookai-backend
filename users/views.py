@@ -73,84 +73,84 @@ class SocialLogoutView(APIView):
         return Response("로그아웃되었습니다!", status=status.HTTP_200_OK)
 
 
-# class KakaoLoginView(APIView):
-#     def post(self, request):
-#         try:
-#             code = request.data.get("code")
-#             access_token = requests.post(
-#                 "https://kauth.kakao.com/oauth/token",
-#                 headers={"Content-Type": "application/x-www-form-urlencoded"},
-#                 data={
-#                     "grant_type": "authorization_code",
-#                     "client_id": "5c41d07be161c81979b0eb05ec72f14b",
-#                     "redirect_uri": "http://127.0.0.1:8000/oauth/kakao",
-#                     "code": code,
-#                 },
-#             )
-#             access_token = access_token.json().get("access_token")
-#             user_data = requests.get(
-#                 "https://kapi.kakao.com/v2/user/me",
-#                 headers={
-#                     "Authorization": f"Bearer {access_token}",
-#                     "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
-#                 },
-#             )
-#             user_data = user_data.json()
-#             kakao_account = user_data.get("kakao_account")
-#             profile = kakao_account.get("profile")
-#             try:
-#                 user = User.objects.get(username=profile.get("nickname"))
-#                 login(request, user)
-#                 return Response(status=status.HTTP_200_OK)
-#             except User.DoesNotExist:
-#                 user = User.objects.create(
-#                     email=kakao_account.get("email"),
-#                     username=profile.get("nickname"),
-#                     avatar=profile.get("profile_image_url"),
-#                 )
-#                 user.set_unusable_password()
-#                 user.save()
-#                 login(request, user)
-#                 return Response(status=status.HTTP_200_OK)
-#         except Exception as e:
-#             print(e)
+class KakaoLoginView(APIView):
+    def post(self, request):
+        try:
+            code = request.data.get("code")
+            access_token = requests.post(
+                "https://kauth.kakao.com/oauth/token",
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                data={
+                    "grant_type": "authorization_code",
+                    "client_id": "5c41d07be161c81979b0eb05ec72f14b",
+                    "redirect_uri": "http://127.0.0.1:5500/oauth/kakao",
+                    "code": code,
+                },
+            )
+            access_token = access_token.json().get("access_token")
+            user_data = requests.get(
+                "https://kapi.kakao.com/v2/user/me",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
+                },
+            )
+            user_data = user_data.json()
+            kakao_account = user_data.get("kakao_account")
+            profile = kakao_account.get("profile")
+            try:
+                user = User.objects.get(username=profile.get("nickname"))
+                login(request, user)
+                return Response(status=status.HTTP_200_OK)
+            except User.DoesNotExist:
+                user = User.objects.create(
+                    email=kakao_account.get("email"),
+                    username=profile.get("nickname"),
+                    avatar=profile.get("profile_image_url"),
+                )
+                user.set_unusable_password()
+                user.save()
+                login(request, user)
+                return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
 
 
-# class GoogleLoginView(APIView):
-#     def post(self, request):
-#         try:
-#             code = request.data.get("code")
-#             access_token = requests.post(
-#                 f"https://oauth2.googleapis.com/token?code={code}&client_id={settings.GC_ID}&client_secret={settings.GC_SECRET}&redirect_uri=https://drinkdrinkdrink.xyz/social/google&grant_type=authorization_code",
-#                 headers={"Accept": "application/json"},
-#             )
-#             access_token = access_token.json().get("access_token")
-#             user_data = requests.get(
-#                 f"https://www.googleapis.com/oauth2/v2/userinfo?access_token={access_token}",
-#                 headers={
-#                     "Authorization": f"Bearer {access_token}",
-#                     "Accept": "application/json",
-#                 },
-#             )
-#             user_data = user_data.json()
+class GoogleLoginView(APIView):
+    def post(self, request):
+        try:
+            code = request.data.get("code")
+            access_token = requests.post(
+                f"https://oauth2.googleapis.com/token?code={code}&client_id={settings.GC_ID}&client_secret={settings.GC_SECRET}&redirect_uri=https://drinkdrinkdrink.xyz/social/google&grant_type=authorization_code",
+                headers={"Accept": "application/json"},
+            )
+            access_token = access_token.json().get("access_token")
+            user_data = requests.get(
+                f"https://www.googleapis.com/oauth2/v2/userinfo?access_token={access_token}",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/json",
+                },
+            )
+            user_data = user_data.json()
 
-#             try:
-#                 user = User.objects.get(email=user_data.get("email"))
-#                 login(request, user)
-#                 return Response(status=status.HTTP_200_OK)
-#             except User.DoesNotExist:
-#                 user = User.objects.create(
-#                     username=user_data.get("name"),
-#                     email=user_data.get("email"),
-#                     name=user_data.get("name"),
-#                     avatar=user_data.get("picture"),
-#                 )
-#                 user.set_unusable_password()
-#                 user.save()
-#                 login(request, user)
-#                 return Response(status=status.HTTP_200_OK)
-#         except Exception as e:
-#             print(e)
+            try:
+                user = User.objects.get(email=user_data.get("email"))
+                login(request, user)
+                return Response(status=status.HTTP_200_OK)
+            except User.DoesNotExist:
+                user = User.objects.create(
+                    username=user_data.get("name"),
+                    email=user_data.get("email"),
+                    name=user_data.get("name"),
+                    avatar=user_data.get("picture"),
+                )
+                user.set_unusable_password()
+                user.save()
+                login(request, user)
+                return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
 
 
 # class NaverLoginView(APIView):
