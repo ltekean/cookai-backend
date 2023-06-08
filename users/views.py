@@ -105,7 +105,7 @@ class KakaoLoginView(APIView):
                 return Response(status=status.HTTP_200_OK)
             except User.DoesNotExist:
                 user = User.objects.create(
-                    email=kakao_account.get("email"),
+                    email=kakao_account.get("id"),
                     username=profile.get("nickname"),
                     avatar=profile.get("profile_image_url"),
                 )
@@ -141,9 +141,8 @@ class GoogleLoginView(APIView):
                 return Response(status=status.HTTP_200_OK)
             except User.DoesNotExist:
                 user = User.objects.create(
+                    email=user_data.get("id"),
                     username=user_data.get("name"),
-                    email=user_data.get("email"),
-                    name=user_data.get("name"),
                     avatar=user_data.get("picture"),
                 )
                 user.set_unusable_password()
@@ -179,7 +178,6 @@ class NaverLoginView(APIView):
                 user = User.objects.create(
                     username=user_data["response"].get("id"),
                     email=user_data["response"].get("email"),
-                    name=user_data["response"].get("name"),
                     avatar=user_data["response"].get("profile_image"),
                 )
                 user.set_unusable_password()
