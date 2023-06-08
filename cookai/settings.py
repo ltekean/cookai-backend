@@ -147,4 +147,4 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": False,
 }
 
-# AUTH_USER_MODEL = "user.User"
+AUTH_USER_MODEL = "users.User"
