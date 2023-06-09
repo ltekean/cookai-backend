@@ -101,7 +101,7 @@ class KakaoLoginView(APIView):
                     "login_type": "kakao",
                 }
 
-            return SocialLogin(**data)
+            return social_login_validation(**data)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -131,7 +131,7 @@ class GoogleLoginView(APIView):
                     "login_type": "google",
                 }
 
-            return SocialLogin(**data)
+            return social_login_validation(**data)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -160,43 +160,38 @@ class NaverLoginView(APIView):
                     "avatar": user_data["response"].get("profile_image"),
                     "login_type": "naver",
                 }
-                return SocialLogin(**data)
+                return social_login_validation(**data)
 
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-def SocialLogin(**kwargs):
+def social_login_validation(**kwargs):
     """소셜 로그인, 회원가입"""
     data = {k: v for k, v in kwargs.items()}
     email = data.get("email")
+    exist_user = User.objects.get(email=email)
     if not email:
         return Response(
             {"error": "해당 계정에 email정보가 없습니다."}, status=status.HTTP_400_BAD_REQUEST
         )
-    try:
-        exist_user = User.objects.get(email=email)
-        refresh = RefreshToken.for_user(exist_user)
-        access_token = serializers.CustomTokenObtainPairSerializer.get_token(exist_user)
+    if exist_user:
         return Response(
-            {
-                "ok": "해당 이메일로 가입한 계정이 있습니다! 원래 계정으로 로그인합니다.",
-                "refresh": str(refresh),
-                "access": str(access_token.access_token),
-            },
-            status=status.HTTP_200_OK,
+            {"error": "해당 이메일로 가입한 계정이 있습니다"}, status=status.HTTP_400_BAD_REQUEST
         )
-
-    except User.DoesNotExist:
-        new_user = User.objects.create(**data)
-        new_user.set_unusable_password()
-        new_user.save()
-        refresh = RefreshToken.for_user(new_user)
-        access_token = serializers.CustomTokenObtainPairSerializer.get_token(new_user)
-        return Response(
-            {"refresh": str(refresh), "access": str(access_token.access_token)},
-            status=status.HTTP_200_OK,
-        )
+    else:
+        with transaction.atomic():
+            new_user = User.objects.create(**data)
+            new_user.set_unusable_password()
+            new_user.save()
+            refresh = RefreshToken.for_user(new_user)
+            access_token = serializers.CustomTokenObtainPairSerializer.get_token(
+                new_user
+            )
+            return Response(
+                {"refresh": str(refresh), "access": str(access_token.access_token)},
+                status=status.HTTP_200_OK,
+            )
 
 
 class ResetPasswordView(APIView):
