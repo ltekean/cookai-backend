@@ -258,7 +258,6 @@ class UserDetailView(APIView):
     def put(self, request, user_id):
         """유저 프로필 수정"""
         user = get_object_or_404(User, id=user_id)
-        # 현재유저와 수정하려는 유저가 일치한다면
         if request.user.id == user_id:
             serializer = UserSerializer(user, data=request.data, partial=True)
             if serializer.is_valid():
@@ -273,7 +272,6 @@ class UserDetailView(APIView):
         """유저 삭제, 주석 추가 예정"""
         user = get_object_or_404(User, id=user_id)
 
-        # 현재유저와 삭제하려는 유저가 일치한다면
         if request.user.id == user_id:
             user = request.user
             user.is_active = False
