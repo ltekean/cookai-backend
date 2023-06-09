@@ -10,7 +10,7 @@ from .models import ArticlePhoto
 from .serializers import ArticlePhotoSerializer
 
 
-class ArticlePhotoDetail(APIView):
+class ArticlePhotoDetailView(APIView):
     """ArticlePhotoDetail
 
     Args:
@@ -69,7 +69,7 @@ class ArticlePhotoDetail(APIView):
         return Response(status=HTTP_200_OK)
 
 
-class GetUploadURL(APIView):
+class GetUploadURLView(APIView):
     def post(self, request):
         """GetUploadURL.post
 
