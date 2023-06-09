@@ -193,7 +193,7 @@ def social_login_validation(**kwargs):
         with transaction.atomic():
             new_user = User.objects.create(**data)
             new_user.set_unusable_password()
-            new_user.save()
+            new_user.save(is_active=True)
             refresh = RefreshToken.for_user(new_user)
             access_token = serializers.CustomTokenObtainPairSerializer.get_token(
                 new_user
