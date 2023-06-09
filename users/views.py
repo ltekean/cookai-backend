@@ -19,9 +19,6 @@ from users import serializers
 from users.email_tokens import account_activation_token
 
 
-# 06.09 할일 : 유저 다만들기(소셜3개),포스트맨쓰기,주석쓰기,프론트대충만들어서 확인하기,api명세 바꾸기,소셜 토큰으로바꾸기
-
-
 class UserView(APIView):
     """유저전체보기, 주석 추가 예정"""
 
