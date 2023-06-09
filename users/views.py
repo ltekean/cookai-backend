@@ -170,16 +170,26 @@ def social_login_validation(**kwargs):
     """소셜 로그인, 회원가입"""
     data = {k: v for k, v in kwargs.items()}
     email = data.get("email")
-    exist_user = User.objects.get(email=email)
+    login_type = data.get("login_type")
     if not email:
         return Response(
             {"error": "해당 계정에 email정보가 없습니다."}, status=status.HTTP_400_BAD_REQUEST
         )
-    if exist_user:
-        return Response(
-            {"error": "해당 이메일로 가입한 계정이 있습니다"}, status=status.HTTP_400_BAD_REQUEST
-        )
-    else:
+    try:
+        user = User.objects.get(email=email)
+        if login_type == user.login_type:
+            refresh = RefreshToken.for_user(user)
+            access_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
+            return Response(
+                {"refresh": str(refresh), "access": str(access_token.access_token)},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"error": f"{user.login_type}으로 이미 가입된 계정이 있습니다!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    except User.DoesNotExist:
         with transaction.atomic():
             new_user = User.objects.create(**data)
             new_user.set_unusable_password()
