@@ -11,14 +11,3 @@ class ArticlePhotoSerializer(serializers.ModelSerializer):
             "pk",
             "file",
         )
-
-
-class UserPhotoSerializer(serializers.ModelSerializer):
-    """user 사진 crud용 시리얼라이저"""
-
-    class Meta:
-        model = UserPhoto
-        fields = (
-            "pk",
-            "file",
-        )

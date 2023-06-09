@@ -67,28 +67,3 @@ class ArticlePhotoDetailView(APIView):
             raise PermissionDenied
         photo.delete()
         return Response(status=HTTP_200_OK)
-
-
-class GetUploadURLView(APIView):
-    def post(self, request):
-        """GetUploadURL.post
-
-        사용자가 사진을 첨부해서 클라우드플레어에 전송하기전에 먼저 일회용 업로드 url을 요청합니다.
-
-        Args:
-            url (str): 클라우드플레어에서 미리 지정한 일회용 url 요청 링크
-            one_time_url (str): post요청이 성공할 경우 클라우드플레어에서 온 response. 일회용 업로드 url을 포함하고 있습니다.
-        return:
-            result(str)): 일회용 url
-
-        """
-        url = f"https://api.cloudflare.com/client/v4/accounts/{settings.CF_ID}/images/v2/direct_upload"
-        one_time_url = requests.post(
-            url,
-            headers={
-                "Authorization": f"Bearer {settings.CF_TOKEN}",
-            },
-        )
-        one_time_url = one_time_url.json()
-        result = one_time_url.get("result")
-        return Response(result)

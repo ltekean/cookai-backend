@@ -3,5 +3,4 @@ from .views import ArticlePhotoDetailView, GetUploadURLView
 
 urlpatterns = [
     path("photo/<int:pk>/", ArticlePhotoDetailView.as_view()),
-    path("photo/get-url/", GetUploadURLView.as_view()),
 ]

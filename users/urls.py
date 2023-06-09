@@ -20,6 +20,7 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view()),
     path("reset-password/", views.ResetPasswordView.as_view()),
     path("change-password/", views.ChangePasswordView.as_view()),
+    path("get-url/", views.UserGetUploadURLView.as_view()),
     path("<int:user_id>/", views.UserDetailView.as_view()),
     path("<int:user_id>/fridge/", views.UserDetailFridgeView.as_view()),
     path("<int:user_id>/avatar/", views.UserAvatarView.as_view()),
