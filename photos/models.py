@@ -34,7 +34,7 @@ class UserPhoto(models.Model):
         on_delete=models.CASCADE,
         blank=True,
         null=True,
-        related_name="userphotos",
+        related_name="avatars",
     )
 
     def __str__(self) -> str:

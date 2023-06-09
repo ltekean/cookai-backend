@@ -1,7 +1,6 @@
 import requests
 from django.contrib.auth import logout, login
 from django.core.mail import EmailMessage
-from django.contrib.sites.shortcuts import get_current_site
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.shortcuts import redirect
@@ -12,17 +11,17 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
-from users.serializers import (
-    UserSerializer,
-)
-from users.models import User
-from photos.serializers import UserPhotoSerializer
-from .email_tokens import account_activation_token
+from users.serializers import UserSerializer, UserFridgeSerializer
 from cookai import settings
-from . import serializers
+from photos.serializers import UserPhotoSerializer
+from users.models import User, Fridge
+from users import serializers
+from users.email_tokens import account_activation_token
 
 
-# 06.09 할일 : 유저 다만들기(냉장고뷰,소셜3개),포스트맨쓰기,주석쓰기,프론트대충만들어서 확인하기,api명세 바꾸기
+# 06.09 할일 : 유저 다만들기(소셜3개),포스트맨쓰기,주석쓰기,프론트대충만들어서 확인하기,api명세 바꾸기, is_active=False로바꾸기,소셜 토큰으로바꾸기
+
+
 class UserView(APIView):
     """유저전체보기, 주석 추가 예정"""
 
@@ -286,7 +285,34 @@ class ChangePasswordView(APIView):
 
 
 class UserDetailFridgeView(APIView):
-    pass
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        all_fridge = Fridge.objects.filter(user=request.user)
+        serializer = UserFridgeSerializer(
+            all_fridge,
+            many=True,
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = UserFridgeSerializer(data=request.data)
+        if serializer.is_valid():
+            fridge = serializer.save(
+                user=request.user,
+            )
+            serializer = UserFridgeSerializer(fridge)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, fridge_id):
+        fridges = get_object_or_404(Fridge, pk=fridge_id)
+        if fridges:
+            fridges.delete()
+            return Response(status=status.HTTP_200_OK)
+        else:
+            raise NotFound
 
 
 class UserAvatarView(APIView):
