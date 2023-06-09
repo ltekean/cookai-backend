@@ -10,17 +10,17 @@ class User(AbstractUser):
     Attributes:
         LoginTypeChoices(class) : 회원가입 유형(일반,카카오,구글,네이버)
         email (str): 이메일, 필수
-        nickname (str) : 닉네임
+        username (str) : 닉네임, 필수
         password (str): 패스워드
         avatar(str) : 유저의 프로필 사진을 url로 가져옵니다.
-        age(int) : 나이
+        age(date) : 나이
         updated_at (date): 수정시간
         created_at (date): 가입시간
         login_type (str): 회원가입 유형의 종류를 지정
         is_active (bool): 활성 여부
         is_admin (bool): 관리자 여부
         is_host(bool): 본인 여부
-        followings(list) : 팔로잉 목록
+        followings(ManyToMany) : 팔로잉 목록
     """
 
     class LoginTypeChoices(models.TextChoices):
@@ -29,14 +29,17 @@ class User(AbstractUser):
         GOOGLE = ("google", "구글")
         NAVER = ("naver", "네이버")
 
+    class GenderTypeChoices(models.TextChoices):
+        MALE = ("male", "남자")
+        FEMALE = ("female", "여자")
+
     email = models.EmailField(
         max_length=255,
-        default="",
-        unique=False,
+        unique=True,
     )
-    nickname = models.CharField(
+    username = models.CharField(
         max_length=150,
-        default="",
+        unique=True,
     )
     password = models.CharField(
         max_length=256,
@@ -45,8 +48,13 @@ class User(AbstractUser):
         blank=True,
         null=True,
     )
-    age = models.PositiveIntegerField(
+    age = models.DateField(
         null=True,
+    )
+    gender = models.CharField(
+        null=True,
+        choices=GenderTypeChoices.choices,
+        max_length=10,
     )
     updated_at = models.DateTimeField(
         auto_now=True,
@@ -57,9 +65,10 @@ class User(AbstractUser):
     login_type = models.CharField(
         max_length=15,
         choices=LoginTypeChoices.choices,
+        default="normal",
     )
     is_active = models.BooleanField(
-        default=True,
+        default=False,
     )
     is_admin = models.BooleanField(
         default=False,
@@ -73,3 +82,17 @@ class User(AbstractUser):
         related_name="followers",
         blank=True,
     )
+
+
+class Fridge(models.Model):
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="fridges",
+    )
+
+    # 06.09 수정 : 나중에 ingredient테이블로 FOREIGN KEY연결해야함
+    # ingredient = models.TextField()
+
+    # def __str__(self):
+    #     return str(self.ingredient)
