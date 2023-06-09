@@ -2,6 +2,7 @@ from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from rest_framework.serializers import ModelSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User, Fridge
 from .email_tokens import account_activation_token
 
@@ -59,3 +60,13 @@ class UserFridgeSerializer(ModelSerializer):
     class Meta:
         model = Fridge
         fields = ("__all__",)
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["email"] = user.email
+        token["nickname"] = user.nickname
+        token["login_type"] = user.login_type
+        return token

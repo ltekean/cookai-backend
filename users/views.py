@@ -19,7 +19,7 @@ from users import serializers
 from users.email_tokens import account_activation_token
 
 
-# 06.09 할일 : 유저 다만들기(소셜3개),포스트맨쓰기,주석쓰기,프론트대충만들어서 확인하기,api명세 바꾸기, is_active=False로바꾸기,소셜 토큰으로바꾸기
+# 06.09 할일 : 유저 다만들기(소셜3개),포스트맨쓰기,주석쓰기,프론트대충만들어서 확인하기,api명세 바꾸기,소셜 토큰으로바꾸기
 
 
 class UserView(APIView):
@@ -65,14 +65,6 @@ class UserSignUpPermitView(APIView):
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SocialLogoutView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        logout(request)
-        return Response("로그아웃되었습니다!", status=status.HTTP_200_OK)
-
-
 class KakaoLoginView(APIView):
     def post(self, request):
         try:
@@ -99,21 +91,34 @@ class KakaoLoginView(APIView):
             kakao_account = user_data.get("kakao_account")
             profile = kakao_account.get("profile")
             try:
-                user = User.objects.get(username=profile.get("nickname"))
-                login(request, user)
-                return Response(status=status.HTTP_200_OK)
+                user = User.objects.get(email=kakao_account.get("id"))
+                refresh = RefreshToken.for_user(user)
+                access_token = serializers.CustomTokenObtainPairSerializer.get_token(
+                    user
+                )
+                return Response(
+                    {"refresh": str(refresh), "access": str(access_token.access_token)},
+                    status=status.HTTP_200_OK,
+                )
             except User.DoesNotExist:
                 user = User.objects.create(
                     email=kakao_account.get("id"),
                     username=profile.get("nickname"),
                     avatar=profile.get("profile_image_url"),
+                    login_type="kakao",
                 )
                 user.set_unusable_password()
                 user.save()
-                login(request, user)
-                return Response(status=status.HTTP_200_OK)
-        except Exception as e:
-            print(e)
+                refresh = RefreshToken.for_user(user)
+                access_token = serializers.CustomTokenObtainPairSerializer.get_token(
+                    user
+                )
+                return Response(
+                    {"refresh": str(refresh), "access": str(access_token.access_token)},
+                    status=status.HTTP_200_OK,
+                )
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class GoogleLoginView(APIView):
@@ -133,23 +138,35 @@ class GoogleLoginView(APIView):
                 },
             )
             user_data = user_data.json()
-
             try:
-                user = User.objects.get(email=user_data.get("email"))
-                login(request, user)
-                return Response(status=status.HTTP_200_OK)
+                user = User.objects.get(email=user_data.get("id"))
+                refresh = RefreshToken.for_user(user)
+                access_token = serializers.CustomTokenObtainPairSerializer.get_token(
+                    user
+                )
+                return Response(
+                    {"refresh": str(refresh), "access": str(access_token.access_token)},
+                    status=status.HTTP_200_OK,
+                )
             except User.DoesNotExist:
                 user = User.objects.create(
                     email=user_data.get("id"),
                     username=user_data.get("name"),
                     avatar=user_data.get("picture"),
+                    login_type="google",
                 )
                 user.set_unusable_password()
                 user.save()
-                login(request, user)
-                return Response(status=status.HTTP_200_OK)
-        except Exception as e:
-            print(e)
+                refresh = RefreshToken.for_user(user)
+                access_token = serializers.CustomTokenObtainPairSerializer.get_token(
+                    user
+                )
+                return Response(
+                    {"refresh": str(refresh), "access": str(access_token.access_token)},
+                    status=status.HTTP_200_OK,
+                )
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class NaverLoginView(APIView):
@@ -170,21 +187,34 @@ class NaverLoginView(APIView):
             )
             user_data = user_data.json()
             try:
-                user = User.objects.get(avatar=user_data["response"]["profile_image"])
-                login(request, user)
-                return Response(status=status.HTTP_200_OK)
+                user = User.objects.get(email=user_data["response"].get("id"))
+                refresh = RefreshToken.for_user(user)
+                access_token = serializers.CustomTokenObtainPairSerializer.get_token(
+                    user
+                )
+                return Response(
+                    {"refresh": str(refresh), "access": str(access_token.access_token)},
+                    status=status.HTTP_200_OK,
+                )
             except User.DoesNotExist:
                 user = User.objects.create(
-                    username=user_data["response"].get("id"),
-                    email=user_data["response"].get("email"),
+                    username=user_data["response"].get("name"),
+                    email=user_data["response"].get("id"),
                     avatar=user_data["response"].get("profile_image"),
+                    login_type="naver",
                 )
                 user.set_unusable_password()
                 user.save()
-                login(request, user)
-                return Response(status=status.HTTP_200_OK)
-        except Exception as e:
-            print(e)
+                refresh = RefreshToken.for_user(user)
+                access_token = serializers.CustomTokenObtainPairSerializer.get_token(
+                    user
+                )
+                return Response(
+                    {"refresh": str(refresh), "access": str(access_token.access_token)},
+                    status=status.HTTP_200_OK,
+                )
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class ResetPasswordView(APIView):
@@ -204,10 +234,14 @@ class ResetPasswordView(APIView):
                 )
                 if serializer.is_valid():
                     serializer.save()
-                    return Response(serializer.data, status=status.HTTP_200_OK)
+                    return Response(
+                        serializer.data,
+                        status=status.HTTP_200_OK,
+                    )
                 else:
                     return Response(
-                        serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                        serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST,
                     )
             else:
                 raise ParseError
@@ -254,7 +288,9 @@ class UserDetailView(APIView):
 
         # 현재유저와 삭제하려는 유저가 일치한다면
         if request.user.id == user_id:
-            user.delete()
+            user = request.user
+            user.is_active = False
+            user.save()
             return Response("삭제되었습니다!", status=status.HTTP_204_NO_CONTENT)
         else:
             return Response("권한이 없습니다!", status=status.HTTP_403_FORBIDDEN)
