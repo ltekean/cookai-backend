@@ -14,7 +14,6 @@ urlpatterns = [
         "reset/<str:uidb64>/<str:token>/", views.UserResetPasswordPermitView.as_view()
     ),
     path("login/", TokenObtainPairView.as_view()),
-    path("logout/", views.SocialLogoutView.as_view()),
     path("oauth/kakao/", views.KakaoLoginView.as_view()),
     path("oauth/google/", views.GoogleLoginView.as_view()),
     path("oauth/naver/", views.NaverLoginView.as_view()),
