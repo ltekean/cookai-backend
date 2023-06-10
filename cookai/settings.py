@@ -24,6 +24,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
+CF_ID = os.environ.get("CF_ID")
+CF_TOKEN = os.environ.get("CF_TOKEN")
+GC_API_KEY = os.environ.get("GC_API_KEY")
+GC_ID = os.environ.get("GC_ID")
+GC_SECRET = os.environ.get("GC_SECRET")
+NC_ID = os.environ.get("NC_ID")
+NC_SECRET = os.environ.get("NC_SECRET")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_HOST_USER = os.environ.get("EMAIL")
+EMAIL_HOST_PASSWORD = os.environ.get("PASSWORD")
+DEFAULT_FROM_MAIL = EMAIL_HOST_USER
+FRONT_DEVELOP_URL = "http://127.0.0.1:5500"
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -49,6 +66,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
+    "photos",
 ]
 
 MIDDLEWARE = [
@@ -91,6 +109,12 @@ DATABASES = {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
+}
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    )
 }
 
 

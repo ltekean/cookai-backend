@@ -51,8 +51,8 @@ class Article(models.Model):
     class Meta:
         db_table = "Article"
 
-    author = models.Pri(
-        max_length=256,
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE
     )
     category = models.ForeignKey(
         Category,
@@ -76,6 +76,10 @@ class Article(models.Model):
     )
     recipe = models.TextField(
         max_length=500,
+    )
+    image = models.URLField(
+        blank=True,
+        null=True,
     )
     
 
