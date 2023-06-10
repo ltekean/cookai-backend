@@ -13,7 +13,6 @@ from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 from users.serializers import UserSerializer, UserFridgeSerializer
 from cookai import settings
-from photos.serializers import UserPhotoSerializer
 from users.models import User, Fridge
 from users import serializers
 from users.email_tokens import account_activation_token
@@ -359,24 +358,6 @@ class UserDetailFridgeView(APIView):
             return Response(status=status.HTTP_200_OK)
         else:
             raise NotFound
-
-
-class UserAvatarView(APIView):
-    """유저 프로필 사진 올리기, 주석 추가 예정"""
-
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, user_id):
-        user = get_object_or_404(User, pk=user_id)
-        if request.user != user:
-            raise PermissionDenied
-        serializer = UserPhotoSerializer(data=request.data)
-        if serializer.is_valid():
-            avatar = serializer.save()
-            serializer = UserPhotoSerializer(avatar)
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors)
 
 
 class UserFollowView(APIView):
