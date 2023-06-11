@@ -304,7 +304,7 @@ class ChangePasswordView(APIView):
             raise ParseError
 
 
-class UserGetUploadURLView(APIView):
+class UserAvatarGetUploadURLView(APIView):
     def post(self, request):
         """GetUploadURL.post
 
