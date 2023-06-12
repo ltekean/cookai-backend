@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from .models import *
+from .models import Category, Article, Comment
 
 # 게시글 C
 class ArticleCreateSerializer(ModelSerializer):
@@ -13,7 +13,7 @@ class ArticleCreateSerializer(ModelSerializer):
 class ArticlePutSerializer(ModelSerializer):
     class Meta:
         model = Article
-        fields = ['title', 'content', 'image', 'category', 'tags', 'recipe']
+        fields = ['title', 'content', 'image', 'category', 'tags', 'recipe', 'ingredients']
 
 #       {
 #   “user_id” : 1,
@@ -37,7 +37,7 @@ class CommentSerializer(serializers.ModelSerializer):
     # 댓글 조회 시리얼라이저-직렬화
     class Meta:
         model = Comment
-        fields = ['comment']
+        fields = ['comment', 'author', 'created_at', 'updated_at'] # author, created_at 등 조회에 필요한 것들
 
 # 게시글 R
 class ArticleSerializer(serializers.ModelSerializer):

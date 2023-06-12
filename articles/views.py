@@ -1,18 +1,19 @@
 from rest_framework.generics import get_object_or_404
 from rest_framework import status, permissions
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from articles.models import *
-from articles.serializers import *
+from articles.models import Category, Article, Like, Bookmark, Comment
+from articles.serializers import ArticleCreateSerializer, ArticleSerializer, ArticlePutSerializer, CommentCreateSerializer, CommentSerializer
 from django.conf import settings
 import requests
 # Create your views here.
 
 # 게시글 작성
 class ArticleCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):        
-        if not request.user.is_authenticated:
-            return Response("로그인을 해주세요.", status=status.HTTP_401_UNAUTHORIZED)
         serializer = ArticleCreateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user)
@@ -24,14 +25,14 @@ class ArticleCreateView(APIView):
 
 # 게시글 가져오기, 수정, 삭제
 class ArticleView(APIView):
-    def get(self):
+    def get(self, request):
         articles = Article.objects.all().order_by('id')
         serializer = ArticleSerializer(articles, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def put(self, request, pk):
+    def put(self, request, article_id):
         # 수정할 게시글 불러오기
-        art_put = get_object_or_404(Article, id=pk)
+        art_put = get_object_or_404(Article, id=article_id)
         # 게시글 작성자와 로그인한 유저가 같으면
         if request.user == art_put.user:
         # ArticlePutSerializer로 입력받은 데이터 직렬화, 검증
@@ -53,30 +54,30 @@ class ArticleView(APIView):
         # 게시글 작성자 != 로그인한 유저
         return Response("본인이 작성한 게시글만 삭제할수 있습니다", status=status.HTTP_403_FORBIDDEN)
 
+from rest_framework.permissions import IsAuthenticated
+
 class CommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, comment_id):
-        if not request.user.is_authenticated:
-            return Response("댓글을 작성하기 전에 먼저 로그인 해주세요.", status=status.HTTP_401_UNAUTHORIZED)
-        # CommentCreateSeializer로 입력받은 데이터 직렬화, 검증
         serializer = CommentCreateSerializer(data=request.data)
-        # 직렬화된 데이터가 유효하다면
         if serializer.is_valid():
-            # DB에 저장
             serializer.save(user=request.user, comment_id=comment_id)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        # 데이터 검증 실패시
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
     
     # 좋아요 순으로 댓글 가져오는 방법.. 어떻게 하지
-    def get(self, request, article_id):
-        # 게시물 id 가져오기
-        article_get = Article.objects.get(id=article_id)
-        # 게시물 id에 해당하는 comments들 모두 가져오기
-        comments = article_get.comments_set.all()
-        # CommentSerializer로 직렬화하기(불러온 comments_set)
-        serializer = CommentSerializer(comments, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    # 주석 처리하고 나중에 해보자
+    # def get(self, request, article_id):
+    #     # 게시물 id 가져오기
+    #     article_get = Article.objects.get(id=article_id)
+    #     # 게시물 id에 해당하는 comments들 모두 가져오기
+    #     comments = article_get.comments_set.all()
+    #     # CommentSerializer로 직렬화하기(불러온 comments_set)
+    #     serializer = CommentSerializer(comments, many=True)
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
     
 
 class CommentDetailView(APIView):
@@ -137,8 +138,9 @@ class ArticleGetUploadURLView(APIView):
 
 
 class LikeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     def post(self, request, article_id):
-        """댓글 좋아요 누르기"""
+        """게시글 좋아요 누르기"""
         article = get_object_or_404(Article, id=article_id)
         if request.user in article.like.all():
             article.like.remove(request.user)
@@ -149,8 +151,9 @@ class LikeView(APIView):
 
 
 class BookmarkView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     def post(self, request, article_id):
-        """게시글 북마크 하기"""
+        # """게시글 북마크 하기""" permissions이 있어야 함
         article = get_object_or_404(Article, id=article_id)
         if request.user in article.bookmark.all():
             article.bookmark.remove(request.user)

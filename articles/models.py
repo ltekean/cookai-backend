@@ -2,6 +2,17 @@ from django.db import models
 from users.models import User
 
 # Create your models here.
+# 카테고리 모델
+class Category(models.Model):
+    name = models.CharField(max_length=10)
+    sorts = [
+        ('A', 'A'),
+        ('B', 'B'),
+        ('C', 'C'),
+    ]
+    sort = models.CharField(choices=sorts, max_length=10)
+    info = models.TextField()
+
 """article 모델
 
     Attributes:
@@ -26,25 +37,6 @@ from users.models import User
     created_at : Datetime(조회 일자)
     """
 
-
-"""Comment 모델
-
-    Attributes:
-    comment : 내용 text
-    author : 작성자 int
-    article : 글 int
-    """
-
-# 카테고리 모델
-class Category(models.Model):
-    name = models.CharField(max_length=10)
-    sorts = [
-        ('A', 'A'),
-        ('B', 'B'),
-        ('C', 'C'),
-    ]
-    sort = models.CharField(choices=sorts, max_length=10)
-    info = models.TextField()
 
 # 아티클 모델
 class Article(models.Model):
@@ -81,21 +73,29 @@ class Article(models.Model):
         blank=True,
         null=True,
     )
-
-
-class Bookmark:
-    bookmark = models.ManyToManyField(
-        User, default=[], through='BookMark'
-    )
-    
-
-class Like:
     likes = models.ManyToManyField(
-        User, related_name="like_articles"
+        User,
+        related_name="liked_articles",
+        blank=True,
+        through='likes'
+    )
+    bookmarks = models.ManyToManyField(
+        User,
+        related_name="bookmarked_articles",
+        blank=True,
+        through='BookMark'
     )
 
+
+"""Comment 모델
+
+    Attributes:
+    comment : 내용 text
+    author : 작성자 int
+    article : 글 int
+    """
 # 댓글 모델
-class Comment:
+class Comment(models.Model):
     class meta:
         db_table = "Comment"
 
@@ -108,4 +108,37 @@ class Comment:
         )
     comment = models.TextField(
         max_length=300,
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+class Ingredient():
+    ingredient_name = models.ForeignKey(
+
+    )
+    ingredient_info = models.TextField(
+        null=True,
+        default=[],
+        max_length=100
+    )
+
+
+class RecipeIngredient():
+    ingredient = models.ForeignKey(
+        Ingredient
+    )
+    article = models.ForeignKey(
+        Article
+    )
+    ingredient_quantity = models.IntegerField(
+        null=False,
+        default = []
+    )
+    ingredient_unit = models.CharField(
+        null=False,
+        default= []
     )
