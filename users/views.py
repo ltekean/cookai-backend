@@ -13,7 +13,6 @@ from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 from users.serializers import UserSerializer, UserFridgeSerializer
 from cookai import settings
-from photos.serializers import UserPhotoSerializer
 from users.models import User, Fridge
 from users import serializers
 from users.email_tokens import account_activation_token
@@ -193,7 +192,7 @@ def social_login_validation(**kwargs):
         with transaction.atomic():
             new_user = User.objects.create(**data)
             new_user.set_unusable_password()
-            new_user.save()
+            new_user.save(is_active=True)
             refresh = RefreshToken.for_user(new_user)
             access_token = serializers.CustomTokenObtainPairSerializer.get_token(
                 new_user
@@ -305,6 +304,31 @@ class ChangePasswordView(APIView):
             raise ParseError
 
 
+class UserAvatarGetUploadURLView(APIView):
+    def post(self, request):
+        """GetUploadURL.post
+
+        사용자가 사진을 첨부해서 클라우드플레어에 전송하기전에 먼저 일회용 업로드 url을 요청합니다.
+
+        Args:
+            url (str): 클라우드플레어에서 미리 지정한 일회용 url 요청 링크
+            one_time_url (str): post요청이 성공할 경우 클라우드플레어에서 온 response. 일회용 업로드 url을 포함하고 있습니다.
+        return:
+            result(str)): 일회용 url
+
+        """
+        url = f"https://api.cloudflare.com/client/v4/accounts/{settings.CF_ID}/images/v2/direct_upload"
+        one_time_url = requests.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {settings.CF_TOKEN}",
+            },
+        )
+        one_time_url = one_time_url.json()
+        result = one_time_url.get("result")
+        return Response(result)
+
+
 class UserDetailFridgeView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -334,24 +358,6 @@ class UserDetailFridgeView(APIView):
             return Response(status=status.HTTP_200_OK)
         else:
             raise NotFound
-
-
-class UserAvatarView(APIView):
-    """유저 프로필 사진 올리기, 주석 추가 예정"""
-
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, user_id):
-        user = get_object_or_404(User, pk=user_id)
-        if request.user != user:
-            raise PermissionDenied
-        serializer = UserPhotoSerializer(data=request.data)
-        if serializer.is_valid():
-            avatar = serializer.save()
-            serializer = UserPhotoSerializer(avatar)
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors)
 
 
 class UserFollowView(APIView):
