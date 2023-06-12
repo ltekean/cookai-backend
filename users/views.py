@@ -20,7 +20,7 @@ from users.email_tokens import account_activation_token
 
 
 class UserView(APIView):
-    """유저전체보기, 주석 추가 예정"""
+    # """유저전체보기, 주석 추가 예정"""
 
     def get(self, request):
         user = User.objects.all()
@@ -29,7 +29,7 @@ class UserView(APIView):
 
 
 class SignUpView(APIView):
-    """회원가입. 주석추가에정,이메일 인증 추가예정"""
+    # """회원가입. 주석추가에정,이메일 인증 추가예정"""
 
     def post(self, request):
         first_password = request.data.get("first_password")
@@ -167,7 +167,7 @@ class NaverLoginView(APIView):
 
 
 def social_login_validation(**kwargs):
-    """소셜 로그인, 회원가입"""
+    # """소셜 로그인, 회원가입"""
     data = {k: v for k, v in kwargs.items()}
     email = data.get("email")
     login_type = data.get("login_type")
@@ -205,7 +205,7 @@ def social_login_validation(**kwargs):
 
 
 class ResetPasswordView(APIView):
-    """비밀번호 찾기. 이메일 인증하면 비밀번호 재설정할 기회를 준다. 주석추가에정,이메일 인증 추가예정"""
+    # """비밀번호 찾기. 이메일 인증하면 비밀번호 재설정할 기회를 준다. 주석추가에정,이메일 인증 추가예정"""
 
     def put(self, request):
         user_email = request.data.get("email")
@@ -250,13 +250,13 @@ class UserResetPasswordPermitView(APIView):
 
 class UserDetailView(APIView):
     def get(self, request, user_id):
-        """유저 프로필 조회 주석 추가 예정"""
+        # """유저 프로필 조회 주석 추가 예정"""
         user = get_object_or_404(User, id=user_id)
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, user_id):
-        """유저 프로필 수정"""
+        # """유저 프로필 수정"""
         user = get_object_or_404(User, id=user_id)
         if request.user.id == user_id:
             serializer = UserSerializer(user, data=request.data, partial=True)
@@ -269,7 +269,7 @@ class UserDetailView(APIView):
             raise PermissionDenied
 
     def delete(self, request, user_id):
-        """유저 삭제, 주석 추가 예정"""
+        # """유저 삭제, 주석 추가 예정"""
         user = get_object_or_404(User, id=user_id)
 
         if request.user.id == user_id:
@@ -282,7 +282,7 @@ class UserDetailView(APIView):
 
 
 class ChangePasswordView(APIView):
-    """노말 로그인 회원만 비번 바꾸기. 주석추가예정"""
+    # """노말 로그인 회원만 비번 바꾸기. 주석추가예정"""
 
     permission_classes = [IsAuthenticated]
 
@@ -337,7 +337,7 @@ class UserDetailFridgeView(APIView):
 
 
 class UserAvatarView(APIView):
-    """유저 프로필 사진 올리기, 주석 추가 예정"""
+    # """유저 프로필 사진 올리기, 주석 추가 예정"""
 
     permission_classes = [IsAuthenticated]
 
@@ -355,16 +355,16 @@ class UserAvatarView(APIView):
 
 
 class UserFollowView(APIView):
-    """팔로우한 유저 조회, 유저 팔로우 토글. 주석추가예정"""
+    # """팔로우한 유저 조회, 유저 팔로우 토글. 주석추가예정"""
 
     def get(self, request, user_id):
-        """유저 팔로우한 유저들 조회"""
+        # """유저 팔로우한 유저들 조회"""
         follow = User.objects.filter(followings=user_id)
         serializer = UserSerializer(follow, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, user_id):
-        """유저 팔로잉 누르기"""
+        # """유저 팔로잉 누르기"""
         you = get_object_or_404(User, id=user_id)
         me = request.user
         if request.user.id != user_id:

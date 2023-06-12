@@ -81,7 +81,18 @@ class Article(models.Model):
         blank=True,
         null=True,
     )
+
+
+class Bookmark:
+    bookmark = models.ManyToManyField(
+        User, default=[], through='BookMark'
+    )
     
+
+class Like:
+    likes = models.ManyToManyField(
+        User, related_name="like_articles"
+    )
 
 # 댓글 모델
 class Comment:

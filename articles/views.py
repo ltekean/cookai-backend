@@ -9,15 +9,17 @@ import requests
 # Create your views here.
 
 # 게시글 작성
-class ArticleCreate(APIView):
-    def post(self, request, brewery_id):        
-        article = Article.objects.get(id=brewery_id)
+class ArticleCreateView(APIView):
+    def post(self, request):        
+        if not request.user.is_authenticated:
+            return Response("로그인을 해주세요.", status=status.HTTP_401_UNAUTHORIZED)
         serializer = ArticleCreateSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=request.user, article=article)
+            serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # 아티클에 이미지까지 더하기
 
 
 # 게시글 가져오기, 수정, 삭제
@@ -52,7 +54,7 @@ class ArticleView(APIView):
         return Response("본인이 작성한 게시글만 삭제할수 있습니다", status=status.HTTP_403_FORBIDDEN)
 
 class CommentView(APIView):
-    def post(self, request, posting_id):
+    def post(self, request, comment_id):
         if not request.user.is_authenticated:
             return Response("댓글을 작성하기 전에 먼저 로그인 해주세요.", status=status.HTTP_401_UNAUTHORIZED)
         # CommentCreateSeializer로 입력받은 데이터 직렬화, 검증
@@ -60,13 +62,13 @@ class CommentView(APIView):
         # 직렬화된 데이터가 유효하다면
         if serializer.is_valid():
             # DB에 저장
-            serializer.save(user=request.user, posting_id=posting_id)
+            serializer.save(user=request.user, comment_id=comment_id)
             return Response(serializer.data, status=status.HTTP_200_OK)
         # 데이터 검증 실패시
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
-    # permission_classes = [permissions.IsAuthenticated]
+    # 좋아요 순으로 댓글 가져오는 방법.. 어떻게 하지
     def get(self, request, article_id):
         # 게시물 id 가져오기
         article_get = Article.objects.get(id=article_id)
@@ -132,3 +134,27 @@ class ArticleGetUploadURLView(APIView):
         one_time_url = one_time_url.json()
         result = one_time_url.get("result")
         return Response(result)
+
+
+class LikeView(APIView):
+    def post(self, request, article_id):
+        """댓글 좋아요 누르기"""
+        article = get_object_or_404(Article, id=article_id)
+        if request.user in article.like.all():
+            article.like.remove(request.user)
+            return Response("dislike", status=status.HTTP_200_OK)
+        else:
+            article.like.add(request.user)
+            return Response("like", status=status.HTTP_200_OK)
+
+
+class BookmarkView(APIView):
+    def post(self, request, article_id):
+        """게시글 북마크 하기"""
+        article = get_object_or_404(Article, id=article_id)
+        if request.user in article.bookmark.all():
+            article.bookmark.remove(request.user)
+            return Response("unbookmark", status=status.HTTP_200_OK)
+        else:
+            article.bookmark.add(request.user)
+            return Response("bookmark", status=status.HTTP_200_OK)
