@@ -30,8 +30,8 @@ class User(AbstractUser):
         NAVER = ("naver", "네이버")
 
     class GenderTypeChoices(models.TextChoices):
-        MALE = ("male", "남자")
-        FEMALE = ("female", "여자")
+        MALE = ("male", "Male")
+        FEMALE = ("female", "Female")
 
     email = models.EmailField(
         max_length=255,
@@ -49,12 +49,14 @@ class User(AbstractUser):
         null=True,
     )
     age = models.DateField(
+        blank=True,
         null=True,
     )
     gender = models.CharField(
-        null=True,
         choices=GenderTypeChoices.choices,
         max_length=10,
+        blank=True,
+        null=True,
     )
     updated_at = models.DateTimeField(
         auto_now=True,

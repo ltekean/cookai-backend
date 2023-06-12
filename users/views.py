@@ -26,32 +26,24 @@ class UserView(APIView):
         serializer = UserSerializer(user, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-class SignUpView(APIView):
-    # """회원가입. 주석추가에정,이메일 인증 추가예정"""
-
     def post(self, request):
-        first_password = request.data.get("first_password")
-        second_password = request.data.get("second_password")
         email = request.data.get("email")
-        user = User.objects.get(email=email)
-        if user:
+        password = request.data.get("password")
+        if User.objects.filter(email=email).exists():
             return Response(
                 "해당 이메일을 가진 유저가 이미 있습니다!", status=status.HTTP_400_BAD_REQUEST
             )
-        if not first_password or not second_password:
+        if not password:
             raise ParseError
-        if first_password != second_password:
-            raise ParseError
-        serializer = serializers.UserSerializer(
-            data=request.data,
-            password=first_password,
-        )
+        serializer = serializers.UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": f"${serializer.errors}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class UserSignUpPermitView(APIView):
@@ -61,7 +53,7 @@ class UserSignUpPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 User.objects.filter(pk=uid).update(is_active=True)
-                return redirect(f"{settings.FRONT_DEVELOP_URL}/login.html")
+                return redirect(f"{settings.FRONT_DEVELOP_URL}/users/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)

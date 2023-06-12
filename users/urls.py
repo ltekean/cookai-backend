@@ -7,9 +7,10 @@ from . import views
 
 
 urlpatterns = [
-    path("", views.UserView.as_view()),
-    path("signup/", views.SignUpView.as_view()),
-    path("activate/<str:uidb64>/<str:token>/", views.UserSignUpPermitView.as_view()),
+    path("", views.UserView.as_view()),  # 구현완료.
+    path(
+        "activate/<str:uidb64>/<str:token>/", views.UserSignUpPermitView.as_view()
+    ),  # 구현완료
     path(
         "reset/<str:uidb64>/<str:token>/", views.UserResetPasswordPermitView.as_view()
     ),
