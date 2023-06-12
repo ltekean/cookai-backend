@@ -59,13 +59,13 @@ class Article(models.Model):
     )
     image = models.URLField(
         blank=True,
-        null=True,
+        null=True
     )
-    likes = models.ManyToManyField(
+    like = models.ManyToManyField(
         User,
         related_name="liked_articles",
         blank=True,
-        through='Likes'
+        through='Likes',
     )
     bookmarks = models.ManyToManyField(
         User,
@@ -87,12 +87,15 @@ class Comment(models.Model):
     class meta:
         db_table = "Comment"
 
-    author =  models.ForeignKey(
-        User, on_delete=models.CASCADE,
-        primary_key=True
+    author = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comment',
     )
     article = models.ForeignKey(
-        Article, on_delete=models.CASCADE
+        Article, 
+        on_delete=models.CASCADE,
+        related_name='liked_by'
         )
     comment = models.TextField(
         max_length=300,
@@ -128,5 +131,19 @@ class RecipeIngredient(models.Model):
     )
     ingredient_unit = models.CharField(
         null=False,
-        default= []
+        default= [],
+        max_length=100
     )
+
+
+# 중간 모델
+class BookMark(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey('Article', on_delete=models.CASCADE)
+    # 추가 필드들...
+
+
+class Likes(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey('Article', on_delete=models.CASCADE)
+    # 추가 필드들...
