@@ -3,8 +3,8 @@ from rest_framework import status, permissions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from articles.models import Category, Article, Like, Bookmark, Comment
-from articles.serializers import ArticleCreateSerializer, ArticleSerializer, ArticlePutSerializer, CommentCreateSerializer, CommentSerializer
+from articles.models import Article, Comment
+from articles.serializers import ArticleCreateSerializer, ArticleSerializer, ArticlePutSerializer, CommentCreateSerializer, CommentSerializer, RecipeIngredientCreateSerializer
 from django.conf import settings
 import requests
 # Create your views here.
@@ -26,9 +26,9 @@ class ArticleCreateView(APIView):
 # 게시글 가져오기, 수정, 삭제
 class ArticleView(APIView):
     def get(self, request):
-        articles = Article.objects.all().order_by('id')
-        serializer = ArticleSerializer(articles, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        article = get_object_or_404(Article,id=id)
+        serialize = ArticleSerializer(article)
+        return Response(serialize.data)
 
     def put(self, request, article_id):
         # 수정할 게시글 불러오기
@@ -54,7 +54,6 @@ class ArticleView(APIView):
         # 게시글 작성자 != 로그인한 유저
         return Response("본인이 작성한 게시글만 삭제할수 있습니다", status=status.HTTP_403_FORBIDDEN)
 
-from rest_framework.permissions import IsAuthenticated
 
 class CommentView(APIView):
     permission_classes = [IsAuthenticated]
@@ -153,7 +152,6 @@ class LikeView(APIView):
 class BookmarkView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def post(self, request, article_id):
-        # """게시글 북마크 하기""" permissions이 있어야 함
         article = get_object_or_404(Article, id=article_id)
         if request.user in article.bookmark.all():
             article.bookmark.remove(request.user)
@@ -161,3 +159,38 @@ class BookmarkView(APIView):
         else:
             article.bookmark.add(request.user)
             return Response("bookmark", status=status.HTTP_200_OK)
+        
+
+class IngredientView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, article_id):
+        serializer = RecipeIngredientCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, article_id=article_id)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get(self, request, article_id):
+        # 게시물 id 가져오기
+        article_get = Article.objects.get(id=article_id)
+        # 게시물 id에 해당하는 recipe 가져오기
+        recipes = article_get.recipe_set.all()
+        # CommentSerializer로 직렬화하기(불러온 comments_set)
+        serializer = RecipeIngredientCreateSerializer(recipes, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 수정 중
+    def put(self, request, article_id):
+        # 수정할 게시글 불러오기
+        ing_put = get_object_or_404(Article, id=article_id)
+        # 게시글 작성자와 로그인한 유저가 같으면
+        if request.user == ing_put.user:
+        # ArticlePutSerializer로 입력받은 데이터 직렬화, 검증
+            serializer = ArticlePutSerializer(ing_put, data=request.data)
+            # 직렬화된 데이터가 유효하다면
+            if serializer.is_valid():
+            # DB에 저장
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            # 데이터 검증 실패시
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

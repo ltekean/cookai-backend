@@ -13,7 +13,10 @@ class Category(models.Model):
     sort = models.CharField(choices=sorts, max_length=10)
     info = models.TextField()
 
-"""article 모델
+
+# 아티클 모델
+class Article(models.Model):
+    """article 모델
 
     Attributes:
     title : 제목 varchar45
@@ -25,21 +28,6 @@ class Category(models.Model):
     recipe : 레시피 text(html)
         
     """
-
-
-
-"""articleHistory 모델
-
-    Attributes:
-    Key :int(id)
-    user : int(유저)
-    article : int(글 번호)
-    created_at : Datetime(조회 일자)
-    """
-
-
-# 아티클 모델
-class Article(models.Model):
     class Meta:
         db_table = "Article"
 
@@ -77,7 +65,7 @@ class Article(models.Model):
         User,
         related_name="liked_articles",
         blank=True,
-        through='likes'
+        through='Likes'
     )
     bookmarks = models.ManyToManyField(
         User,
@@ -87,15 +75,15 @@ class Article(models.Model):
     )
 
 
-"""Comment 모델
+# 댓글 모델
+class Comment(models.Model):
+    """Comment 모델
 
     Attributes:
     comment : 내용 text
     author : 작성자 int
     article : 글 int
     """
-# 댓글 모델
-class Comment(models.Model):
     class meta:
         db_table = "Comment"
 
@@ -116,9 +104,9 @@ class Comment(models.Model):
         auto_now_add=True,
     )
 
-class Ingredient():
-    ingredient_name = models.ForeignKey(
-
+class Ingredient(models.Model):
+    ingredient_name = models.CharField(
+        max_length=100
     )
     ingredient_info = models.TextField(
         null=True,
@@ -127,12 +115,12 @@ class Ingredient():
     )
 
 
-class RecipeIngredient():
+class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(
-        Ingredient
+        Ingredient, on_delete=models.CASCADE
     )
     article = models.ForeignKey(
-        Article
+        Article, on_delete=models.CASCADE
     )
     ingredient_quantity = models.IntegerField(
         null=False,

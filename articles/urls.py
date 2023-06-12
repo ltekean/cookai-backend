@@ -8,7 +8,7 @@ urlpatterns = [
     path('<int:article_id>/comment/', views.CommentView.as_view(), name='commentview'), # 댓글 CR - 완료
     path('<int:article_id>/comment/<int:comment_id>/', views.CommentDetailView.as_view(), name='commentupdate'), # 댓글 UD - 완료
     path("get-url/", views.ArticleGetUploadURLView.as_view()), # 사진 첨부 - 완료
-    # path('<int:article_id>/ingredient/<str:ingredient>/', views.IngredientView.as_view(), name='ingredient'), # 레시피 재료 수정/추가
+    path('<int:article_id>/ingredient/<str:ingredient>/', views.IngredientView.as_view(), name='ingredient'), # 레시피 재료 수정/추가
     # path('<int:article_id>ingredient/<ingredient>/', views.IngredientDeleteView.as_view(), name='ingredientdelete'), #레시피 재료 제거
     path('like/<int:comment_id>/', views.LikeView.as_view(), name='like'), # 좋아요 생성 - 완료
     # path('<int:post_id>/like/', views.LikeSeeView.as_view(), name='likesee'), # 이건 뭔지 감 못 잡음
