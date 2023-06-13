@@ -1,9 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-
-class User(AbstractUser):
-    """유저 모델
+"""유저 모델
 
     AbstractUser 유저 모델을 커스텀한 유저 모델입니다.
 
@@ -22,6 +20,8 @@ class User(AbstractUser):
         is_host(bool): 본인 여부
         followings(ManyToMany) : 팔로잉 목록
     """
+class User(AbstractUser):
+    
 
     class LoginTypeChoices(models.TextChoices):
         NORMAL = ("normal", "일반")
