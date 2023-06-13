@@ -20,9 +20,10 @@ class ArticleView(APIView):
 
 #카테고리 띄우기
 class ArticleCategoryView(APIView):
-    def get(self, request, category):
-        categorizing = category.article_set.order_by('id')
-        serializer = ArticleSerializer(categorizing, many=True)
+    def get(self, request, category): 
+        categorizing = Category.get(sort=category) 
+        articles=categorizing.article_set.order_by('-created_at')
+        serializer = ArticleSerializer(articles, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 
