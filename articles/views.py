@@ -3,11 +3,28 @@ from rest_framework import status, permissions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from articles.models import Article, Comment
-from articles.serializers import ArticleCreateSerializer, ArticleSerializer, ArticlePutSerializer, CommentCreateSerializer, CommentSerializer, RecipeIngredientCreateSerializer
+from articles.models import Article, Comment, Category
+from articles.serializers import ArticleCreateSerializer, ArticleSerializer, ArticlePutSerializer, CommentCreateSerializer, RecipeIngredientCreateSerializer
 from django.conf import settings
 import requests
 # Create your views here.
+
+
+# 전체 게시글 띄우기
+class ArticleView(APIView):
+    def get(self, request):
+        articles = Article.objects.all().order_by('id') # 일단 'id'순으로 정렬, 나중에 변경해도 됨
+        serializer = ArticleSerializer(articles, many=True)       
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+#카테고리 띄우기
+class ArticleCategoryView(APIView):
+    def get(self, request, sort):
+        category = Category.objects.filter(sort=sort)
+        serializer = ArticleSerializer(category, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 
 # 게시글 작성
 class ArticleCreateView(APIView):
@@ -24,7 +41,7 @@ class ArticleCreateView(APIView):
 
 
 # 게시글 가져오기, 수정, 삭제
-class ArticleView(APIView):
+class ArticleDetailView(APIView):
     def get(self, request):
         article = get_object_or_404(Article,id=id)
         serialize = ArticleSerializer(article)

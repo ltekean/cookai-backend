@@ -107,6 +107,7 @@ class Comment(models.Model):
         auto_now_add=True,
     )
 
+# 재료 DB 모델
 class Ingredient(models.Model):
     ingredient_name = models.CharField(
         max_length=100
@@ -118,6 +119,7 @@ class Ingredient(models.Model):
     )
 
 
+# 레시피 재료 모델
 class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(
         Ingredient, on_delete=models.CASCADE
@@ -140,10 +142,8 @@ class RecipeIngredient(models.Model):
 class BookMark(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey('Article', on_delete=models.CASCADE)
-    # 추가 필드들...
 
 
 class Likes(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey('Article', on_delete=models.CASCADE)
-    # 추가 필드들...

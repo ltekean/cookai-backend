@@ -15,18 +15,7 @@ class ArticlePutSerializer(ModelSerializer):
         model = Article
         fields = ['title', 'content', 'image', 'category', 'tags', 'recipe', 'ingredients']
 
-#       {
-#   “user_id” : 1,
-#   “title” : “title”,
-#   “content” : “content”,
-#   “image” : [“image URL”,…],
-#   “category”:”category”,
-#   “tags”:[”tag1”, ”tag2”,…],
-#   “recipe”:’<img src=\”\”><p></p>’,
-#   “ingredients”:[{”ingredient”:”ingredient”, ingredient_quentity:float, “ingredient_unit”:”unit”},…]
-#   }
 
-# 댓글 가져오기
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     
@@ -77,6 +66,7 @@ class CommentCreateSerializer(ModelSerializer):
         fields = ['comment',]   # json으로 받을 데이터 필드
 
 
+# 동시 저장을 위해 모델 저장 2개 설정
 class RecipeIngredientCreateSerializer(ModelSerializer):
     class Meta:
         model = RecipeIngredient
