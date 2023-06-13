@@ -41,9 +41,9 @@ class ArticleSerializer(serializers.ModelSerializer):
 
     user = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
-    comments_set = CommentSerializer(many=True) # recipe_ingredients_set 식으로 들고 오기
+    comments_set = CommentSerializer(many=True) # comments_set이라는 역참조 필드 존재
     comments_count = serializers.SerializerMethodField()
-    recipe_set = RecipeIngredientSerializer()
+    recipeingredient_set = RecipeIngredientSerializer(many=True) # related_name을 이용해서 변수 이름을 정하자
 
     def get_user(self, obj):
         return obj.user.nickname
@@ -53,9 +53,6 @@ class ArticleSerializer(serializers.ModelSerializer):
     
     def get_likes_count(self, obj):
         return obj.likes.count()
-    
-    def get_recipe_set(self, obj):
-        return obj.recipe_set()
 
 
 # 댓글 작성

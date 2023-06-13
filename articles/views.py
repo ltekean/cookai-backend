@@ -20,9 +20,9 @@ class ArticleView(APIView):
 
 #카테고리 띄우기
 class ArticleCategoryView(APIView):
-    def get(self, request, sort):
-        category = Category.objects.filter(sort=sort)
-        serializer = ArticleSerializer(category, many=True)
+    def get(self, request, category):
+        categorizing = category.article_set.order_by('id')
+        serializer = ArticleSerializer(categorizing, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 
@@ -187,6 +187,7 @@ class IngredientView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    # 나중에 article에 같이 나오기 때문에 없애주는 것
     def get(self, request, article_id):
         # 게시물 id 가져오기
         article_get = Article.objects.get(id=article_id)
