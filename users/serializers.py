@@ -10,10 +10,13 @@ from .email_tokens import account_activation_token
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ("__all__",)
+        fields = "__all__"
         extra_kwargs = {
             "followings": {
                 "read_only": True,
+            },
+            "password": {
+                "write_only": True,  # 작성만 가능하도록 제한! 비밀번호 조회 불가
             },
         }
 

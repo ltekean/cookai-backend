@@ -26,32 +26,24 @@ class UserView(APIView):
         serializer = UserSerializer(user, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-class SignUpView(APIView):
-    # """회원가입. 주석추가에정,이메일 인증 추가예정"""
-
     def post(self, request):
-        first_password = request.data.get("first_password")
-        second_password = request.data.get("second_password")
         email = request.data.get("email")
-        user = User.objects.get(email=email)
-        if user:
+        password = request.data.get("password")
+        if User.objects.filter(email=email).exists():
             return Response(
                 "해당 이메일을 가진 유저가 이미 있습니다!", status=status.HTTP_400_BAD_REQUEST
             )
-        if not first_password or not second_password:
+        if not password:
             raise ParseError
-        if first_password != second_password:
-            raise ParseError
-        serializer = serializers.UserSerializer(
-            data=request.data,
-            password=first_password,
-        )
+        serializer = serializers.UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": f"${serializer.errors}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class UserSignUpPermitView(APIView):
@@ -61,46 +53,50 @@ class UserSignUpPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 User.objects.filter(pk=uid).update(is_active=True)
-                return redirect(f"{settings.FRONT_DEVELOP_URL}/login.html")
+                return redirect(f"{settings.FRONT_DEVELOP_URL}/users/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class KakaoLoginView(APIView):
+    def get(self, request):
+        return Response(settings.KK_API_KEY, status=status.HTTP_200_OK)
+
     def post(self, request):
         try:
-            with transaction.atomic():
-                code = request.data.get("code")
-                access_token = requests.post(
-                    "https://kauth.kakao.com/oauth/token",
-                    headers={"Content-Type": "application/x-www-form-urlencoded"},
-                    data={
-                        "grant_type": "authorization_code",
-                        "client_id": "5c41d07be161c81979b0eb05ec72f14b",
-                        "redirect_uri": f"{settings.FRONT_DEVELOP_URL}/oauth/kakao",
-                        "code": code,
-                    },
-                )
-                access_token = access_token.json().get("access_token")
-                user_data = requests.get(
-                    "https://kapi.kakao.com/v2/user/me",
-                    headers={
-                        "Authorization": f"Bearer {access_token}",
-                        "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
-                    },
-                )
-                user_data = user_data.json()
-                kakao_account = user_data.get("kakao_account")
-                profile = kakao_account.get("profile")
-                data = {
-                    "email": kakao_account.get("email"),
-                    "username": profile.get("nickname"),
-                    "avatar": profile.get("profile_image_url"),
-                    "login_type": "kakao",
-                }
-
-            return social_login_validation(**data)
+            # with transaction.atomic():
+            auth_code = request.data.get("code")
+            kakao_token_api = "https://kauth.kakao.com/oauth/token"
+            data = {
+                "grant_type": "authorization_code",
+                "client_id": settings.KK_API_KEY,
+                "redirect_uri": "http://127.0.0.1:5500/index.html",
+                "code": auth_code,
+            }
+            kakao_token = requests.post(
+                kakao_token_api,
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                data=data,
+            )
+            access_token = kakao_token.json().get("access_token")
+            user_data = requests.get(
+                "https://kapi.kakao.com/v2/user/me",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
+                },
+            )
+            user_data = user_data.json()
+            data = {
+                "avatar": user_data.get("properties").get("profile_image"),
+                "email": user_data.get("kakao_account").get("email"),
+                "username": user_data.get("properties").get("nickname"),
+                "gender": user_data.get("kakao_account").get("gender"),
+                "login_type": "kakao",
+                "is_active": True,
+            }
+            return social_login_validate(**data)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -111,7 +107,7 @@ class GoogleLoginView(APIView):
             with transaction.atomic():
                 code = request.data.get("code")
                 access_token = requests.post(
-                    f"https://oauth2.googleapis.com/token?code={code}&client_id={settings.GC_ID}&client_secret={settings.GC_SECRET}&redirect_uri={settings.FRONT_DEVELOP_URL}/oauth/google&grant_type=authorization_code",
+                    f"https://oauth2.googleapis.com/token?code={code}&client_id={settings.GC_ID}&client_secret={settings.GC_SECRET}&redirect_uri=http://127.0.0.1:5500/index.html&grant_type=authorization_code",
                     headers={"Accept": "application/json"},
                 )
                 access_token = access_token.json().get("access_token")
@@ -123,16 +119,18 @@ class GoogleLoginView(APIView):
                     },
                 )
                 user_data = user_data.json()
+
                 data = {
                     "email": user_data.get("email"),
                     "username": user_data.get("name"),
                     "avatar": user_data.get("picture"),
                     "login_type": "google",
+                    "is_active": True,
                 }
-
-            return social_login_validation(**data)
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+                return social_login_validate(**data)
+        except Exception as e:
+            print(e)
+            # return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class NaverLoginView(APIView):
@@ -158,14 +156,15 @@ class NaverLoginView(APIView):
                     "username": user_data["response"].get("name"),
                     "avatar": user_data["response"].get("profile_image"),
                     "login_type": "naver",
+                    "is_active": True,
                 }
-                return social_login_validation(**data)
+                return social_login_validate(**data)
 
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-def social_login_validation(**kwargs):
+def social_login_validate(**kwargs):
     # """소셜 로그인, 회원가입"""
     data = {k: v for k, v in kwargs.items()}
     email = data.get("email")
@@ -189,18 +188,16 @@ def social_login_validation(**kwargs):
                 status=status.HTTP_400_BAD_REQUEST,
             )
     except User.DoesNotExist:
-        with transaction.atomic():
-            new_user = User.objects.create(**data)
-            new_user.set_unusable_password()
-            new_user.save(is_active=True)
-            refresh = RefreshToken.for_user(new_user)
-            access_token = serializers.CustomTokenObtainPairSerializer.get_token(
-                new_user
-            )
-            return Response(
-                {"refresh": str(refresh), "access": str(access_token.access_token)},
-                status=status.HTTP_200_OK,
-            )
+        # with transaction.atomic():
+        new_user = User.objects.create(**data)
+        new_user.set_unusable_password()
+        new_user.save()
+        refresh = RefreshToken.for_user(new_user)
+        access_token = serializers.CustomTokenObtainPairSerializer.get_token(new_user)
+        return Response(
+            {"refresh": str(refresh), "access": str(access_token.access_token)},
+            status=status.HTTP_200_OK,
+        )
 
 
 class ResetPasswordView(APIView):
