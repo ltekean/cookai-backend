@@ -102,63 +102,64 @@ class KakaoLoginView(APIView):
 
 
 class GoogleLoginView(APIView):
+    def get(self, request):
+        return Response(settings.GC_ID, status=status.HTTP_200_OK)
+
     def post(self, request):
         try:
-            with transaction.atomic():
-                code = request.data.get("code")
-                access_token = requests.post(
-                    f"https://oauth2.googleapis.com/token?code={code}&client_id={settings.GC_ID}&client_secret={settings.GC_SECRET}&redirect_uri=http://127.0.0.1:5500/index.html&grant_type=authorization_code",
-                    headers={"Accept": "application/json"},
-                )
-                access_token = access_token.json().get("access_token")
-                user_data = requests.get(
-                    f"https://www.googleapis.com/oauth2/v2/userinfo?access_token={access_token}",
-                    headers={
-                        "Authorization": f"Bearer {access_token}",
-                        "Accept": "application/json",
-                    },
-                )
-                user_data = user_data.json()
-
-                data = {
-                    "email": user_data.get("email"),
-                    "username": user_data.get("name"),
-                    "avatar": user_data.get("picture"),
-                    "login_type": "google",
-                    "is_active": True,
-                }
-                return social_login_validate(**data)
-        except Exception as e:
-            print(e)
-            # return Response(status=status.HTTP_400_BAD_REQUEST)
+            # with transaction.atomic():
+            access_token = request.data["access_token"]
+            user_data = requests.get(
+                "https://www.googleapis.com/oauth2/v2/userinfo",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            user_data = user_data.json()
+            data = {
+                "email": user_data.get("email"),
+                "username": user_data.get("name"),
+                "avatar": user_data.get("picture"),
+                "login_type": "google",
+                "is_active": True,
+            }
+            return social_login_validate(**data)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class NaverLoginView(APIView):
+    def get(self, request):
+        return Response(settings.NC_ID, status=status.HTTP_200_OK)
+
     def post(self, request):
         try:
-            with transaction.atomic():
-                code = request.data.get("code")
-                access_token = requests.post(
-                    f"https://nid.naver.com/oauth2.0/token?code={code}&client_id={settings.NC_ID}&client_secret={settings.NC_SECRET}&grant_type=authorization_code&state=1",
-                    headers={"Accept": "application/json"},
-                )
-                access_token = access_token.json().get("access_token")
-                user_data = requests.get(
-                    "https://openapi.naver.com/v1/nid/me",
-                    headers={
-                        "Authorization": f"Bearer {access_token}",
-                        "Accept": "application/json",
-                    },
-                )
-                user_data = user_data.json()
-                data = {
-                    "email": user_data["response"].get("email"),
-                    "username": user_data["response"].get("name"),
-                    "avatar": user_data["response"].get("profile_image"),
-                    "login_type": "naver",
-                    "is_active": True,
-                }
-                return social_login_validate(**data)
+            # with transaction.atomic():
+            code = request.data.get("naver_code")
+            state = request.data.get("state")
+            access_token = requests.post(
+                f"https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&code={code}&client_id={settings.NC_ID}&client_secret={settings.NC_SECRET}&state={state}",
+                headers={"Accept": "application/json"},
+            )
+            access_token = access_token.json().get("access_token")
+            user_data = requests.get(
+                "https://openapi.naver.com/v1/nid/me",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/json",
+                },
+            )
+            user_data = user_data.json().get("response")
+            birthyear = user_data.get("birthyear")
+            birthday = user_data.get("birthday")
+            data = {
+                "avatar": user_data.get("profile_image"),
+                "email": user_data.get("email"),
+                "username": user_data.get("nickname"),
+                "age": f"{birthyear}-{birthday}",
+                "login_type": "naver",
+                "is_active": True,
+            }
+
+            return social_login_validate(**data)
 
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -202,34 +203,54 @@ def social_login_validate(**kwargs):
 
 class ResetPasswordView(APIView):
     # """비밀번호 찾기. 이메일 인증하면 비밀번호 재설정할 기회를 준다. 주석추가에정,이메일 인증 추가예정"""
-
-    def put(self, request):
-        user_email = request.data.get("email")
-        user = User.objects.filter(email=user_email)
-        if user:
-            new_first_password = request.data.get("new_first_password")
-            new_second_password = request.data.get("new_second_password")
-            if new_first_password == new_second_password:
-                serializer = serializers.UserSerializer(
-                    data=request.data,
-                    password=new_first_password,
-                    partial=True,
-                )
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(
-                        serializer.data,
-                        status=status.HTTP_200_OK,
+    def post(self, request):
+        try:
+            user_email = request.data.get("email")
+            user = User.objects.get(email=user_email)
+            if user:
+                if user.login_type == "normal":
+                    # url에 포함될 user.id 에러 방지용  encoding하기
+                    uidb64 = urlsafe_base64_encode(force_bytes(user.id))
+                    # tokens.py에서 함수 호출
+                    token = account_activation_token.make_token(user)
+                    to_email = user.email
+                    email = EmailMessage(
+                        "안녕하세요 Cookai입니다. 아래 링크를 클릭해 인증을 완료하세요!",
+                        f"http://127.0.0.1:8000/users/reset/{uidb64}/{token}",
+                        to=[to_email],
                     )
+                    email.send()
+                    return Response({"ok": "이메일 전송 완료!"}, status=status.HTTP_200_OK)
                 else:
                     return Response(
-                        serializer.errors,
+                        {"error": "해당 사용자는 소셜로그인 사용자입니다!"},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
-            else:
+        except User.DoesNotExist:
+            return Response(
+                {"error": "해당 이메일에 일치하는 사용자가 없습니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def put(self, request):
+        try:
+            new_first_password = request.data.get("new_first_password")
+            new_second_password = request.data.get("new_second_password")
+            user_id = request.data.get("user_id")
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response(
+                    {"error": "일치하는 유저가 존재하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
+            if not new_first_password or not new_second_password:
                 raise ParseError
-        else:
-            raise NotFound
+            if new_first_password != new_second_password:
+                raise ParseError
+            user.set_password(new_second_password)
+            user.save()
+            return Response(status=status.HTTP_200_OK)
+        except Exception:
+            raise ParseError
 
 
 class UserResetPasswordPermitView(APIView):
@@ -238,13 +259,17 @@ class UserResetPasswordPermitView(APIView):
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
-                return redirect(f"{settings.FRONT_DEVELOP_URL}/login.html")
+                return redirect(
+                    f"{settings.FRONT_DEVELOP_URL}/users/password_change.html?uid={uid}"
+                )
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserDetailView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get(self, request, user_id):
         # """유저 프로필 조회 주석 추가 예정"""
         user = get_object_or_404(User, id=user_id)
