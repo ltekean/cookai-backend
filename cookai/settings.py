@@ -31,6 +31,7 @@ GC_ID = os.environ.get("GC_ID")
 GC_SECRET = os.environ.get("GC_SECRET")
 NC_ID = os.environ.get("NC_ID")
 NC_SECRET = os.environ.get("NC_SECRET")
+KK_API_KEY = os.environ.get("KK_API_KEY")
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
