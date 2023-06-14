@@ -3,8 +3,9 @@ from rest_framework import status, permissions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from articles.paginations import ArticlePagination, CommentPagination
 from articles.models import Article, Comment, Category
-from articles.serializers import ArticleCreateSerializer, ArticleSerializer, ArticlePutSerializer, CommentCreateSerializer, RecipeIngredientCreateSerializer
+from articles.serializers import ArticleCreateSerializer, ArticleSerializer, ArticlePutSerializer, CommentSerializer, CommentCreateSerializer, RecipeIngredientCreateSerializer
 from django.conf import settings
 import requests
 # Create your views here.
@@ -12,6 +13,8 @@ import requests
 
 # 전체 게시글 띄우기
 class ArticleView(APIView):
+    pagination_class = ArticlePagination
+
     def get(self, request):
         articles = Article.objects.all().order_by('id') # 일단 'id'순으로 정렬, 나중에 변경해도 됨
         serializer = ArticleSerializer(articles, many=True)       
@@ -20,6 +23,8 @@ class ArticleView(APIView):
 
 #카테고리 띄우기
 class ArticleCategoryView(APIView):
+    pagination_class = ArticlePagination
+
     def get(self, request, category): 
         categorizing = Category.get(sort=category) 
         articles=categorizing.article_set.order_by('-created_at')
@@ -46,7 +51,7 @@ class ArticleDetailView(APIView):
     def get(self, request):
         article = get_object_or_404(Article,id=id)
         serialize = ArticleSerializer(article)
-        return Response(serialize.data)
+        return Response(serialize.data, get_comment(id))
 
     def put(self, request, article_id):
         # 수정할 게시글 불러오기
@@ -72,9 +77,10 @@ class ArticleDetailView(APIView):
         # 게시글 작성자 != 로그인한 유저
         return Response("본인이 작성한 게시글만 삭제할수 있습니다", status=status.HTTP_403_FORBIDDEN)
 
-
+# 댓글 작성 뷰
 class CommentView(APIView):
     permission_classes = [IsAuthenticated]
+    pagination_class = CommentPagination
 
     def post(self, request, comment_id):
         serializer = CommentCreateSerializer(data=request.data)
@@ -84,17 +90,12 @@ class CommentView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-    
-    # 좋아요 순으로 댓글 가져오는 방법.. 어떻게 하지
-    # 주석 처리하고 나중에 해보자
-    # def get(self, request, article_id):
-    #     # 게시물 id 가져오기
-    #     article_get = Article.objects.get(id=article_id)
-    #     # 게시물 id에 해당하는 comments들 모두 가져오기
-    #     comments = article_get.comments_set.all()
-    #     # CommentSerializer로 직렬화하기(불러온 comments_set)
-    #     serializer = CommentSerializer(comments, many=True)
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
+# 댓글 가져오기 함수
+# 좋아요 순으로 댓글 가져오는 방법.. 어떻게 하지
+def get_comment(self, request, article_id):
+    comments = Comment.objects.filter(article_id=article_id).order_by('created_at')
+    serializer = CommentSerializer(comments, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
     
 
 class CommentDetailView(APIView):
@@ -169,6 +170,12 @@ class LikeView(APIView):
 
 class BookmarkView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        bookmarks = request.user.article_set.all()  # 사용자가 누른 모든 북마크 가져오기
+        serializer = ArticleSerializer(bookmarks, many=True)  # 북마크를 직렬화
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
     def post(self, request, article_id):
         article = get_object_or_404(Article, id=article_id)
         if request.user in article.bookmark.all():
