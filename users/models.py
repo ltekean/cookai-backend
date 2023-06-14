@@ -35,8 +35,7 @@ class UserManager(BaseUserManager):
         return user
 
 
-class User(AbstractUser):
-    """유저 모델
+"""유저 모델
 
     AbstractUser 유저 모델을 커스텀한 유저 모델입니다.
 
@@ -56,6 +55,8 @@ class User(AbstractUser):
         followings(ManyToMany) : 팔로잉 목록
     """
 
+
+class User(AbstractUser):
     class LoginTypeChoices(models.TextChoices):
         NORMAL = ("normal", "일반")
         KAKAO = ("kakao", "카카오")
