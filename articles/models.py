@@ -1,14 +1,15 @@
 from django.db import models
 from users.models import User
 
+
 # Create your models here.
 # 카테고리 모델
 class Category(models.Model):
     name = models.CharField(max_length=10)
     sorts = [
-        ('A', 'A'),
-        ('B', 'B'),
-        ('C', 'C'),
+        ("A", "A"),
+        ("B", "B"),
+        ("C", "C"),
     ]
     sort = models.CharField(choices=sorts, max_length=10)
     info = models.TextField()
@@ -26,13 +27,15 @@ class Article(models.Model):
     author : 작성자 int
     category : 카테고리
     recipe : 레시피 text(html)
-        
+
     """
+
     class Meta:
         db_table = "Article"
 
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE
+        User,
+        on_delete=models.CASCADE,
     )
     category = models.ForeignKey(
         Category,
@@ -57,21 +60,15 @@ class Article(models.Model):
     recipe = models.TextField(
         max_length=500,
     )
-    image = models.URLField(
-        blank=True,
-        null=True
-    )
+    image = models.URLField(blank=True, null=True)
     like = models.ManyToManyField(
         User,
         related_name="liked_articles",
         blank=True,
-        through='Likes',
+        through="Likes",
     )
     bookmarks = models.ManyToManyField(
-        User,
-        related_name="bookmarked_articles",
-        blank=True,
-        through='BookMark'
+        User, related_name="bookmarked_articles", blank=True, through="BookMark"
     )
 
 
@@ -84,19 +81,18 @@ class Comment(models.Model):
     author : 작성자 int
     article : 글 int
     """
+
     class meta:
         db_table = "Comment"
 
     author = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
-        related_name='comment',
+        related_name="comment",
     )
     article = models.ForeignKey(
-        Article, 
-        on_delete=models.CASCADE,
-        related_name='liked_by'
-        )
+        Article, on_delete=models.CASCADE, related_name="liked_by"
+    )
     comment = models.TextField(
         max_length=300,
     )
@@ -107,43 +103,30 @@ class Comment(models.Model):
         auto_now_add=True,
     )
 
+
 # 재료 DB 모델
 class Ingredient(models.Model):
-    ingredient_name = models.CharField(
-        max_length=100
-    )
-    ingredient_info = models.TextField(
-        null=True,
-        default=[],
-        max_length=100
-    )
+    ingredient_name = models.CharField(max_length=100)
+    ingredient_info = models.TextField(null=True, default=[], max_length=100)
 
 
 # 레시피 재료 모델
 class RecipeIngredient(models.Model):
-    ingredient = models.ForeignKey(
-        Ingredient, on_delete=models.CASCADE
-    )
-    article = models.ForeignKey(
-        Article, on_delete=models.CASCADE
-    )
-    ingredient_quantity = models.IntegerField(
-        null=False,
-        default = []
-    )
-    ingredient_unit = models.CharField(
-        null=False,
-        default= [],
-        max_length=100
-    )
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    ingredient_quantity = models.IntegerField(null=False, default=[])
+    ingredient_unit = models.CharField(null=False, default=[], max_length=100)
 
 
 # 중간 모델
 class BookMark(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    article = models.ForeignKey('Article', on_delete=models.CASCADE)
+    article = models.ForeignKey(
+        "Article",
+        on_delete=models.CASCADE,
+    )
 
 
 class Likes(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    article = models.ForeignKey('Article', on_delete=models.CASCADE)
+    article = models.ForeignKey("Article", on_delete=models.CASCADE)

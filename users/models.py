@@ -129,9 +129,12 @@ class Fridge(models.Model):
         on_delete=models.CASCADE,
         related_name="fridges",
     )
-
     # 06.09 수정 : 나중에 ingredient테이블로 FOREIGN KEY연결해야함
-    # ingredient = models.TextField()
+    ingredient = models.ForeignKey(
+        "articles.Ingredient",
+        on_delete=models.CASCADE,
+        related_name="fridges",
+    )
 
-    # def __str__(self):
-    #     return str(self.ingredient)
+    def __str__(self):
+        return str(self.ingredient)

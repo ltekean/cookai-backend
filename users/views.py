@@ -59,6 +59,20 @@ class UserSignUpPermitView(APIView):
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserResetPasswordPermitView(APIView):
+    def get(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+            if account_activation_token.check_token(user, token):
+                return redirect(
+                    f"{settings.FRONT_DEVELOP_URL}/users/password_change.html?uid={uid}"
+                )
+            return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class KakaoLoginView(APIView):
     def get(self, request):
         return Response(settings.KK_API_KEY, status=status.HTTP_200_OK)
@@ -252,55 +266,6 @@ class ResetPasswordView(APIView):
             raise ParseError
 
 
-class UserResetPasswordPermitView(APIView):
-    def get(self, request, uidb64, token):
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-            if account_activation_token.check_token(user, token):
-                return redirect(
-                    f"{settings.FRONT_DEVELOP_URL}/users/password_change.html?uid={uid}"
-                )
-            return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
-        except KeyError:
-            return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class UserDetailView(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def get(self, request, user_id):
-        # """유저 프로필 조회 주석 추가 예정"""
-        user = get_object_or_404(User, id=user_id)
-        serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def put(self, request, user_id):
-        # """유저 프로필 수정"""
-        user = get_object_or_404(User, id=user_id)
-        if request.user.id == user_id:
-            serializer = UserSerializer(user, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            raise PermissionDenied
-
-    def delete(self, request, user_id):
-        # """유저 삭제, 주석 추가 예정"""
-        user = get_object_or_404(User, id=user_id)
-
-        if request.user.id == user_id:
-            user = request.user
-            user.is_active = False
-            user.save()
-            return Response("삭제되었습니다!", status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response("권한이 없습니다!", status=status.HTTP_403_FORBIDDEN)
-
-
 class ChangePasswordView(APIView):
     # """노말 로그인 회원만 비번 바꾸기. 주석추가예정"""
 
@@ -350,6 +315,41 @@ class UserAvatarGetUploadURLView(APIView):
         return Response(result)
 
 
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request, user_id):
+        # """유저 프로필 조회 주석 추가 예정"""
+        user = get_object_or_404(User, id=user_id)
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, user_id):
+        # """유저 프로필 수정"""
+        user = get_object_or_404(User, id=user_id)
+        if request.user.id == user_id:
+            serializer = UserSerializer(user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            raise PermissionDenied
+
+    def delete(self, request, user_id):
+        # """유저 삭제, 주석 추가 예정"""
+        user = get_object_or_404(User, id=user_id)
+
+        if request.user.id == user_id:
+            user = request.user
+            user.is_active = False
+            user.save()
+            return Response("삭제되었습니다!", status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response("권한이 없습니다!", status=status.HTTP_403_FORBIDDEN)
+
+
 class UserDetailFridgeView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -383,6 +383,7 @@ class UserDetailFridgeView(APIView):
 
 class UserFollowView(APIView):
     # """팔로우한 유저 조회, 유저 팔로우 토글. 주석추가예정"""
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request, user_id):
         # """유저 팔로우한 유저들 조회"""
