@@ -1,5 +1,38 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+
+
+class UserManager(BaseUserManager):
+    def create_user(self, email, username, password=None):
+        if not email:
+            raise ValueError("User must have an email")
+        if not password:
+            raise ValueError("User must have a password")
+        user = self.model(
+            email=self.normalize_email(email),
+            username=username,
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, email, password=None):
+        try:
+            user = User.objects.get(username=username)
+            raise ValueError("해당 닉네임이 이미 존재합니다!")
+        except User.DoesNotExist:
+            pass
+        user = self.create_user(
+            email,
+            username=username,
+            password=password,
+        )
+        user.is_active = True
+        user.is_admin = True
+        user.is_superuser = True
+        user.is_staff = True
+        user.save(using=self._db)
+        return user
 
 
 class User(AbstractUser):
@@ -85,7 +118,8 @@ class User(AbstractUser):
         blank=True,
     )
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ["username"]
+    objects = UserManager()
 
 
 class Fridge(models.Model):
