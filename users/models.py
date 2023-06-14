@@ -84,6 +84,8 @@ class User(AbstractUser):
         related_name="followers",
         blank=True,
     )
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
 
 
 class Fridge(models.Model):
