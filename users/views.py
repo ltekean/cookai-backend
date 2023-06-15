@@ -1,5 +1,6 @@
 import requests
 from django.db import transaction
+from django.conf import settings
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -12,7 +13,7 @@ from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 from users.serializers import UserSerializer, UserFridgeSerializer
-from cookai import settings
+
 from users.models import User, Fridge
 from users import serializers
 from users.email_tokens import account_activation_token
