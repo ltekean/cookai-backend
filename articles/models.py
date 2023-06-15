@@ -109,7 +109,7 @@ class Ingredient(models.Model):
 
 # Ingredient을 참고하여 쿠팡 구매 링크와, 이미지 url을 저장하는 모델
 class IngredientLink(models.Model):
-    Ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     link = models.URLField(max_length=200, null=True, blank=True)
     link_img = models.URLField(max_length=200, null=True, blank=True)
 
