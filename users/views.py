@@ -54,7 +54,7 @@ class UserSignUpPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 User.objects.filter(pk=uid).update(is_active=True)
-                return redirect(f"{settings.FRONT_DEVELOP_URL}/users/login.html")
+                return redirect(f"{settings.FRONT_BASE_URL}/users/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
@@ -67,7 +67,7 @@ class UserResetPasswordPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 return redirect(
-                    f"{settings.FRONT_DEVELOP_URL}/users/password_change.html?uid={uid}"
+                    f"{settings.FRONT_BASE_URL}/users/password_change.html?uid={uid}"
                 )
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
