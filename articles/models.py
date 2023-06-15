@@ -5,13 +5,18 @@ from users.models import User
 # Create your models here.
 # 카테고리 모델
 class Category(models.Model):
-    name = models.CharField(max_length=10)
+    name = models.CharField(
+        max_length=10,
+    )
     sorts = [
         ("A", "A"),
         ("B", "B"),
         ("C", "C"),
     ]
-    sort = models.CharField(choices=sorts, max_length=10)
+    sort = models.CharField(
+        choices=sorts,
+        max_length=10,
+    )
     info = models.TextField()
 
 
@@ -110,28 +115,61 @@ class Comment(models.Model):
 
 # 재료 DB 모델
 class Ingredient(models.Model):
-    ingredient_name = models.CharField(max_length=100)
-    ingredient_info = models.TextField(null=True, default=[], max_length=100)
+    ingredient_name = models.CharField(
+        max_length=100,
+    )
+    ingredient_info = models.TextField(
+        null=True,
+        default=[],
+        max_length=100,
+    )
 
 
 # Ingredient을 참고하여 쿠팡 구매 링크와, 이미지 url을 저장하는 모델
 class IngredientLink(models.Model):
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    link = models.URLField(max_length=200, null=True, blank=True)
-    link_img = models.URLField(max_length=200, null=True, blank=True)
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+    )
+    link = models.URLField(
+        max_length=200,
+        null=True,
+        blank=True,
+    )
+    link_img = models.URLField(
+        max_length=200,
+        null=True,
+        blank=True,
+    )
 
 
 # 레시피 재료 모델
 class RecipeIngredient(models.Model):
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    article = models.ForeignKey(Article, on_delete=models.CASCADE)
-    ingredient_quantity = models.IntegerField(null=False, default=[])
-    ingredient_unit = models.CharField(null=False, default=[], max_length=100)
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+    )
+    article = models.ForeignKey(
+        Article,
+        on_delete=models.CASCADE,
+    )
+    ingredient_quantity = models.IntegerField(
+        null=False,
+        default=[],
+    )
+    ingredient_unit = models.CharField(
+        null=False,
+        default=[],
+        max_length=100,
+    )
 
 
 # 중간 모델
 class BookMark(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+    )
     article = models.ForeignKey(
         Article,
         on_delete=models.CASCADE,
