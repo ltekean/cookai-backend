@@ -139,7 +139,7 @@ if DEBUG == "1":
     KK_API_KEY = os.environ.get("KK_API_KEY")
     FRONT_BASE_URL = "https://cookai.today"
     BACKEND_BASE_URL = "https://www.backend.cookai.today"
-    CORS_ORIGIN_WHITELIST = [
+    CORS_ALLOWED_ORIGINS = [
         "backend",
         "https://cookai.today",
         "https://www.backend.cookai.today",
@@ -164,7 +164,7 @@ elif DEBUG == "0":
     KK_API_KEY = os.environ.get("KK_API_KEY")
     FRONT_BASE_URL = "http://127.0.0.1:5500"
     BACKEND_BASE_URL = "http://127.0.0.1:8000"
-    CORS_ORIGIN_ALLOW_ALL = True
+    CORS_ALLOW_ALL_ORIGINS = True
     CORS_ALLOW_CREDENTIALS = True
     CSRF_TRUSTED_ALL_ORIGINS = True
 
