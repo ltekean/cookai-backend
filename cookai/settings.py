@@ -9,6 +9,8 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -107,7 +109,7 @@ CRONJOBS = [
     )
 ]
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
+
 CF_ID = os.environ.get("CF_ID")
 CF_TOKEN = os.environ.get("CF_TOKEN")
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
