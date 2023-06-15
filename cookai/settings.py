@@ -145,7 +145,10 @@ if DEBUG == "1":
         "https://www.backend.cookai.today",
     ]
     CORS_ALLOW_CREDENTIALS = True
-    CSRF_TRUSTED_ORIGINS = CORS_ORIGIN_WHITELIST
+    CSRF_TRUSTED_ORIGINS = [
+        "https://cookai.today",
+        "https://www.backend.cookai.today",
+    ]
 
 elif DEBUG == "0":
     DEBUG = True
