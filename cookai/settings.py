@@ -121,10 +121,11 @@ COUPANG_ACCESS_KEY = os.environ.get("COUPANG_ACCESS_KEY")
 COUPANG_SECRET_KEY = os.environ.get("COUPANG_SECRET_KEY")
 
 # 환경변수에 따라 DEBUG모드 여부를 결정합니다.
-DEBUG = os.environ.get("DEBUG", "0") == "1"
+DEBUG = os.environ.get("DEBUG", "0")
 
 # DEBUG == "1" 이면 배포환경 "0" 이면 개발환경.
 if DEBUG == "1":
+    DEBUG = False
     ALLOWED_HOSTS = [
         "backend",
         "https://cookai.today",
@@ -146,10 +147,9 @@ if DEBUG == "1":
     CORS_ALLOW_CREDENTIALS = True
     CSRF_TRUSTED_ORIGINS = CORS_ORIGIN_WHITELIST
 
-else:
+elif DEBUG == "0":
     DEBUG = True
     ALLOWED_HOSTS = [
-        "backend",
         "localhost",
         "127.0.0.1",
     ]
