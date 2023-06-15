@@ -6,7 +6,6 @@ from datetime import timedelta
 # poetry install > poetry export -f requirements.txt > requirements.txt
 # > push > 도커에서 git pull > python manage.py crontab add > .env 변경해야하면 바꾸기.
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
