@@ -1,6 +1,7 @@
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
+from django.conf import settings
 from rest_framework.serializers import ModelSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User, Fridge
@@ -31,7 +32,7 @@ class UserSerializer(ModelSerializer):
         to_email = user.email
         email = EmailMessage(
             "안녕하세요 Cookai입니다. 아래 링크를 클릭해 인증을 완료하세요!",
-            f"http://127.0.0.1:8000/users/activate/{uidb64}/{token}",
+            f"{settings.BACKEND_BASE_URL}/users/activate/{uidb64}/{token}",
             to=[to_email],
         )
         email.send()

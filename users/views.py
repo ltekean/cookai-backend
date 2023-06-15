@@ -86,7 +86,7 @@ class KakaoLoginView(APIView):
             data = {
                 "grant_type": "authorization_code",
                 "client_id": settings.KK_API_KEY,
-                "redirect_uri": "http://127.0.0.1:5500/index.html",
+                "redirect_uri": f"{settings.FRONT_BASE_URL}/index.html",
                 "code": auth_code,
             }
             kakao_token = requests.post(
@@ -230,7 +230,7 @@ class ResetPasswordView(APIView):
                     to_email = user.email
                     email = EmailMessage(
                         "안녕하세요 Cookai입니다. 아래 링크를 클릭해 인증을 완료하세요!",
-                        f"http://127.0.0.1:8000/users/reset/{uidb64}/{token}",
+                        f"{settings.BACKEND_BASE_URL}/users/reset/{uidb64}/{token}",
                         to=[to_email],
                     )
                     email.send()
