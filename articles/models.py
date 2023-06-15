@@ -3,35 +3,50 @@ from users.models import User
 
 
 # Create your models here.
-# 카테고리 모델
 class Category(models.Model):
+    """카테고리 모델
+
+    Attributes:
+    name(Char) : 카테고리 이름, 10자 제한
+    sorts : 카테고리 목록, (각 선택 항목 내부 값, 사람이 읽는 값)
+    sort(Char) : 선택된 카테고리, 목록 중에서 선택, 10자 제한
+    info(Text) : 카테고리 설명, 50자 제한
+
+    """
+
     name = models.CharField(
         max_length=10,
     )
     sorts = [
-        ("A", "A"),
-        ("B", "B"),
-        ("C", "C"),
+        ("한식", "한식"),
+        ("중식", "중식"),
+        ("양식", "양식"),
+        ("일식", "일식"),
     ]
     sort = models.CharField(
         choices=sorts,
         max_length=10,
     )
-    info = models.TextField()
+    info = models.TextField(
+        max_length=50,
+    )
 
 
-# 아티클 모델
 class Article(models.Model):
-    """article 모델
+
+    """게시글 모델
 
     Attributes:
-    title : 제목 varchar45
-    content : 내용 text
-    create_at : 작성시간 Datetime
-    update_at : 수정시간 Datetime
-    author : 작성자 int
-    category : 카테고리
-    recipe : 레시피 text(html)
+    author(ForeignKey) : 작성자 외래키, int, CASCADE
+    category(ForeignKey) : 카테고리 모델 외래키, CASCADE
+    title(Varchar) : 제목, 30자 제한, 필수 입력
+    content(Text) : 내용, 500자 제한, 필수 입력
+    create_at(Date) : 작성시간 Datetime
+    update_at(Date) : 수정시간 Datetime
+    recipe(Text) : 레시피 text(html), 500자 제한
+    image(Url) : 이미지, 이미지Url로 불러오기
+    like(MtoM) : User모델과 MtoM, 역참조 : Likes, 빈 값 가능, 중간 모델 : Like
+    bookmark(MtoM) : User모델과 MtoM, 역참조 : Bookmarks, 빈 값 가능, 중간 모델 : Bookmark
 
     """
 
@@ -80,14 +95,17 @@ class Article(models.Model):
     )
 
 
-# 댓글 모델
 class Comment(models.Model):
-    """Comment 모델
+    """댓글 모델
+    게시글에 작성할 댓글 모델입니다!
 
     Attributes:
-    comment : 내용 text
-    author : 작성자 int
-    article : 글 int
+
+    author(OtoO) : 작성자 int(역참조 : comments)
+    article(ForeignKey) : 글 int
+    comment(text) : 댓글 내용, 300자 제한, str
+    updated_at (date): 수정시간
+    created_at (date): 가입시간
     """
 
     class meta:
@@ -164,8 +182,16 @@ class RecipeIngredient(models.Model):
     )
 
 
-# 중간 모델
 class BookMark(models.Model):
+
+    """북마크 모델
+    게시글과 사용자 MtoM 관계의 중간모델입니다!
+
+    Attributes:
+    user(ForeignKey) : 사용자, 외래키, CASCADE
+    article(ForeignKey) : 게시글, 외래키, CASCADE
+    """
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -177,6 +203,15 @@ class BookMark(models.Model):
 
 
 class Like(models.Model):
+
+    """Like 모델
+    게시글과 사용자 MtoM 관계의 중간모델입니다!
+
+    Attributes:
+    user(ForeignKey) : 사용자, 외래키, CASCADE
+    article(ForeignKey) : 게시글, 외래키, CASCADE, 역참조 : articles
+    """
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
