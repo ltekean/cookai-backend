@@ -176,6 +176,19 @@ files = [
 Django = ">=3.2"
 
 [[package]]
+name = "django-crontab"
+version = "0.7.1"
+description = "dead simple crontab powered job scheduling for django"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-crontab-0.7.1.tar.gz", hash = "sha256:1201810a212460aaaa48eb6a766738740daf42c1a4f6aafecfb1525036929236"},
+]
+
+[package.dependencies]
+Django = ">=1.8"
+
+[[package]]
 name = "django-dotenv"
 version = "1.4.2"
 description = "foreman reads from .env. manage.py doesn't. Let's fix that."
@@ -433,4 +446,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.9.dev0"
-content-hash = "7202ea93fbc595e2f40e96bfea24f94e15e1834ac665384e12e8b26cd14df7e5"
+content-hash = "e60352b8c1ca93b476439b9b4204d6c9eedd1cdca2e8d420cfb07733d6037492"
