@@ -33,7 +33,6 @@ class Article(models.Model):
     class Meta:
         db_table = "Article"
 
-
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -64,12 +63,15 @@ class Article(models.Model):
     image = models.URLField(blank=True, null=True)
     like = models.ManyToManyField(
         User,
-        related_name="liked_articles",
+        related_name="article_likes",
         blank=True,
-        through="Likes",
+        through="Like",
     )
     bookmarks = models.ManyToManyField(
-        User, related_name="bookmarked_articles", blank=True, through="BookMark"
+        User,
+        related_name="bookmarks",
+        blank=True,
+        through="BookMark",
     )
 
 
@@ -89,10 +91,11 @@ class Comment(models.Model):
     author = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
-        related_name="comment",
+        related_name="comments",
     )
     article = models.ForeignKey(
-        Article, on_delete=models.CASCADE, related_name="liked_by"
+        Article,
+        on_delete=models.CASCADE,
     )
     comment = models.TextField(
         max_length=300,
@@ -110,12 +113,12 @@ class Ingredient(models.Model):
     ingredient_name = models.CharField(max_length=100)
     ingredient_info = models.TextField(null=True, default=[], max_length=100)
 
+
 # Ingredient을 참고하여 쿠팡 구매 링크와, 이미지 url을 저장하는 모델
 class IngredientLink(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     link = models.URLField(max_length=200, null=True, blank=True)
     link_img = models.URLField(max_length=200, null=True, blank=True)
-
 
 
 # 레시피 재료 모델
@@ -130,12 +133,18 @@ class RecipeIngredient(models.Model):
 class BookMark(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(
-        "Article",
+        Article,
         on_delete=models.CASCADE,
     )
 
 
-
-class Likes(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    article = models.ForeignKey("Article", on_delete=models.CASCADE)
+class Like(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+    )
+    article = models.ForeignKey(
+        Article,
+        on_delete=models.CASCADE,
+        related_name="articles",
+    )
