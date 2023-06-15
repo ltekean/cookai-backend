@@ -8,7 +8,6 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -108,7 +107,7 @@ CRONJOBS = [
     )
 ]
 
-
+SECRET_KEY = os.environ.get("SECRET_KEY")
 CF_ID = os.environ.get("CF_ID")
 CF_TOKEN = os.environ.get("CF_TOKEN")
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -140,6 +139,7 @@ if DEBUG == "1":
     FRONT_BASE_URL = "https://cookai.today"
     BACKEND_BASE_URL = "https://www.backend.cookai.today"
     CORS_ORIGIN_WHITELIST = [
+        "backend",
         "https://cookai.today",
         "https://www.backend.cookai.today",
     ]
