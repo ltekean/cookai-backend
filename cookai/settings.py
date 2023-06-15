@@ -40,6 +40,8 @@ EMAIL_HOST_USER = os.environ.get("EMAIL")
 EMAIL_HOST_PASSWORD = os.environ.get("PASSWORD")
 DEFAULT_FROM_MAIL = EMAIL_HOST_USER
 FRONT_DEVELOP_URL = "http://127.0.0.1:5500"
+COUPANG_ACCESS_KEY = os.environ.get("COUPANG_ACCESS_KEY")
+COUPANG_SECRET_KEY = os.environ.get("COUPANG_SECRET_KEY")
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
