@@ -140,11 +140,9 @@ if DEBUG == "1":
     FRONT_BASE_URL = "https://cookai.today"
     BACKEND_BASE_URL = "https://www.backend.cookai.today"
     CORS_ALLOWED_ORIGINS = [
-        "backend",
         "https://cookai.today",
         "https://www.backend.cookai.today",
     ]
-    CORS_ALLOW_CREDENTIALS = True
     CSRF_TRUSTED_ORIGINS = [
         "https://cookai.today",
         "https://www.backend.cookai.today",
@@ -165,8 +163,8 @@ elif DEBUG == "0":
     FRONT_BASE_URL = "http://127.0.0.1:5500"
     BACKEND_BASE_URL = "http://127.0.0.1:8000"
     CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOW_CREDENTIALS = True
     CSRF_TRUSTED_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 # postgres 환경변수가 존재 할 경우에 postgres db에 연결을 시도합니다.
 POSTGRES_DB = os.environ.get("POSTGRES_DB", "")
