@@ -135,9 +135,9 @@ if DEBUG == "1":
     GC_API_KEY = os.environ.get("GC_DEPLOY_API_KEY")
     GC_ID = os.environ.get("GC_DEPLOY_ID")
     GC_SECRET = os.environ.get("GC_DEPLOY_SECRET")
-    NC_ID = os.environ.get("NC_ID")
-    NC_SECRET = os.environ.get("NC_SECRET")
-    KK_API_KEY = os.environ.get("KK_API_KEY")
+    NC_ID = os.environ.get("NC_DEPLOY_ID")
+    NC_SECRET = os.environ.get("NC_DEPLOY_SECRET")
+    KK_API_KEY = os.environ.get("KK_DEPLOY_API_KEY")
     FRONT_BASE_URL = "https://cookai.today"
     BACKEND_BASE_URL = "https://www.backend.cookai.today"
     CORS_ALLOWED_ORIGINS = [
