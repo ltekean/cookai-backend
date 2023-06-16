@@ -120,6 +120,7 @@ DEFAULT_FROM_MAIL = EMAIL_HOST_USER
 COUPANG_ACCESS_KEY = os.environ.get("COUPANG_ACCESS_KEY")
 COUPANG_SECRET_KEY = os.environ.get("COUPANG_SECRET_KEY")
 
+
 # 환경변수에 따라 DEBUG모드 여부를 결정합니다.
 DEBUG = os.environ.get("DEBUG", "0")
 
@@ -131,9 +132,9 @@ if DEBUG == "1":
         "https://cookai.today",
         "https://www.backend.cookai.today",
     ]
-    GC_API_KEY = os.environ.get("GC_API_KEY")
-    GC_ID = os.environ.get("GC_ID")
-    GC_SECRET = os.environ.get("GC_SECRET")
+    GC_API_KEY = os.environ.get("GC_DEPLOY_API_KEY")
+    GC_ID = os.environ.get("GC_DEPLOY_ID")
+    GC_SECRET = os.environ.get("GC_DEPLOY_SECRET")
     NC_ID = os.environ.get("NC_ID")
     NC_SECRET = os.environ.get("NC_SECRET")
     KK_API_KEY = os.environ.get("KK_API_KEY")
