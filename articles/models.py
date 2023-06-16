@@ -33,7 +33,6 @@ class Article(models.Model):
     class Meta:
         db_table = "Article"
 
-
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -109,13 +108,14 @@ class Comment(models.Model):
 class Ingredient(models.Model):
     ingredient_name = models.CharField(max_length=100)
     ingredient_info = models.TextField(null=True, default=[], max_length=100)
+    updated_at = models.DateTimeField(null=True, blank=True)
+
 
 # Ingredient을 참고하여 쿠팡 구매 링크와, 이미지 url을 저장하는 모델
 class IngredientLink(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     link = models.URLField(max_length=200, null=True, blank=True)
     link_img = models.URLField(max_length=200, null=True, blank=True)
-
 
 
 # 레시피 재료 모델
@@ -133,7 +133,6 @@ class BookMark(models.Model):
         "Article",
         on_delete=models.CASCADE,
     )
-
 
 
 class Likes(models.Model):
