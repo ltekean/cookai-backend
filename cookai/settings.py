@@ -175,7 +175,7 @@ CRONJOBS = [
     (
         "*/1 * * * *",
         "users.cron.delete_dormant_user",
-        ">>" + os.path.join(BASE_DIR, "users/log/cron.log"),
+        ">> ./cron.log",
     )
 ]
 CORS_ALLOW_ALL_ORIGINS = True
