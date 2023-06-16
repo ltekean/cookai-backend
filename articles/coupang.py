@@ -6,6 +6,7 @@ import requests
 import json
 import urllib.request
 import secrets
+from django.utils import timezone
 from urllib.parse import urlencode
 from articles.models import Ingredient, IngredientLink
 from django.conf import settings
@@ -13,8 +14,6 @@ from django.conf import settings
 
 ACCESS_KEY = settings.COUPANG_ACCESS_KEY
 SECRET_KEY = settings.COUPANG_SECRET_KEY
-
-print(ACCESS_KEY)
 
 
 class coupangMgr:
@@ -87,14 +86,10 @@ class coupangMgr:
         return products
 
 
-# 테스트 코드
-# coupang_api = coupangMgr()
-# products = coupang_api.get_products_by_keyword("감자")
-
-# print(products)
-
-
 def save_coupang_links_to_ingredient_links(ingredient_name):
+    # coupangMgr 객체 생성
+    coupang_api = coupangMgr()
+
     # 키워드를 기반으로 상품 정보검색
     product_links = coupang_api.get_products_by_keyword(ingredient_name, 10)
 
@@ -114,3 +109,22 @@ def save_coupang_links_to_ingredient_links(ingredient_name):
             ingredient=ingredient, link=link, link_img=link_img
         )
         ingredient_link.save()
+
+
+def update_ingredient_links(limit_per_minute=50, interval_days=1):
+    new_ingredients = Ingredient.objects.filter(
+        updated_at__isnull=True
+    ) | Ingredient.objects.filter(
+        updated_at__lt=timezone.now() - timezone.timedelta(days=interval_days)
+    )
+
+    for index, ingredient in enumerate(new_ingredients):
+        if index < limit_per_minute * 24 * 60:
+            ingredient_name = ingredient.ingredient_name
+            save_coupang_links_to_ingredient_links(ingredient_name)
+            ingredient.updated_at = timezone.now()
+            ingredient.save()
+        else:
+            break
+    else:
+        print("coupang")

@@ -175,8 +175,13 @@ CRONJOBS = [
     (
         "*/1 * * * *",
         "users.cron.delete_dormant_user",
-        ">>" + os.path.join(BASE_DIR, "users/log/cron.log"),
-    )
+        ">>" + os.path.join(BASE_DIR, "cron.log"),
+    ),
+    (
+        "*/1 * * * *",
+        "articles.coupang.update_ingredient_links",
+        ">>" + os.path.join(BASE_DIR, "cron.log2"),
+    ),
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
