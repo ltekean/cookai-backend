@@ -16,7 +16,7 @@ ACCESS_KEY = settings.COUPANG_ACCESS_KEY
 SECRET_KEY = settings.COUPANG_SECRET_KEY
 
 
-class coupangMgr:
+class CoupangManage:
     DOMAIN = "https://api-gateway.coupang.com"
 
     # HMAC서명 생성
@@ -87,8 +87,8 @@ class coupangMgr:
 
 
 def save_coupang_links_to_ingredient_links(ingredient_name):
-    # coupangMgr 객체 생성
-    coupang_api = coupangMgr()
+    # CoupangManage 객체 생성
+    coupang_api = CoupangManage()
 
     # 키워드를 기반으로 상품 정보검색
     product_links = coupang_api.get_products_by_keyword(ingredient_name, 10)
