@@ -103,7 +103,7 @@ CRONJOBS = [
     (
         "*/1 * * * *",
         "users.cron.delete_dormant_user",
-        ">>" + os.path.join(BASE_DIR, "log/cron.log"),
+        ">>" + os.path.join(BASE_DIR, "cron.log"),
     )
 ]
 
