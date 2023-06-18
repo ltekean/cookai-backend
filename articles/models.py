@@ -8,23 +8,11 @@ class Category(models.Model):
 
     Attributes:
     name(Char) : 카테고리 이름, 10자 제한
-    sorts : 카테고리 목록, (각 선택 항목 내부 값, 사람이 읽는 값)
-    sort(Char) : 선택된 카테고리, 목록 중에서 선택, 10자 제한
     info(Text) : 카테고리 설명, 50자 제한
 
     """
 
     name = models.CharField(
-        max_length=10,
-    )
-    sorts = [
-        ("한식", "한식"),
-        ("중식", "중식"),
-        ("양식", "양식"),
-        ("일식", "일식"),
-    ]
-    sort = models.CharField(
-        choices=sorts,
         max_length=10,
     )
     info = models.TextField(
@@ -83,15 +71,13 @@ class Article(models.Model):
     image = models.URLField(blank=True, null=True)
     like = models.ManyToManyField(
         User,
-        related_name="article_likes",
+        related_name="likes",
         blank=True,
-        through="Like",
     )
-    bookmarks = models.ManyToManyField(
+    bookmark = models.ManyToManyField(
         User,
         related_name="bookmarks",
         blank=True,
-        through="BookMark",
     )
 
 
@@ -111,7 +97,7 @@ class Comment(models.Model):
     class meta:
         db_table = "Comment"
 
-    author = models.OneToOneField(
+    author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="comments",
@@ -182,42 +168,42 @@ class RecipeIngredient(models.Model):
     )
 
 
-class BookMark(models.Model):
+# class BookMark(models.Model):
 
-    """북마크 모델
-    게시글과 사용자 MtoM 관계의 중간모델입니다!
+#     """북마크 모델
+#     게시글과 사용자 MtoM 관계의 중간모델입니다!
 
-    Attributes:
-    user(ForeignKey) : 사용자, 외래키, CASCADE
-    article(ForeignKey) : 게시글, 외래키, CASCADE
-    """
+#     Attributes:
+#     user(ForeignKey) : 사용자, 외래키, CASCADE
+#     article(ForeignKey) : 게시글, 외래키, CASCADE
+#     """
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-    )
-    article = models.ForeignKey(
-        Article,
-        on_delete=models.CASCADE,
-    )
+#     user = models.ForeignKey(
+#         User,
+#         on_delete=models.CASCADE,
+#     )
+#     article = models.ForeignKey(
+#         Article,
+#         on_delete=models.CASCADE,
+#     )
 
 
-class Like(models.Model):
+# class Like(models.Model):
 
-    """Like 모델
-    게시글과 사용자 MtoM 관계의 중간모델입니다!
+#     """Like 모델
+#     게시글과 사용자 MtoM 관계의 중간모델입니다!
 
-    Attributes:
-    user(ForeignKey) : 사용자, 외래키, CASCADE
-    article(ForeignKey) : 게시글, 외래키, CASCADE, 역참조 : articles
-    """
+#     Attributes:
+#     user(ForeignKey) : 사용자, 외래키, CASCADE
+#     article(ForeignKey) : 게시글, 외래키, CASCADE, 역참조 : articles
+#     """
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-    )
-    article = models.ForeignKey(
-        Article,
-        on_delete=models.CASCADE,
-        related_name="articles",
-    )
+#     user = models.ForeignKey(
+#         User,
+#         on_delete=models.CASCADE,
+#     )
+#     article = models.ForeignKey(
+#         Article,
+#         on_delete=models.CASCADE,
+#         related_name="articles",
+#     )

@@ -3,11 +3,28 @@ from rest_framework import serializers
 from .models import Category, Article, Comment, Ingredient, RecipeIngredient
 
 
+class CategoryCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = "__all__"
+
+
 # 게시글 C
 class ArticleCreateSerializer(ModelSerializer):
     class Meta:
         model = Article
-        fields = ["title", "content", "category", "tags", "recipe", "ingredients"]
+        fields = [
+            "title",
+            "content",
+            "category",
+            "recipe",
+        ]
+
+
+class IngredientSerializer(ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = "__all__"
 
 
 # 게시글 U
@@ -19,17 +36,21 @@ class ArticlePutSerializer(ModelSerializer):
             "content",
             "image",
             "category",
-            "tags",
             "recipe",
-            "ingredients",
         ]
 
 
-class CommentSerializer(serializers.ModelSerializer):
-    user = serializers.SerializerMethodField()
+class CategorySerializer(ModelSerializer):
+    class Meta:
+        model = Category
+        fields = "__all__"
 
-    def get_user(self, obj):
-        return obj.user.nickname
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+
+    def get_author(self, obj):
+        return obj.author.username
 
     # 댓글 조회 시리얼라이저-직렬화
     class Meta:
@@ -52,28 +73,49 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         ]
 
 
-# 게시글 R
 class ArticleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Article
+        fields = [
+            "category",
+            "title",
+            "update_at",
+            "like",
+            "image",
+        ]
+
+    user = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+
+    def get_user(self, obj):
+        return obj.author.username
+
+    def get_likes_count(self, obj):
+        return obj.like.count()
+
+
+# 상세게시글 R
+class ArticleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Article
         fields = "__all__"
 
     user = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
-    comments_set = CommentSerializer(many=True)  # comments_set이라는 역참조 필드 존재
+    comment_set = CommentSerializer(many=True)  # comment_set이라는 역참조 필드 존재
     comments_count = serializers.SerializerMethodField()
     recipeingredient_set = RecipeIngredientSerializer(
         many=True
     )  # related_name을 이용해서 변수 이름을 정하자
 
     def get_user(self, obj):
-        return obj.user.nickname
+        return obj.author.username
 
     def get_comments_count(self, obj):
-        return obj.comments_set.count()
+        return obj.comment_set.count()
 
     def get_likes_count(self, obj):
-        return obj.likes.count()
+        return obj.like.count()
 
 
 # 댓글 작성
@@ -90,7 +132,10 @@ class CommentCreateSerializer(ModelSerializer):
 class RecipeIngredientCreateSerializer(ModelSerializer):
     class Meta:
         model = RecipeIngredient
-        fields = ["ingredient_quantity", "ingredient_unit"]
+        fields = [
+            "ingredient_quantity",
+            "ingredient_unit",
+        ]
 
     class Veta:
         model = Ingredient
