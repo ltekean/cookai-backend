@@ -104,8 +104,12 @@ class ArticleDetailView(APIView):
         art_del = get_object_or_404(Article, id=article_id)
         if request.user == art_del.user:
             art_del.delete()
-            return Response("게시글이 삭제되었습니다", status=status.HTTP_204_NO_CONTENT)
-        return Response("본인이 작성한 게시글만 삭제할수 있습니다", status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"message": "게시글이 삭제되었습니다"}, status=status.HTTP_204_NO_CONTENT
+            )
+        return Response(
+            {"error": "본인이 작성한 게시글만 삭제할수 있습니다"}, status=status.HTTP_403_FORBIDDEN
+        )
 
 
 class IngredientDetailView(APIView):
@@ -127,8 +131,12 @@ class IngredientDetailView(APIView):
         ing_del = get_object_or_404(Article, id=article_id)
         if request.user == ing_del.user:
             ing_del.delete()
-            return Response("재료가 삭제되었습니다", status=status.HTTP_204_NO_CONTENT)
-        return Response("본인이 작성한 재료만 삭제할수 있습니다", status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"message": "재료가 삭제되었습니다"}, status=status.HTTP_204_NO_CONTENT
+            )
+        return Response(
+            {"error": "본인이 작성한 재료만 삭제할수 있습니다"}, status=status.HTTP_403_FORBIDDEN
+        )
 
 
 # 댓글 작성 뷰
@@ -152,7 +160,9 @@ class CommentDetailView(APIView):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response("본인이 작성한 댓글만 수정할수 있습니다", status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"error": "본인이 작성한 댓글만 수정할수 있습니다"}, status=status.HTTP_403_FORBIDDEN
+        )
 
     def delete(self, request, article_id, comment_id):
         comment = get_object_or_404(Comment, id=comment_id)
@@ -238,11 +248,17 @@ class RecipeIngredientDetailView(APIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response("올바른 사용자가 아닙니다", status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {"error": "올바른 사용자가 아닙니다"}, status=status.HTTP_401_UNAUTHORIZED
+            )
 
     def delete(self, request, ingredient_id):
         ing_put = get_object_or_404(RecipeIngredient, id=ingredient_id)
         if request.user != ing_put.article.author:
-            return Response("올바른 사용자가 아닙니다", status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {"error": "올바른 사용자가 아닙니다"}, status=status.HTTP_401_UNAUTHORIZED
+            )
         ing_put.delete()
-        return Response("recipe ingredient가 삭제되었습니다", status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"message": "recipe ingredient가 삭제되었습니다"}, status=status.HTTP_204_NO_CONTENT
+        )
