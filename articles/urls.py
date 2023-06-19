@@ -26,5 +26,4 @@ urlpatterns = [
     # path('likes/', views.CommentLikeView.as_view(), name='commentlike'), # 좋아요 순 댓글모음
     # path('<int:article_id>/order/', views.LinkPlusView.as_view(), name='linkplus'), # 구매링크 추가 - 쿠팡이라 일단 패스
     path("<int:article_id>/bookmark/", views.BookmarkView.as_view()),  # 북마크 - 완료
-    path("bookmark/", views.BookmarkGetView.as_view()),  # 북마크 - 완료
 ]

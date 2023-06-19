@@ -5,6 +5,8 @@ from .models import Category, Article, Comment, Ingredient, RecipeIngredient
 
 # 게시글 C
 class ArticleCreateSerializer(ModelSerializer):
+    is_author = serializers.SerializerMethodField()
+
     class Meta:
         model = Article
         fields = [
@@ -12,7 +14,12 @@ class ArticleCreateSerializer(ModelSerializer):
             "content",
             "category",
             "recipe",
+            "is_author",
         ]
+
+    def get_is_author(self, article):
+        request = self.context["request"]
+        return article.author == request.user
 
 
 class IngredientSerializer(ModelSerializer):
@@ -23,6 +30,8 @@ class IngredientSerializer(ModelSerializer):
 
 # 게시글 U
 class ArticlePutSerializer(ModelSerializer):
+    is_author = serializers.SerializerMethodField()
+
     class Meta:
         model = Article
         fields = [
@@ -31,7 +40,12 @@ class ArticlePutSerializer(ModelSerializer):
             "image",
             "category",
             "recipe",
+            "is_author",
         ]
+
+    def get_is_author(self, article):
+        request = self.context["request"]
+        return article.author == request.user
 
 
 class CategorySerializer(ModelSerializer):
@@ -73,6 +87,9 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class ArticleSerializer(serializers.ModelSerializer):
+    is_author = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Article
         fields = [
@@ -81,7 +98,15 @@ class ArticleSerializer(serializers.ModelSerializer):
             "update_at",
             "like",
             "image",
+            "is_author",
         ]
+
+    def get_is_author(self, article):
+        request = self.context["request"]
+        return article.author == request.user
+
+    def get_likes_count(self, obj):
+        return obj.like.count()
 
 
 # 상세게시글 R
@@ -90,6 +115,7 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         model = Article
         fields = "__all__"
 
+    is_author = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     comment_set = CommentSerializer(many=True)  # comment_set이라는 역참조 필드 존재
@@ -106,6 +132,10 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
 
     def get_likes_count(self, obj):
         return obj.like.count()
+
+    def get_is_author(self, article):
+        request = self.context["request"]
+        return article.author == request.user
 
 
 # 댓글 작성

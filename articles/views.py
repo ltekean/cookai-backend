@@ -4,9 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from articles.paginations import ArticlePagination
 from articles.models import Article, Comment, Category, Ingredient, RecipeIngredient
+from articles.permissions import IsAuthenticatedOrReadOnlyExceptBookMark
 from django.db.models import Count
-from datetime import timedelta
-from django.utils import timezone
 from articles.serializers import (
     ArticleSerializer,
     ArticleCreateSerializer,
@@ -22,32 +21,26 @@ import requests
 
 # Create your views here.
 class ArticleView(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnlyExceptBookMark]
     pagination_class = ArticlePagination
     serializer_class = ArticleSerializer
     queryset = Article.objects.all().order_by("create_at")
-
-    def trending(self):
-        queryset = (
-            Article.objects.filter(created_at__gte=timezone.now() - timedelta(days=3))
-            .annotate(like_count=Count("like"))
-            .order_by("like", "create_at")
-        )
-        return queryset
 
     def bookmarked(self):
         queryset = self.request.user.bookmarked_articles.all()
         return queryset.order_by("bookmark", "create_at")
 
+    def liked(self):
+        queryset = Article.objects.all().order_by("likes_count")
+        return queryset
+
     def get_queryset(self):
         query_select = {
-            "trending": self.trending,
             "bookmarked": self.bookmarked,
+            "liked": self.liked,
         }
         selection = self.request.GET.get("filter", None)
         return query_select.get(selection, super().get_queryset)()
-
-    # 위의 경우가 아니라면 기본적으로 super().get_queryset()을 호출하여 기본 쿼리셋을 반환합니다.
 
 
 # 카테고리 띄우기
@@ -64,7 +57,9 @@ class ArticleCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        serializer = ArticleCreateSerializer(data=request.data)
+        serializer = ArticleCreateSerializer(
+            context={"request": request}, data=request.data
+        )
         if serializer.is_valid():
             serializer.save(author=request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -88,13 +83,18 @@ class IngredientCreateView(APIView):
 class ArticleDetailView(APIView):
     def get(self, request, article_id):
         article = get_object_or_404(Article, id=article_id)
-        serializer = ArticleDetailSerializer(article)
+        serializer = ArticleDetailSerializer(
+            article,
+            context={"request": request},
+        )
         return Response(serializer.data)
 
     def put(self, request, article_id):
         art_put = get_object_or_404(Article, id=article_id)
         if request.user == art_put.user:
-            serializer = ArticlePutSerializer(art_put, data=request.data)
+            serializer = ArticlePutSerializer(
+                art_put, context={"request": request}, data=request.data
+            )
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -202,10 +202,6 @@ class LikeView(APIView):
 
 
 class BookmarkView(APIView):
-    """
-    북마크로 등록/해제하는 함수입니다.
-    """
-
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, article_id):
@@ -216,20 +212,6 @@ class BookmarkView(APIView):
         else:
             article.bookmark.add(request.user)
             return Response("bookmark", status=status.HTTP_200_OK)
-
-
-class BookmarkGetView(APIView):
-    """
-    북마크 모음을 가져오는 함수입니다.
-    마이페이지 등에서도 사용 가능합니다.
-    """
-
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        bookmarks = request.user.bookmarks.all()
-        serializer = ArticleSerializer(bookmarks, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # 재료 C
