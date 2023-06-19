@@ -202,6 +202,10 @@ class LikeView(APIView):
 
 
 class BookmarkView(APIView):
+    """
+    북마크로 등록/해제하는 함수입니다.
+    """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, article_id):
@@ -212,6 +216,20 @@ class BookmarkView(APIView):
         else:
             article.bookmark.add(request.user)
             return Response("bookmark", status=status.HTTP_200_OK)
+
+
+class BookmarkGetView(APIView):
+    """
+    북마크 모음을 가져오는 함수입니다.
+    마이페이지 등에서도 사용 가능합니다.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        bookmarks = request.user.bookmarks.all()
+        serializer = ArticleSerializer(bookmarks, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # 재료 C
@@ -228,7 +246,7 @@ class RecipeIngredientView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class RecipeIngredientDetailView(APIView):  # UD
+class RecipeIngredientDetailView(APIView):
     def put(self, request, ingredient_id):
         ing_put = get_object_or_404(RecipeIngredient, id=ingredient_id)
         if request.user == ing_put.article.author:
