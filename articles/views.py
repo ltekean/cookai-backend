@@ -82,11 +82,8 @@ class IngredientCreateView(APIView):
 
     def post(self, request):
         serializer = IngredientSerializer(data=request.data)
-        print("before val")
         if serializer.is_valid():
-            print("val complete")
             serializer.save(author=request.user)
-            print("create complete")
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -153,21 +150,13 @@ class CommentView(APIView):
 
 class CommentDetailView(APIView):
     def put(self, request, article_id, comment_id):
-        # 수정할 댓글 불러오기
         comment = get_object_or_404(Comment, id=comment_id)
-        # 댓글 작성자와 로그인한 유저가 같으면
         if request.user == comment.author:
-            # CommentCreateSerializer로 입력받은 데이터 직렬화, 검증
             serializer = CommentCreateSerializer(comment, data=request.data)
-            # 직렬화된 데이터가 유효하다면
             if serializer.is_valid():
-                # DB에 저장
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
-            # 데이터 검증 실패시
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        # 댓글 작성자 != 로그인한 유저
         return Response("본인이 작성한 댓글만 수정할수 있습니다", status=status.HTTP_403_FORBIDDEN)
 
     def delete(self, request, article_id, comment_id):
@@ -221,8 +210,8 @@ class BookmarkView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, article_id):
-        bookmarks = request.user.bookmarks.all()  # 사용자가 누른 모든 북마크 가져오기
-        serializer = ArticleSerializer(bookmarks, many=True)  # 북마크를 직렬화
+        bookmarks = request.user.bookmarks.all()
+        serializer = ArticleSerializer(bookmarks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, article_id):
@@ -235,7 +224,7 @@ class BookmarkView(APIView):
             return Response("bookmark", status=status.HTTP_200_OK)
 
 
-# 재료 CR
+# 재료 C
 class RecipeIngredientView(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
@@ -244,20 +233,9 @@ class RecipeIngredientView(APIView):
         if serializer.is_valid():
             serializer.save(
                 article_id=article_id, ingredient_id=request.data.get("ingredient")
-            )  # 한 아티클에 동시에 나오게끔 하려면 어떻게 해야 하지?
-            # 저장을 어디에 하지?
+            )
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    # 나중에 article에 같이 나오기 때문에 없애주는 것
-    def get(self, request, article_id):
-        # 게시물 id 가져오기
-        ing_get = Article.objects.get(id=article_id)
-        # 게시물 id에 해당하는 recipe 가져오기
-        recipes = ing_get.recipeingredients.all()
-        # CommentSerializer로 직렬화하기(불러온 comments_set)
-        serializer = RecipeIngredientCreateSerializer(recipes, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class RecipeIngredientDetailView(APIView):  # UD

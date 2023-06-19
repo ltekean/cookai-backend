@@ -59,9 +59,14 @@ class CommentSerializer(serializers.ModelSerializer):
 
 # 레시피 재료 가져오기
 class RecipeIngredientSerializer(serializers.ModelSerializer):
+    """
+    상세게시글에 나타낼 레시피 재료 가져오는 것입니다.
+    """
+
     class Meta:
         model = RecipeIngredient
         fields = [
+            "ingredient_id",
             "ingredient_quantity",
             "ingredient_unit",
         ]
@@ -122,7 +127,6 @@ class CommentCreateSerializer(ModelSerializer):
         ]  # json으로 받을 데이터 필드
 
 
-# 동시 저장을 위해 모델 저장 2개 설정
 class RecipeIngredientCreateSerializer(ModelSerializer):
     class Meta:
         model = RecipeIngredient
