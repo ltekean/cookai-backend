@@ -1,4 +1,5 @@
 import requests
+
 from django.db import transaction
 from django.conf import settings
 from django.core.mail import EmailMessage
@@ -51,8 +52,6 @@ class UserView(APIView):
             return Response(
                 "해당 이메일을 가진 유저가 이미 있습니다!", status=status.HTTP_400_BAD_REQUEST
             )
-        if not password:
-            raise ParseError
         serializer = serializers.UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -429,7 +428,6 @@ class UserFollowView(APIView):
         user = get_object_or_404(User, id=user_id)
 
         serializer = UserSerializer(user.followings, many=True)
-        print(serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, user_id):
