@@ -71,10 +71,6 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(Fridge)
 class FridgeAdmin(admin.ModelAdmin):
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-    )
     list_display = [
         "user",
         "ingredient",
@@ -86,7 +82,7 @@ class FridgeAdmin(admin.ModelAdmin):
         (
             "Profile",
             {
-                "fields": ("user"),
+                "fields": ("user",),
             },
         )
     ]

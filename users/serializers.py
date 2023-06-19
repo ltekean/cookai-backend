@@ -12,7 +12,7 @@ from .email_tokens import account_activation_token
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
+        exclude = ("groups", "user_permissions")
         extra_kwargs = {
             "followings": {
                 "read_only": True,
@@ -49,10 +49,6 @@ class UserFridgeSerializer(ModelSerializer):
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
-        if user.is_active == False:
-            return Response(
-                {"error": "해당 유저는 존재하지 않습니다! "}, status=status.HTTP_404_NOT_FOUND
-            )
         token = super().get_token(user)
         token["email"] = user.email
         token["username"] = user.username
