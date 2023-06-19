@@ -204,11 +204,6 @@ class LikeView(APIView):
 class BookmarkView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request, article_id):
-        bookmarks = request.user.bookmarks.all()
-        serializer = ArticleSerializer(bookmarks, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
     def post(self, request, article_id):
         article = get_object_or_404(Article, id=article_id)
         if request.user in article.bookmark.all():
@@ -221,7 +216,7 @@ class BookmarkView(APIView):
 
 # 재료 C
 class RecipeIngredientView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, article_id):
         serializer = RecipeIngredientCreateSerializer(data=request.data)
