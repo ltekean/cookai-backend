@@ -8,10 +8,10 @@ import numpy as np
 from scipy.sparse.linalg import svds
 
 
-def recommend_movies(
+def recommend_article(
     df_svd_preds: pd.DataFrame,
     user_id,
-    ori_movies_df,
+    ori_article_df,
     ori_ratings_df,
     num_recommendations=1,
 ):
@@ -27,13 +27,13 @@ def recommend_movies(
     user_data = ori_ratings_df[ori_ratings_df.userId == user_id]
 
     # 위에서 뽑은 user_data와 원본 영화 데이터를 합친다.
-    user_history = user_data.merge(ori_movies_df, on="article").sort_values(
+    user_history = user_data.merge(ori_article_df, on="article").sort_values(
         ["score"], ascending=False
     )
 
     # 원본 영화 데이터에서 사용자가 본 영화 데이터를 제외한 데이터를 추출
-    recommendations = ori_movies_df[
-        ~ori_movies_df["article"].isin(user_history["article"])
+    recommendations = ori_article_df[
+        ~ori_article_df["article"].isin(user_history["article"])
     ]
     # 사용자의 영화 평점이 높은 순으로 정렬된 데이터와 위 recommendations을 합친다.
     recommendations = recommendations.merge(
@@ -48,7 +48,8 @@ def recommend_movies(
     return user_history, recommendations
 
 
-def foo(user_id):
+def collaborative_filtering(user_id):
+    """ """
     users = User.objects.prefetch_related("likes").values("pk", "likes__pk")
     # Create the DataFrame
     df = read_frame(users, fieldnames=["pk", "likes"])
@@ -94,7 +95,7 @@ def foo(user_id):
     df_articles = read_frame(df_articles, fieldnames=["pk"])
     df_articles.columns = [{"pk": "article"}]
     df = df.groupby(["pk", "article"]).sum()
-    already_rated, predictions = recommend_movies(
+    already_rated, predictions = recommend_article(
         df_svd_preds, user_id, df_articles, df, 1
     )
     return list(predictions["article"])
