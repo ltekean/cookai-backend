@@ -71,4 +71,36 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(Fridge)
 class FridgeAdmin(admin.ModelAdmin):
-    pass
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = [
+        "user",
+        "ingredient",
+    ]
+    list_filter = [
+        "user",
+    ]
+    fieldsets = [
+        (
+            "Profile",
+            {
+                "fields": ("user"),
+            },
+        )
+    ]
+    add_fieldsets = [
+        (
+            None,
+            {
+                "classes": ["wide"],
+                "fields": ["ingredient"],
+            },
+        ),
+    ]
+    search_fields = [
+        "user__email",
+        "ingredient__ingredient_name",
+        "user__username",
+    ]

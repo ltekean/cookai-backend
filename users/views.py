@@ -12,8 +12,12 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
-from users.serializers import UserSerializer, UserFridgeSerializer
-
+from rest_framework_simplejwt.views import TokenObtainPairView
+from users.serializers import (
+    UserSerializer,
+    UserFridgeSerializer,
+    CustomTokenObtainPairSerializer,
+)
 from users.models import User, Fridge
 from users import serializers
 from users.email_tokens import account_activation_token
@@ -72,6 +76,10 @@ class UserResetPasswordPermitView(APIView):
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class KakaoLoginView(APIView):

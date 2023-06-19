@@ -12,7 +12,7 @@ urlpatterns = [
     path(
         "reset/<str:uidb64>/<str:token>/", views.UserResetPasswordPermitView.as_view()
     ),
-    path("login/", TokenObtainPairView.as_view()),
+    path("login/", views.CustomTokenObtainPairView.as_view()),
     path("oauth/kakao/", views.KakaoLoginView.as_view()),
     path("oauth/google/", views.GoogleLoginView.as_view()),
     path("oauth/naver/", views.NaverLoginView.as_view()),

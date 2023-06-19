@@ -41,11 +41,13 @@ class UserManager(BaseUserManager):
 
     Attributes:
         LoginTypeChoices(class) : 회원가입 유형(일반,카카오,구글,네이버)
+        GenderTypeChoices(class) : 성별 유형(male,female)
         email (str): 이메일, 필수
         username (str) : 닉네임, 필수
-        password (str): 패스워드
+        password (str): 패스워드, 필수
         avatar(str) : 유저의 프로필 사진을 url로 가져옵니다.
         age(date) : 나이
+        gender(str) : 성별
         updated_at (date): 수정시간
         created_at (date): 가입시간
         login_type (str): 회원가입 유형의 종류를 지정
@@ -124,16 +126,22 @@ class User(AbstractUser):
 
 
 class Fridge(models.Model):
+    """냉장고 모델
+
+    models.Model을 커스텀한 냉장고 모델입니다.
+
+    Attributes:
+        user(Foreignkey) : 유저모델을 외래키로 가져옵니다.
+        ingredient : article의 Ingredient모델을 외래키로 가져옵니다.
+    """
+
     user = models.ForeignKey(
         "users.User",
         on_delete=models.CASCADE,
-        related_name="fridges",
     )
-    # 06.09 수정 : 나중에 ingredient테이블로 FOREIGN KEY연결해야함
     ingredient = models.ForeignKey(
         "articles.Ingredient",
         on_delete=models.CASCADE,
-        related_name="fridges",
     )
 
     def __str__(self):
