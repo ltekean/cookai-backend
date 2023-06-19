@@ -83,15 +83,6 @@ class ArticleSerializer(serializers.ModelSerializer):
             "image",
         ]
 
-    user = serializers.SerializerMethodField()
-    likes_count = serializers.SerializerMethodField()
-
-    def get_user(self, obj):
-        return obj.author.username
-
-    def get_likes_count(self, obj):
-        return obj.like.count()
-
 
 # 상세게시글 R
 class ArticleDetailSerializer(serializers.ModelSerializer):

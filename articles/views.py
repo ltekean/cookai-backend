@@ -1,20 +1,17 @@
 from rest_framework.generics import get_object_or_404
 from rest_framework import status, permissions, generics
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from articles.paginations import ArticlePagination, CommentPagination
+from articles.paginations import ArticlePagination
 from articles.models import Article, Comment, Category, Ingredient, RecipeIngredient
 from django.db.models import Count
 from datetime import timedelta
 from django.utils import timezone
-from users.models import User
 from articles.serializers import (
     ArticleSerializer,
     ArticleCreateSerializer,
     ArticleDetailSerializer,
     ArticlePutSerializer,
-    CommentSerializer,
     CommentCreateSerializer,
     IngredientSerializer,
     RecipeIngredientCreateSerializer,
@@ -73,8 +70,6 @@ class ArticleCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        # 아티클에 이미지까지 더하기
-        # 카테고리가 비어있을 시에는 어떻게 새로 추가해야 하는가?
 
 
 class IngredientCreateView(APIView):
