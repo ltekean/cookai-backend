@@ -1,6 +1,8 @@
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User, Fridge
@@ -47,6 +49,10 @@ class UserFridgeSerializer(ModelSerializer):
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
+        if user.is_active == False:
+            return Response(
+                {"error": "해당 유저는 존재하지 않습니다! "}, status=status.HTTP_404_NOT_FOUND
+            )
         token = super().get_token(user)
         token["email"] = user.email
         token["username"] = user.username
