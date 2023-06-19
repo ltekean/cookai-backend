@@ -3,12 +3,6 @@ from rest_framework import serializers
 from .models import Category, Article, Comment, Ingredient, RecipeIngredient
 
 
-class CategoryCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = "__all__"
-
-
 # 게시글 C
 class ArticleCreateSerializer(ModelSerializer):
     class Meta:
@@ -137,6 +131,15 @@ class RecipeIngredientCreateSerializer(ModelSerializer):
             "ingredient_unit",
         ]
 
-    class Veta:
-        model = Ingredient
-        fields = "__all__"
+    # 없는 재료는 새로 추가해야 함
+
+    def save(self, **kwargs):
+        ingredient_name = kwargs.get("ingredient_id", None)
+        if not ingredient_name:
+            raise serializers.ValidationError({"ingredient_id": "재료를 입력해주세요"})
+        try:
+            ingredient = Ingredient.objects.get(ingredient_name=ingredient_name)
+        except:
+            ingredient = Ingredient.objects.create(ingredient_name=ingredient_name)
+            ingredient.save()
+        return super().save(**kwargs)

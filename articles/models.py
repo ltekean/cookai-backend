@@ -121,10 +121,33 @@ class Comment(models.Model):
 class Ingredient(models.Model):
     ingredient_name = models.CharField(
         max_length=100,
+        primary_key=True,
     )
     ingredient_info = models.TextField(
         null=True,
-        default=[],
+        default=list,
+        max_length=100,
+    )
+
+
+# 레시피 재료 모델
+class RecipeIngredient(models.Model):
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name="ingredients",
+    )
+    article = models.ForeignKey(
+        Article,
+        on_delete=models.CASCADE,
+    )
+    ingredient_quantity = models.IntegerField(
+        null=False,
+        default=list,
+    )
+    ingredient_unit = models.CharField(
+        null=False,
+        default=list,
         max_length=100,
     )
 
@@ -145,65 +168,3 @@ class IngredientLink(models.Model):
         null=True,
         blank=True,
     )
-
-
-# 레시피 재료 모델
-class RecipeIngredient(models.Model):
-    ingredient = models.ForeignKey(
-        Ingredient,
-        on_delete=models.CASCADE,
-    )
-    article = models.ForeignKey(
-        Article,
-        on_delete=models.CASCADE,
-    )
-    ingredient_quantity = models.IntegerField(
-        null=False,
-        default=[],
-    )
-    ingredient_unit = models.CharField(
-        null=False,
-        default=[],
-        max_length=100,
-    )
-
-
-# class BookMark(models.Model):
-
-#     """북마크 모델
-#     게시글과 사용자 MtoM 관계의 중간모델입니다!
-
-#     Attributes:
-#     user(ForeignKey) : 사용자, 외래키, CASCADE
-#     article(ForeignKey) : 게시글, 외래키, CASCADE
-#     """
-
-#     user = models.ForeignKey(
-#         User,
-#         on_delete=models.CASCADE,
-#     )
-#     article = models.ForeignKey(
-#         Article,
-#         on_delete=models.CASCADE,
-#     )
-
-
-# class Like(models.Model):
-
-#     """Like 모델
-#     게시글과 사용자 MtoM 관계의 중간모델입니다!
-
-#     Attributes:
-#     user(ForeignKey) : 사용자, 외래키, CASCADE
-#     article(ForeignKey) : 게시글, 외래키, CASCADE, 역참조 : articles
-#     """
-
-#     user = models.ForeignKey(
-#         User,
-#         on_delete=models.CASCADE,
-#     )
-#     article = models.ForeignKey(
-#         Article,
-#         on_delete=models.CASCADE,
-#         related_name="articles",
-#     )

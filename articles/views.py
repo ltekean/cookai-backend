@@ -3,9 +3,8 @@ from rest_framework import status, permissions, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
 from articles.paginations import ArticlePagination, CommentPagination
-from articles.models import Article, Comment, Category, Ingredient
+from articles.models import Article, Comment, Category, Ingredient, RecipeIngredient
 from django.db.models import Count
 from datetime import timedelta
 from django.utils import timezone
@@ -15,7 +14,6 @@ from articles.serializers import (
     ArticleCreateSerializer,
     ArticleDetailSerializer,
     ArticlePutSerializer,
-    CategoryCreateSerializer,
     CommentSerializer,
     CommentCreateSerializer,
     IngredientSerializer,
@@ -56,17 +54,7 @@ class ArticleView(generics.ListCreateAPIView):
 
 
 # 카테고리 띄우기
-# 카테고리를 사용자가 직접 설정하는 것으로 해야 한다.
-# 그럼 카테고리는 어떻게 만들고, 어떻게 저장하지?
 class ArticleCategoryView(APIView):
-    def post(self, request, category):
-        serializer = CategoryCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            if category not in category:
-                serializer.save(article=request.article, category=category)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     def get(self, request, category_id):
         categorizing = Category.objects.get(id=category_id)
         articles = categorizing.article_set.order_by("create_at")
@@ -89,25 +77,16 @@ class ArticleCreateView(APIView):
         # 카테고리가 비어있을 시에는 어떻게 새로 추가해야 하는가?
 
 
-class CategoryCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request):
-        serializer = CategoryCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class IngredientCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         serializer = IngredientSerializer(data=request.data)
+        print("before val")
         if serializer.is_valid():
+            print("val complete")
             serializer.save(author=request.user)
+            print("create complete")
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -192,14 +171,10 @@ class CommentDetailView(APIView):
         return Response("본인이 작성한 댓글만 수정할수 있습니다", status=status.HTTP_403_FORBIDDEN)
 
     def delete(self, request, article_id, comment_id):
-        # 삭제할 댓글 불러오기
         comment = get_object_or_404(Comment, id=comment_id)
-        # 댓글 작성자 == 로그인한 유저
         if request.user == comment.author:
-            # comment 삭제
             comment.delete()
             return Response("댓글이 삭제되었습니다", status=status.HTTP_204_NO_CONTENT)
-        # 댓글 작성자 != 로그인한 유저
         return Response("본인이 작성한 댓글만 삭제할수 있습니다", status=status.HTTP_403_FORBIDDEN)
 
 
@@ -260,38 +235,46 @@ class BookmarkView(APIView):
             return Response("bookmark", status=status.HTTP_200_OK)
 
 
-class IngredientView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+# 재료 CR
+class RecipeIngredientView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def post(self, request, article_id):
         serializer = RecipeIngredientCreateSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(author=request.user, article_id=article_id)
+            serializer.save(
+                article_id=article_id, ingredient_id=request.data.get("ingredient")
+            )  # 한 아티클에 동시에 나오게끔 하려면 어떻게 해야 하지?
+            # 저장을 어디에 하지?
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 나중에 article에 같이 나오기 때문에 없애주는 것
     def get(self, request, article_id):
         # 게시물 id 가져오기
-        article_get = Article.objects.get(id=article_id)
+        ing_get = Article.objects.get(id=article_id)
         # 게시물 id에 해당하는 recipe 가져오기
-        recipes = article_get.recipe_set.all()
+        recipes = ing_get.recipeingredients.all()
         # CommentSerializer로 직렬화하기(불러온 comments_set)
         serializer = RecipeIngredientCreateSerializer(recipes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # 수정 중
-    def put(self, request, article_id):
-        # 수정할 게시글 불러오기
-        ing_put = get_object_or_404(Article, id=article_id)
-        # 게시글 작성자와 로그인한 유저가 같으면
-        if request.user == ing_put.user:
-            # ArticlePutSerializer로 입력받은 데이터 직렬화, 검증
-            serializer = ArticlePutSerializer(ing_put, data=request.data)
-            # 직렬화된 데이터가 유효하다면
+
+class RecipeIngredientDetailView(APIView):  # UD
+    def put(self, request, ingredient_id):
+        ing_put = get_object_or_404(RecipeIngredient, id=ingredient_id)
+        if request.user == ing_put.article.author:
+            serializer = RecipeIngredientCreateSerializer(ing_put, data=request.data)
             if serializer.is_valid():
-                # DB에 저장
-                serializer.save()
+                serializer.save(ingredient_id=request.data.get("ingredient"))
                 return Response(serializer.data, status=status.HTTP_200_OK)
-            # 데이터 검증 실패시
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response("올바른 사용자가 아닙니다", status=status.HTTP_401_UNAUTHORIZED)
+
+    def delete(self, request, ingredient_id):
+        ing_put = get_object_or_404(RecipeIngredient, id=ingredient_id)
+        if request.user != ing_put.article.author:
+            return Response("올바른 사용자가 아닙니다", status=status.HTTP_401_UNAUTHORIZED)
+        ing_put.delete()
+        return Response("recipe ingredient가 삭제되었습니다", status=status.HTTP_204_NO_CONTENT)
