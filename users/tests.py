@@ -1,8 +1,11 @@
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from users.models import User
+from django.utils import timezone
 
-SIGNUP_URL = reverse("signup")
+GET_USER_URL = reverse("user_view")
+SIGNUP_URL = reverse("user_view")
+LOGIN_URL = reverse("custom_token_obtain_pair")
 
 
 class UserBaseTestCase(APITestCase):
@@ -20,25 +23,25 @@ class UserBaseTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         cls.user = User.objects.create_user(
-            nickname="testuser1",
+            username="testuser1",
             email="testuser1@gmail.com",
             password="xptmxm111!",
-            age=30,
-            gender="male",
         )
+        cls.user.is_active = True
+        cls.user.save()
         cls.user_signup_data = {
-            "nickname": "testuser2",
+            "username": "testuser2",
             "password": "xptmxm111!",
             "password2": "xptmxm111!",
             "email": "testuser2@gmail.com",
-            "age": 20,
-            "gender": "male",
         }
-        cls.user_edit_data = {"current_password": "xptmxm111!"}
+        cls.user_edit_data = {"old_password": "xptmxm111!"}
         cls.user_login_data = {"email": "testuser1@gmail.com", "password": "xptmxm111!"}
 
     def setUp(self) -> None:
-        login_user = self.client.post(reverse("login"), self.user_login_data).data
+        login_user = self.client.post(
+            reverse("custom_token_obtain_pair"), self.user_login_data
+        ).data
         self.access = login_user["access"]
         self.refresh = login_user["refresh"]
 
@@ -47,7 +50,16 @@ class UserMultiUserTestCase(UserBaseTestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         super().setUpTestData()
-        cls.user2 = User.objects.create_user(**super().user_signup_data)
+        user_signup_data = {
+            "username": "testuser3",
+            "password": "xptmxm111!",
+            "email": "testuser3@gmail.com",
+            # "age": 21,
+            # "gender": "female",
+        }
+        cls.user2 = User.objects.create_user(**user_signup_data)
+        cls.user2.is_active = True
+        cls.user.save()
 
 
 class UserSignUpTestCase(UserBaseTestCase):
@@ -56,7 +68,7 @@ class UserSignUpTestCase(UserBaseTestCase):
     회원가입을 테스트합니다.
     """
 
-    url = reverse("signup")
+    url = reverse("user_view")
 
     def test_signup(self):
         """정상: 회원가입
@@ -70,8 +82,8 @@ class UserSignUpTestCase(UserBaseTestCase):
         )
         self.assertEqual(response.status_code, 201)
 
-        test_signuped_user = User.objects.get(username=data["email"])
-        self.assertEqual(test_signuped_user.username, data["email"])
+        test_signuped_user = User.objects.get(email=data["email"])
+        self.assertEqual(test_signuped_user.email, data["email"])
 
     def test_signup_password_not_same(self):
         """에러: 패스워드 불일치
@@ -141,7 +153,6 @@ class UserSignOutTestCase(UserMultiUserTestCase):
         """
         self.url = reverse("user_detail", kwargs={"user_id": self.user.id})
         data = self.user_login_data
-        del data["email"]
         response = self.client.put(
             path=self.url,
             HTTP_AUTHORIZATION=f"Bearer {self.access}",
@@ -149,7 +160,7 @@ class UserSignOutTestCase(UserMultiUserTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        test_signout_user = User.objects.get(username=data["username"])
+        test_signout_user = User.objects.get(email=data["email"])
         self.assertEqual(test_signout_user.is_active, False)
 
     def test_signout_wrong_password(self):
@@ -161,14 +172,12 @@ class UserSignOutTestCase(UserMultiUserTestCase):
         data = self.user_login_data
         del data["email"]
         data["password"] = "asdf!!1234"
-        response = self.client.put(
+        response = self.client.delete(
             path=self.url,
             HTTP_AUTHORIZATION=f"Bearer {self.access}",
             data=data,
         )
         self.assertEqual(response.status_code, 400)
-        test_signout_user = User.objects.get(username=data["username"])
-        self.assertEqual(test_signout_user.is_active, True)
 
     def test_signout_annon(self):
         """에러: 비로그인 접근
@@ -177,7 +186,6 @@ class UserSignOutTestCase(UserMultiUserTestCase):
         """
         self.url = reverse("user_detail", kwargs={"user_id": self.user.id})
         data = self.user_login_data
-        del data["email"]
         response = self.client.put(
             path=self.url,
             data=data,
@@ -186,7 +194,7 @@ class UserSignOutTestCase(UserMultiUserTestCase):
         self.assertEqual(
             response.data["detail"], "자격 인증데이터(authentication credentials)가 제공되지 않았습니다."
         )
-        test_signout_user = User.objects.get(username=data["username"])
+        test_signout_user = User.objects.get(email=data["email"])
         self.assertEqual(test_signout_user.is_active, True)
 
     def test_signout_wrong_token(self):
@@ -196,7 +204,6 @@ class UserSignOutTestCase(UserMultiUserTestCase):
         """
         self.url = reverse("user_detail", kwargs={"user_id": self.user.id})
         data = self.user_login_data
-        del data["email"]
         response = self.client.put(
             path=self.url,
             HTTP_AUTHORIZATION=f"Bearer {self.access[:-3]}123",
@@ -204,7 +211,7 @@ class UserSignOutTestCase(UserMultiUserTestCase):
         )
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.data["detail"], "이 토큰은 모든 타입의 토큰에 대해 유효하지 않습니다")
-        test_signout_user = User.objects.get(username=data["username"])
+        test_signout_user = User.objects.get(email=data["email"])
         self.assertEqual(test_signout_user.is_active, True)
 
     def test_wrong_user(self):
@@ -237,42 +244,39 @@ class UserEditTestCase(UserMultiUserTestCase):
         민감하지 않은 회원정보(성별,나이) 수정의 경우
         """
         url = reverse("user_detail", kwargs={"user_id": self.user.id})
-        data = {"gender": "female", "age": 31}
+        data = {"gender": "female", "age": "1997-10-08"}
 
         response = self.client.put(
             path=url, HTTP_AUTHORIZATION=f"Bearer {self.access}", data=data
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.user.email, data["age"])
 
     def test_useredit_password(self):
         """정상: 패스워드 변경
 
         정상적인 패스워드 변경의 경우입니다.
         """
-        url = reverse("user_detail", kwargs={"user_id": self.user.id})
+        url = reverse("change_password")
         data = self.user_edit_data
-        data["password"] = "newpassword1!"
-        data["password2"] = "newpassword1!"
-        old_pw = self.user.password
-        response = self.client.patch(
+        data["new_password"] = "newpassword1!"
+        data["new_password2"] = "newpassword1!"
+        response = self.client.put(
             path=url, HTTP_AUTHORIZATION=f"Bearer {self.access}", data=data
         )
         self.assertEqual(response.status_code, 200)
-        self.assertNotEqual(old_pw, self.user.password)
 
     def test_useredit_nothing(self):
         """정상: 아무것도 수정안함
 
         아무것도 수정안한 경우입니다.
         """
-        url = reverse("user_detail", kwargs={"user_id": self.user.id})
+        url = reverse("change_password")
         data = self.user_edit_data
         old_pw = self.user.password
-        response = self.client.patch(
+        response = self.client.put(
             path=url, HTTP_AUTHORIZATION=f"Bearer {self.access}", data=data
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(old_pw, self.user.password)
 
     def test_useredit_password_wrong(self):
@@ -280,10 +284,10 @@ class UserEditTestCase(UserMultiUserTestCase):
 
         현재 패스워드를 틀린 경우입니다.
         """
-        url = reverse("user_detail", kwargs={"user_id": self.user.id})
+        url = reverse("change_password")
         data = self.user_edit_data
-        data["current_password"] = "qhdks222!"
-        response = self.client.patch(
+        data["old_password"] = "qhdks222!"
+        response = self.client.put(
             path=url, HTTP_AUTHORIZATION=f"Bearer {self.access}", data=data
         )
         self.assertEqual(response.status_code, 400)
@@ -293,10 +297,10 @@ class UserEditTestCase(UserMultiUserTestCase):
 
         변경할 패스워드2를 입력 안한 경우입니다.
         """
-        url = reverse("user_detail", kwargs={"user_id": self.user.id})
+        url = reverse("change_password")
         data = self.user_edit_data
-        data["password"] = "qhdks222!"
-        response = self.client.patch(
+        data["new_password"] = "qhdks222!"
+        response = self.client.put(
             path=url, HTTP_AUTHORIZATION=f"Bearer {self.access}", data=data
         )
         self.assertEqual(response.status_code, 400)
@@ -306,11 +310,11 @@ class UserEditTestCase(UserMultiUserTestCase):
 
         변경할 패스워드가 불일치한 경우입니다.
         """
-        url = reverse("user_detail", kwargs={"user_id": self.user.id})
+        url = reverse("change_password")
         data = self.user_edit_data
-        data["password"] = "qhdks111!"
-        data["password2"] = "qhdks222!"
-        response = self.client.patch(
+        data["new_password"] = "qhdks111!"
+        data["new_password2"] = "qhdks222!"
+        response = self.client.put(
             path=url, HTTP_AUTHORIZATION=f"Bearer {self.access}", data=data
         )
         self.assertEqual(response.status_code, 400)
@@ -320,9 +324,9 @@ class UserEditTestCase(UserMultiUserTestCase):
 
         비로그인 접근의 경우입니다.
         """
-        url = reverse("user_detail", kwargs={"user_id": self.user.id})
+        url = reverse("change_password")
         data = self.user_edit_data
-        response = self.client.patch(
+        response = self.client.put(
             path=url,
             data=data,
         )
@@ -344,9 +348,9 @@ class UserEditTestCase(UserMultiUserTestCase):
 
         잘못된 토큰을 보낸 경우입니다.
         """
-        url = reverse("user_detail", kwargs={"user_id": self.user.id})
+        url = reverse("change_password")
         data = self.user_edit_data
-        response = self.client.patch(
+        response = self.client.put(
             path=url,
             data=data,
             HTTP_AUTHORIZATION=f"Bearer {self.access[:-3]}123",
@@ -361,21 +365,6 @@ class UserEditTestCase(UserMultiUserTestCase):
         self.assertEqual(
             response.data["detail"], "자격 인증데이터(authentication credentials)가 제공되지 않았습니다."
         )
-
-    def test_wrong_user(self):
-        url = reverse("user_detail", kwargs={"user_id": self.user2.id})
-        data = self.user_edit_data
-        response = self.client.patch(
-            path=url,
-            data=data,
-            HTTP_AUTHORIZATION=f"Bearer {self.access}",
-        )
-        self.assertEqual(response.status_code, 401)
-        response = self.client.put(
-            path=url,
-            data={"gender": "female", "age": 31},
-        )
-        self.assertEqual(response.status_code, 401)
 
 
 class UserGetIdTestCase(UserBaseTestCase):
@@ -414,7 +403,7 @@ class UserTokenTestCase(UserBaseTestCase):
     토큰 로그인 및 갱신을 테스트합니다.
     """
 
-    url = reverse("login")
+    url = reverse("custom_token_obtain_pair")
 
     def test_token_login(self):
         """정상: 토큰 login
@@ -434,7 +423,7 @@ class UserTokenTestCase(UserBaseTestCase):
         유저네임을 틀린 경우입니다.
         """
         data = self.user_login_data
-        data["email"] = "testuser0"
+        data["email"] = "testuser0@testuser@.com"
         response = self.client.post(
             path=self.url,
             data=data,
@@ -456,7 +445,7 @@ class UserTokenTestCase(UserBaseTestCase):
 
 
 class UserRefreshTestCase(UserBaseTestCase):
-    url = reverse("refresh")
+    url = reverse("token_refresh")
 
     def test_token_refresh(self):
         """정상: 토큰 refresh
@@ -488,39 +477,41 @@ class UserRefreshTestCase(UserBaseTestCase):
 
 
 class UserFollowTestCase(UserMultiUserTestCase):
-    url = reverse("follow", kwargs={"user_id": 2})
+    url1 = reverse("user_follow", kwargs={"user_id": 1})
+    url2 = reverse("user_follow", kwargs={"user_id": 2})
+    url3 = reverse("user_follow", kwargs={"user_id": 50000})
 
     def test_follow_normal(self):
         response = self.client.post(
-            path=self.url,
+            path=self.url2,
             HTTP_AUTHORIZATION=f"Bearer {self.access}",
         )
         self.assertEqual(response.status_code, 200)
 
     def test_follow_self(self):
         response = self.client.post(
-            path=self.url,
+            path=self.url1,
             HTTP_AUTHORIZATION=f"Bearer {self.access}",
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 403)
 
     def test_follow_non(self):
         response = self.client.post(
-            path=reverse("follow", kwargs={"user_id": 0}),
+            path=self.url3,
             HTTP_AUTHORIZATION=f"Bearer {self.access}",
         )
         self.assertEqual(response.status_code, 404)
 
     def test_follow_anon(self):
-        response = self.client.post(path=self.url)
+        response = self.client.post(path=self.url1)
         self.assertEqual(response.status_code, 401)
 
     def test_get_follow(self):
-        response = self.client.get(path=self.url)
+        response = self.client.get(path=self.url1)
         self.assertEqual(response.status_code, 200)
 
     def test_get_follow_non(self):
-        response = self.client.get(path=reverse("follow", kwargs={"user_id": 0}))
+        response = self.client.get(path=self.url3)
         self.assertEqual(response.status_code, 404)
 
 

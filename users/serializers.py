@@ -1,6 +1,8 @@
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User, Fridge
@@ -10,7 +12,7 @@ from .email_tokens import account_activation_token
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
+        exclude = ("groups", "user_permissions")
         extra_kwargs = {
             "followings": {
                 "read_only": True,
