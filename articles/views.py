@@ -31,7 +31,11 @@ class ArticleView(generics.ListCreateAPIView):
         return queryset.order_by("bookmark", "create_at")
 
     def liked(self):
-        queryset = Article.objects.all().order_by("likes_count")
+        queryset = (
+            Article.objects.all()
+            .annotate(like_count=Count("like"))
+            .order_by("-like_count", "-create_at")
+        )
         return queryset
 
     def get_queryset(self):
@@ -57,9 +61,7 @@ class ArticleCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        serializer = ArticleCreateSerializer(
-            context={"request": request}, data=request.data
-        )
+        serializer = ArticleCreateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(author=request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -92,9 +94,7 @@ class ArticleDetailView(APIView):
     def put(self, request, article_id):
         art_put = get_object_or_404(Article, id=article_id)
         if request.user == art_put.user:
-            serializer = ArticlePutSerializer(
-                art_put, context={"request": request}, data=request.data
-            )
+            serializer = ArticlePutSerializer(art_put, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)

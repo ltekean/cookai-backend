@@ -14,12 +14,7 @@ class ArticleCreateSerializer(ModelSerializer):
             "content",
             "category",
             "recipe",
-            "is_author",
         ]
-
-    def get_is_author(self, article):
-        request = self.context["request"]
-        return article.author == request.user
 
 
 class IngredientSerializer(ModelSerializer):
@@ -40,12 +35,7 @@ class ArticlePutSerializer(ModelSerializer):
             "image",
             "category",
             "recipe",
-            "is_author",
         ]
-
-    def get_is_author(self, article):
-        request = self.context["request"]
-        return article.author == request.user
 
 
 class CategorySerializer(ModelSerializer):
