@@ -433,7 +433,7 @@ class UserDetailFridgeView(APIView):
             )
         fridges = get_object_or_404(Fridge, pk=fridge_id)
         if fridges.user != request.user:
-            PermissionDenied
+            raise PermissionDenied
         if fridges:
             fridges.delete()
             return Response({"message": "삭제완료"}, status=status.HTTP_200_OK)
