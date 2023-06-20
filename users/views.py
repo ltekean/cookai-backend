@@ -12,8 +12,12 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
-from users.serializers import UserSerializer, UserFridgeSerializer
-
+from rest_framework_simplejwt.views import TokenObtainPairView
+from users.serializers import (
+    UserSerializer,
+    UserFridgeSerializer,
+    CustomTokenObtainPairSerializer,
+)
 from users.models import User, Fridge
 from users import serializers
 from users.email_tokens import account_activation_token
@@ -30,6 +34,13 @@ class UserView(APIView):
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
+        password2 = request.data.get("password2")
+        if not email:
+            raise ParseError
+        if not password or not password2:
+            raise ParseError
+        if password != password2:
+            raise ParseError
         if User.objects.filter(email=email).exists():
             return Response(
                 "해당 이메일을 가진 유저가 이미 있습니다!", status=status.HTTP_400_BAD_REQUEST
@@ -39,7 +50,7 @@ class UserView(APIView):
         serializer = serializers.UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(
                 {"message": f"${serializer.errors}"},
@@ -72,6 +83,10 @@ class UserResetPasswordPermitView(APIView):
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class KakaoLoginView(APIView):
@@ -277,9 +292,12 @@ class ChangePasswordView(APIView):
         if user.login_type == "normal":
             old_password = request.data.get("old_password")
             new_password = request.data.get("new_password")
-            if not old_password or not new_password:
+            new_password2 = request.data.get("new_password2")
+            if not old_password or not new_password or not new_password2:
                 raise ParseError
             if old_password == new_password:
+                raise ParseError
+            if new_password != new_password2:
                 raise ParseError
             if user.check_password(old_password):
                 user.set_password(new_password)
@@ -338,15 +356,17 @@ class UserDetailView(APIView):
         else:
             raise PermissionDenied
 
-    def delete(self, request, user_id):
-        # """유저 삭제, 주석 추가 예정"""
+    def patch(self, request, user_id):
+        """유저 삭제, 주석 추가 예정"""
         user = get_object_or_404(User, id=user_id)
 
-        if request.user.id == user_id:
+        if request.user.id == user_id and user.check_password(
+            request.data.get["password"]
+        ):
             user = request.user
             user.is_active = False
             user.save()
-            return Response("삭제되었습니다!", status=status.HTTP_204_NO_CONTENT)
+            return Response("삭제되었습니다!", status=status.HTTP_200_OK)
         else:
             return Response("권한이 없습니다!", status=status.HTTP_403_FORBIDDEN)
 
@@ -388,13 +408,16 @@ class UserFollowView(APIView):
 
     def get(self, request, user_id):
         # """유저 팔로우한 유저들 조회"""
-        follow = User.objects.filter(followings=user_id)
-        serializer = UserSerializer(follow, many=True)
+        user = get_object_or_404(User, id=user_id)
+
+        serializer = UserSerializer(user.followings, many=True)
+        print(serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, user_id):
         # """유저 팔로잉 누르기"""
         you = get_object_or_404(User, id=user_id)
+
         me = request.user
         if request.user.id != user_id:
             if me in you.followers.all():
