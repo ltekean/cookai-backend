@@ -1,12 +1,12 @@
 from django.core.mail import EmailMessage
-
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from articles.models import Ingredient
 from .models import User, Fridge
 from .email_tokens import account_activation_token
 
@@ -46,6 +46,17 @@ class UserFridgeSerializer(ModelSerializer):
     class Meta:
         model = Fridge
         fields = ("__all__",)
+
+        def save(self, **kwargs):
+            ingredient_name = kwargs.get("ingredient_id", None)
+            if not ingredient_name:
+                raise ValidationError({"ingredient_id": "재료를 입력해주세요"})
+            try:
+                ingredient = Ingredient.objects.get(ingredient_name=ingredient_name)
+            except Ingredient.DoesNotExist:
+                ingredient = Ingredient.objects.create(ingredient_name=ingredient_name)
+                ingredient.save()
+            return super().save(**kwargs)
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):

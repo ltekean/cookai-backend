@@ -72,7 +72,7 @@ class UserSignUpPermitView(APIView):
                 User.objects.filter(pk=uid).update(is_active=True)
                 return redirect(f"{settings.FRONT_DEVELOP_URL}/users/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
-        except KeyError:
+        except:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
 
 

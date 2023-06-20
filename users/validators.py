@@ -2,7 +2,7 @@ import re
 from django.core.exceptions import ValidationError
 
 
-def validate_password(self, password):
+def validate_password(password):
     """비밀번호 유효성 검사"""
     if len(password) < 8:
         raise ValidationError({"password": "비밀번호는 8자리 이상이어야 합니다."})
