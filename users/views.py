@@ -397,7 +397,7 @@ class UserDetailFridgeView(APIView):
 
     def get(self, request, **kwargs):
         if kwargs.get("fridge_id"):
-            fridge = get_object_or_404(Fridge, kwargs.get("fridge_id"))
+            fridge = get_object_or_404(Fridge, id=kwargs.get("fridge_id"))
             serializer = UserFridgeSerializer(fridge)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
