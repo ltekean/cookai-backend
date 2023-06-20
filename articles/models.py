@@ -125,23 +125,6 @@ class Ingredient(models.Model):
     ingredient_info = models.TextField(null=True, default=[], max_length=100)
 
 
-# Ingredient을 참고하여 쿠팡 구매 링크와, 이미지 url을 저장하는 모델
-class IngredientLink(models.Model):
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    link = models.URLField(max_length=200, null=True, blank=True)
-    link_img = models.URLField(max_length=200, null=True, blank=True)
-
-    ingredient_name = models.CharField(
-        max_length=100,
-        primary_key=True,
-    )
-    ingredient_info = models.TextField(
-        null=True,
-        default=list,
-        max_length=100,
-    )
-
-
 # 레시피 재료 모델
 class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(
