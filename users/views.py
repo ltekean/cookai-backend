@@ -133,7 +133,7 @@ class KakaoLoginView(APIView):
             }
             return social_login_validate(**data)
         except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "로그인 실패!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GoogleLoginView(APIView):
@@ -158,7 +158,7 @@ class GoogleLoginView(APIView):
             }
             return social_login_validate(**data)
         except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "로그인 실패!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class NaverLoginView(APIView):
@@ -195,7 +195,7 @@ class NaverLoginView(APIView):
             }
             return social_login_validate(**data)
         except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "로그인 실패!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def social_login_validate(**kwargs):
@@ -284,7 +284,7 @@ class ResetPasswordView(APIView):
                 )
             user.set_password(new_second_password)
             user.save()
-            return Response(status=status.HTTP_200_OK)
+            return Response({"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK)
         except Exception:
             raise ParseError
 
@@ -316,9 +316,13 @@ class ChangePasswordView(APIView):
             if user.check_password(old_password):
                 user.set_password(new_password)
                 user.save()
-                return Response(status=status.HTTP_200_OK)
+                return Response(
+                    {"message": "비밀번호가 변경되었습니다!"}, status=status.HTTP_200_OK
+                )
             else:
-                raise ParseError
+                return Response(
+                    {"error": "현재 비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
         else:
             return Response(
                 {"error": "비밀번호 변경은 일반 로그인 계정만 가능합니다!"},
@@ -383,9 +387,9 @@ class UserDetailView(APIView):
             user = request.user
             user.is_active = False
             user.save()
-            return Response("삭제되었습니다!", status=status.HTTP_200_OK)
+            return Response({"message": "삭제되었습니다!"}, status=status.HTTP_200_OK)
         else:
-            return Response("권한이 없습니다!", status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "권한이 없습니다!"}, status=status.HTTP_403_FORBIDDEN)
 
 
 class UserDetailFridgeView(APIView):
@@ -414,7 +418,7 @@ class UserDetailFridgeView(APIView):
         fridges = get_object_or_404(Fridge, pk=fridge_id)
         if fridges:
             fridges.delete()
-            return Response(status=status.HTTP_200_OK)
+            return Response({"message": "삭제완료"}, status=status.HTTP_200_OK)
         else:
             raise NotFound
 
@@ -438,10 +442,10 @@ class UserFollowView(APIView):
         if request.user.id != user_id:
             if me in you.followers.all():
                 you.followers.remove(me)
-                return Response("unfollow", status=status.HTTP_200_OK)
+                return Response({"message": "unfollow"}, status=status.HTTP_200_OK)
             else:
                 you.followers.add(me)
-                return Response("follow", status=status.HTTP_200_OK)
+                return Response({"message": "follow"}, status=status.HTTP_200_OK)
         else:
             return Response(
                 {"error": "자신을 팔로우 할 수 없습니다!"}, status=status.HTTP_403_FORBIDDEN

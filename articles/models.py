@@ -71,7 +71,7 @@ class Article(models.Model):
     image = models.URLField(blank=True, null=True)
     like = models.ManyToManyField(
         User,
-        related_name="likes",
+        related_name="articles",
         blank=True,
     )
     bookmark = models.ManyToManyField(
