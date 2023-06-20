@@ -5,13 +5,28 @@ from .models import Category, Article, Comment, Ingredient, RecipeIngredient
 
 # 게시글 C
 class ArticleCreateSerializer(ModelSerializer):
+    is_author = serializers.SerializerMethodField()
+
     class Meta:
         model = Article
-        fields = ["title", "content", "category", "tags", "recipe", "ingredients"]
+        fields = [
+            "title",
+            "content",
+            "category",
+            "recipe",
+        ]
+
+
+class IngredientSerializer(ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = "__all__"
 
 
 # 게시글 U
 class ArticlePutSerializer(ModelSerializer):
+    is_author = serializers.SerializerMethodField()
+
     class Meta:
         model = Article
         fields = [
@@ -19,17 +34,21 @@ class ArticlePutSerializer(ModelSerializer):
             "content",
             "image",
             "category",
-            "tags",
             "recipe",
-            "ingredients",
         ]
 
 
-class CommentSerializer(serializers.ModelSerializer):
-    user = serializers.SerializerMethodField()
+class CategorySerializer(ModelSerializer):
+    class Meta:
+        model = Category
+        fields = "__all__"
 
-    def get_user(self, obj):
-        return obj.user.nickname
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+
+    def get_author(self, obj):
+        return obj.author.username
 
     # 댓글 조회 시리얼라이저-직렬화
     class Meta:
@@ -44,36 +63,69 @@ class CommentSerializer(serializers.ModelSerializer):
 
 # 레시피 재료 가져오기
 class RecipeIngredientSerializer(serializers.ModelSerializer):
+    """
+    상세게시글에 나타낼 레시피 재료 가져오는 것입니다.
+    """
+
     class Meta:
         model = RecipeIngredient
         fields = [
+            "ingredient_id",
             "ingredient_quantity",
             "ingredient_unit",
         ]
 
 
-# 게시글 R
 class ArticleSerializer(serializers.ModelSerializer):
+    is_author = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Article
+        fields = [
+            "category",
+            "title",
+            "update_at",
+            "like",
+            "image",
+            "is_author",
+        ]
+
+    def get_is_author(self, article):
+        request = self.context["request"]
+        return article.author == request.user
+
+    def get_likes_count(self, obj):
+        return obj.like.count()
+
+
+# 상세게시글 R
+class ArticleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Article
         fields = "__all__"
 
+    is_author = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
-    comments_set = CommentSerializer(many=True)  # comments_set이라는 역참조 필드 존재
+    comment_set = CommentSerializer(many=True)  # comment_set이라는 역참조 필드 존재
     comments_count = serializers.SerializerMethodField()
     recipeingredient_set = RecipeIngredientSerializer(
         many=True
     )  # related_name을 이용해서 변수 이름을 정하자
 
     def get_user(self, obj):
-        return obj.user.nickname
+        return obj.author.username
 
     def get_comments_count(self, obj):
-        return obj.comments_set.count()
+        return obj.comment_set.count()
 
     def get_likes_count(self, obj):
-        return obj.likes.count()
+        return obj.like.count()
+
+    def get_is_author(self, article):
+        request = self.context["request"]
+        return article.author == request.user
 
 
 # 댓글 작성
@@ -86,12 +138,23 @@ class CommentCreateSerializer(ModelSerializer):
         ]  # json으로 받을 데이터 필드
 
 
-# 동시 저장을 위해 모델 저장 2개 설정
 class RecipeIngredientCreateSerializer(ModelSerializer):
     class Meta:
         model = RecipeIngredient
-        fields = ["ingredient_quantity", "ingredient_unit"]
+        fields = [
+            "ingredient_quantity",
+            "ingredient_unit",
+        ]
 
-    class Veta:
-        model = Ingredient
-        fields = "__all__"
+    # 없는 재료는 새로 추가해야 함
+
+    def save(self, **kwargs):
+        ingredient_name = kwargs.get("ingredient_id", None)
+        if not ingredient_name:
+            raise serializers.ValidationError({"ingredient_id": "재료를 입력해주세요"})
+        try:
+            ingredient = Ingredient.objects.get(ingredient_name=ingredient_name)
+        except:
+            ingredient = Ingredient.objects.create(ingredient_name=ingredient_name)
+            ingredient.save()
+        return super().save(**kwargs)
