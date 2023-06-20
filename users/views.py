@@ -395,7 +395,12 @@ class UserDetailView(APIView):
 class UserDetailFridgeView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request, **kwargs):
+        if kwargs.get("fridge_id"):
+            fridge = get_object_or_404(Fridge, kwargs.get("fridge_id"))
+            serializer = UserFridgeSerializer(fridge)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
         all_fridge = Fridge.objects.filter(user=request.user)
         serializer = UserFridgeSerializer(
             all_fridge,
@@ -403,11 +408,14 @@ class UserDetailFridgeView(APIView):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def post(self, request):
+    def post(self, request, **kwargs):
+        if kwargs.get("fridge_id"):
+            return Response({"error": "올바르지않은 요청입니다"}, status=status.HTTP_403_FORBIDDEN)
         serializer = UserFridgeSerializer(data=request.data)
         if serializer.is_valid():
             fridge = serializer.save(
                 user=request.user,
+                ingredient_id=request.get("ingredient"),
             )
             serializer = UserFridgeSerializer(fridge)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
