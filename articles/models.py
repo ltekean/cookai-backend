@@ -121,8 +121,20 @@ class Comment(models.Model):
 
 # 재료 DB 모델
 class Ingredient(models.Model):
-    ingredient_name = models.CharField(max_length=100)
-    ingredient_info = models.TextField(null=True, default=[], max_length=100)
+
+    ingredient_name = models.CharField(
+        max_length=100,
+        primary_key=True,
+    )
+    ingredient_info = models.TextField(
+        null=True,
+        default=list,
+        max_length=100,
+    )
+    updated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
 
 
 # 레시피 재료 모델
@@ -167,3 +179,8 @@ class IngredientLink(models.Model):
         null=True,
         blank=True,
     )
+
+
+class Likes(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey("Article", on_delete=models.CASCADE)
