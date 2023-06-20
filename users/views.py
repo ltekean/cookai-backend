@@ -410,7 +410,9 @@ class UserDetailFridgeView(APIView):
 
     def post(self, request, **kwargs):
         if kwargs.get("fridge_id"):
-            return Response({"error": "올바르지않은 요청입니다"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "올바르지않은 요청입니다"}, status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
         serializer = UserFridgeSerializer(data=request.data)
         if serializer.is_valid():
             fridge = serializer.save(
@@ -422,8 +424,16 @@ class UserDetailFridgeView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, fridge_id):
+    def delete(self, request, **kwargs):
+        try:
+            fridge_id = kwargs["fridge_id"]
+        except:
+            return Response(
+                {"error": "올바르지않은 요청입니다."}, status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
         fridges = get_object_or_404(Fridge, pk=fridge_id)
+        if fridges.user != request.user:
+            PermissionDenied
         if fridges:
             fridges.delete()
             return Response({"message": "삭제완료"}, status=status.HTTP_200_OK)
