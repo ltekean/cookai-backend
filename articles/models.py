@@ -72,7 +72,7 @@ class Article(models.Model):
     image = models.URLField(blank=True, null=True)
     like = models.ManyToManyField(
         User,
-        related_name="articles",
+        related_name="like_articles",
         blank=True,
     )
     bookmark = models.ManyToManyField(
@@ -130,7 +130,6 @@ class Comment(models.Model):
 
 # 재료 DB 모델
 class Ingredient(models.Model):
-
     ingredient_name = models.CharField(
         max_length=100,
         primary_key=True,
@@ -188,8 +187,3 @@ class IngredientLink(models.Model):
         null=True,
         blank=True,
     )
-
-
-class Likes(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    article = models.ForeignKey("Article", on_delete=models.CASCADE)

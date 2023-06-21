@@ -1,14 +1,10 @@
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from django.utils import timezone
-from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.serializers import (
     ModelSerializer,
     ValidationError,
     SerializerMethodField,
-    PrimaryKeyRelatedField,
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from articles.models import Ingredient
@@ -17,18 +13,21 @@ from .email_tokens import account_activation_token
 
 
 class UserSerializer(ModelSerializer):
+    is_host = SerializerMethodField()
     total_comments = SerializerMethodField()
     total_articles = SerializerMethodField()
-    articles = SerializerMethodField()
     total_like_articles = SerializerMethodField()
     total_like_comments = SerializerMethodField()
     total_bookmark_articles = SerializerMethodField()
-    total_followings = PrimaryKeyRelatedField(many=True, read_only=True)
-    total_followers = PrimaryKeyRelatedField(many=True, read_only=True)
+    total_followings = SerializerMethodField(read_only=True)
+    total_followers = SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
-        exclude = ("groups", "user_permissions")
+        exclude = (
+            "groups",
+            "user_permissions",
+        )
         extra_kwargs = {
             "followings": {
                 "read_only": True,
@@ -58,45 +57,52 @@ class UserSerializer(ModelSerializer):
         email.send()
         return user
 
-    def get_total_comments(self, obj):
-        return obj.comments.count()
+    def get_is_host(self, user):
+        request = self.context["request"]
 
-    def get_total_articles(self, obj):
-        return obj.articles.count()
+        return request.user.id == user.id
 
-    def get_articles(self, obj):
-        return obj.articles.all()
+    def get_total_comments(self, user):
+        return user.comments.count()
 
-    def get_total_like_articles(self, obj):
-        print(obj.articles)
-        return obj.articles.articles.count()
+    def get_total_articles(self, user):
+        return user.article_set.count()
 
-    def get_total_like_comments(self, obj):
-        return obj.comments.like.count()
+    def get_total_like_articles(self, user):
+        return user.like_articles.count()
 
-    def get_total_bookmark_articles(self, obj):
-        return obj.bookmarks.articles.count()
+    def get_total_like_comments(self, user):
+        return user.like_comments.count()
 
-    def get_total_followings(self, obj):
-        return obj.bookmarks.values
+    def get_total_bookmark_articles(self, user):
+        return user.bookmarks.count()
 
-    def get_total_followers(self, obj):
-        return obj.bookmarks.values()
+    def get_total_followings(self, user):
+        return user.followings.count()
+
+    def get_total_followers(self, user):
+        return user.followers.count()
 
 
 class PublicUserSerializer(ModelSerializer):
+    is_host = SerializerMethodField()
     total_comments = SerializerMethodField()
     total_articles = SerializerMethodField()
-    articles = SerializerMethodField()
     total_like_articles = SerializerMethodField()
     total_like_comments = SerializerMethodField()
     total_bookmark_articles = SerializerMethodField()
-    total_followings = PrimaryKeyRelatedField(many=True, read_only=True)
-    total_followers = PrimaryKeyRelatedField(many=True, read_only=True)
+    total_followings = SerializerMethodField(read_only=True)
+    total_followers = SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
-        exclude = ("groups", "user_permissions", "password", "fridge")
+        exclude = (
+            "groups",
+            "user_permissions",
+            "password",
+            "age",
+            "gender",
+        )
         extra_kwargs = {
             "followings": {
                 "read_only": True,
@@ -106,30 +112,31 @@ class PublicUserSerializer(ModelSerializer):
             },
         }
 
-    def get_total_comments(self, obj):
-        return obj.comments.count()
+    def get_is_host(self, user):
+        request = self.context["request"]
 
-    def get_total_articles(self, obj):
-        return obj.articles.count()
+        return request.user.id == user.id
 
-    def get_articles(self, obj):
-        return obj.articles.all()
+    def get_total_comments(self, user):
+        return user.comments.count()
 
-    def get_total_like_articles(self, obj):
-        print(obj.articles)
-        return obj.articles.articles.count()
+    def get_total_articles(self, user):
+        return user.article_set.count()
 
-    def get_total_like_comments(self, obj):
-        return obj.comments.like.count()
+    def get_total_like_articles(self, user):
+        return user.like_articles.count()
 
-    def get_total_bookmark_articles(self, obj):
-        return obj.bookmarks.articles.count()
+    def get_total_like_comments(self, user):
+        return user.like_comments.count()
 
-    def get_total_followings(self, obj):
-        return obj.bookmarks.values
+    def get_total_bookmark_articles(self, user):
+        return user.bookmarks.count()
 
-    def get_total_followers(self, obj):
-        return obj.bookmarks.values()
+    def get_total_followings(self, user):
+        return user.followings.count()
+
+    def get_total_followers(self, user):
+        return user.followers.count()
 
 
 class UserFridgeSerializer(ModelSerializer):

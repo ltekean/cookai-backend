@@ -38,6 +38,31 @@ urlpatterns = [
     ),
     path("<int:user_id>/", views.UserDetailView.as_view(), name="user_detail"),
     path(
+        "<int:user_id>/comments/",
+        views.UserDetailCommentsView.as_view(),
+        name="user_detail_comment",
+    ),
+    path(
+        "<int:user_id>/articles/",
+        views.UserDetailArticlesView.as_view(),
+        name="user_detail_article",
+    ),
+    path(
+        "<int:user_id>/articles/likes/",
+        views.UserDetailLikeArticlesView.as_view(),
+        name="user_detail_like_article",
+    ),
+    path(
+        "<int:user_id>/comments/likes/",
+        views.UserDetailLikeCommentsView.as_view(),
+        name="user_detail_like_comment",
+    ),
+    path(
+        "<int:user_id>/articles/bookmarks/",
+        views.UserDetailArticlesBookmarksView.as_view(),
+        name="user_detail_article_bookmark",
+    ),
+    path(
         "fridge/",
         views.UserDetailFridgeView.as_view(),
         name="user_fridge",
@@ -47,7 +72,11 @@ urlpatterns = [
         views.UserDetailFridgeView.as_view(),
         name="user_fridge_detail",
     ),
-    path("<int:user_id>/follow/", views.UserFollowView.as_view(), name="user_follow"),
+    path(
+        "<int:user_id>/following/",
+        views.UserFollowView.as_view(),
+        name="user_following",
+    ),
     path(
         "<int:user_id>/follower/",
         views.UserFollowerView.as_view(),
