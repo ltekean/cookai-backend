@@ -2,30 +2,36 @@ from rest_framework.generics import get_object_or_404
 from rest_framework import status, permissions, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.renderers import JSONRenderer
 from articles.paginations import ArticlePagination
+from rest_framework.exceptions import NotFound
 from articles.models import Article, Comment, Category, Ingredient, RecipeIngredient
 from articles.permissions import IsAuthenticatedOrReadOnlyExceptBookMark
 from django.db.models import Count
 from articles.serializers import (
     ArticleSerializer,
-    ArticleCreateSerializer,
     ArticleDetailSerializer,
-    ArticlePutSerializer,
     CommentCreateSerializer,
     IngredientSerializer,
     RecipeIngredientCreateSerializer,
+    TagSerializer,
 )
 from django.conf import settings
 import requests
+from taggit.models import Tag
 
 
 # Create your views here.
+
+
 class ArticleView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnlyExceptBookMark]
     pagination_class = ArticlePagination
     serializer_class = ArticleSerializer
     queryset = Article.objects.all().order_by("create_at")
 
+    # def search_tag(self):
+    #     queryset= tag_queryset.
     def bookmarked(self):
         queryset = self.request.user.bookmarked_articles.all()
         return queryset.order_by("bookmark", "create_at")
@@ -61,7 +67,7 @@ class ArticleCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        serializer = ArticleCreateSerializer(data=request.data)
+        serializer = ArticleSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save(author=request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -94,7 +100,7 @@ class ArticleDetailView(APIView):
     def put(self, request, article_id):
         art_put = get_object_or_404(Article, id=article_id)
         if request.user == art_put.user:
-            serializer = ArticlePutSerializer(art_put, data=request.data)
+            serializer = ArticleSerializer(art_put, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -195,6 +201,29 @@ class ArticleGetUploadURLView(APIView):
         one_time_url = one_time_url.json()
         result = one_time_url.get("result")
         return Response(result)
+
+
+class TagSearchView(APIView):
+    def get(self, request):
+        tag_condition = request.query_params.get("tag", None)
+        tag_list = Tag.objects.filter(name__contains=tag_condition)
+        serializer = TagSerializer(tag_list, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class TagArticleView(APIView):
+    def get(self, request, tag_id):
+        try:
+            target_tag = Tag.objects.get(id=tag_id)
+            target_article = Article.objects.filter(tags__name__in=[target_tag])
+            serializer = ArticleSerializer(
+                target_article, many=True, context={"request": request}
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except:
+            return Response(
+                {"error": "해당 태그를 찾을 수 없습니다!"}, status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class LikeView(APIView):
