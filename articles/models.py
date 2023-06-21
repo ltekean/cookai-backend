@@ -72,7 +72,7 @@ class Article(models.Model):
     image = models.URLField(blank=True, null=True)
     like = models.ManyToManyField(
         User,
-        related_name="like_articles",
+        related_name="likes",
         blank=True,
     )
     bookmark = models.ManyToManyField(
@@ -165,11 +165,6 @@ class RecipeIngredient(models.Model):
         default=list,
         max_length=100,
     )
-
-
-class Likes(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    article = models.ForeignKey("Article", on_delete=models.CASCADE)
 
 
 class IngredientLink(models.Model):
