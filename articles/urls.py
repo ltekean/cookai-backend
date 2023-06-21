@@ -18,12 +18,10 @@ urlpatterns = [
     path(
         "recipeingredient/<int:ingredient_id>/",
         views.RecipeIngredientDetailView.as_view(),
-
     ),  # 레시피 재료 RUD -
     path(
         "<int:article_id>/order/", views.LinkPlusView.as_view()
     ),  # 구매링크 추가 - 쿠팡이라 일단 패스
-    ),
     path("like/article/<int:article_id>/", views.ArticleLikeView.as_view()),
     path("like/comment/<int:comment_id>/", views.CommentLikeView.as_view()),
     # path('<int:post_id>/like/', views.LikeSeeView.as_view(), name='likesee'),
