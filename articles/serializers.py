@@ -1,48 +1,43 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from .models import (
-    Category,
-    Article,
-    Comment,
-    Ingredient,
-    IngredientLink,
-    RecipeIngredient,
-)
+
+from taggit.serializers import TagListSerializerField, TaggitSerializer
+from .models import Category, Article, Comment, Ingredient,IngredientLink, RecipeIngredient
+from taggit.models import Tag
 
 
-# 게시글 C
-class ArticleCreateSerializer(ModelSerializer):
+class ArticleSerializer(TaggitSerializer, serializers.ModelSerializer):
+    tags = TagListSerializerField(required=False)
     is_author = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Article
         fields = [
-            "title",
-            "content",
             "category",
+            "title",
+            "update_at",
+            "like",
+            "image",
+            "is_author",
+            "content",
             "recipe",
+            "tags",
+            "likes_count",
         ]
+
+    def get_is_author(self, article):
+        request = self.context["request"]
+        return article.author == request.user
+
+    def get_likes_count(self, obj):
+        return obj.like.count()
 
 
 class IngredientSerializer(ModelSerializer):
     class Meta:
         model = Ingredient
         fields = "__all__"
-
-
-# 게시글 U
-class ArticlePutSerializer(ModelSerializer):
-    is_author = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Article
-        fields = [
-            "title",
-            "content",
-            "image",
-            "category",
-            "recipe",
-        ]
 
 
 class CategorySerializer(ModelSerializer):
@@ -53,9 +48,7 @@ class CategorySerializer(ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()
-
-    def get_author(self, obj):
-        return obj.author.username
+    likes_count = serializers.SerializerMethodField()
 
     # 댓글 조회 시리얼라이저-직렬화
     class Meta:
@@ -65,7 +58,14 @@ class CommentSerializer(serializers.ModelSerializer):
             "author",
             "created_at",
             "updated_at",
+            "likes_count",
         ]  # author, created_at 등 조회에 필요한 것들
+
+    def get_author(self, obj):
+        return obj.author.username
+
+    def get_likes_count(self, obj):
+        return obj.like.count()
 
 
 # 레시피 재료 가져오기
@@ -83,35 +83,9 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         ]
 
 
-class ArticleSerializer(serializers.ModelSerializer):
-    is_author = serializers.SerializerMethodField()
-    likes_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Article
-        fields = [
-            "category",
-            "title",
-            "update_at",
-            "like",
-            "image",
-            "is_author",
-        ]
-
-    def get_is_author(self, article):
-        request = self.context["request"]
-        return article.author == request.user
-
-    def get_likes_count(self, obj):
-        return obj.like.count()
-
-
 # 상세게시글 R
-class ArticleDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Article
-        fields = "__all__"
-
+class ArticleDetailSerializer(serializers.ModelSerializer, TaggitSerializer):
+    tags = TagListSerializerField()
     is_author = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
@@ -120,6 +94,10 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
     recipeingredient_set = RecipeIngredientSerializer(
         many=True
     )  # related_name을 이용해서 변수 이름을 정하자
+
+    class Meta:
+        model = Article
+        fields = "__all__"
 
     def get_user(self, obj):
         return obj.author.username
@@ -133,6 +111,30 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
     def get_is_author(self, article):
         request = self.context["request"]
         return article.author == request.user
+
+
+class ArticleListSerializer(ArticleDetailSerializer):
+    class Meta:
+        model = Article
+        fields = [
+            "title",
+            "create_at",
+            "image",
+            "is_author",
+            "comments_count",
+            "likes_count",
+        ]
+
+
+class TagSerializer(serializers.ModelSerializer):
+    article_count = serializers.SerializerMethodField()
+
+    def get_article_count(self, obj):
+        return obj.taggit_taggeditem_items.count()
+
+    class Meta:
+        model = Tag
+        fields = "__all__"
 
 
 # 댓글 작성
