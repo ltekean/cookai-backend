@@ -113,6 +113,11 @@ class Comment(models.Model):
     comment = models.TextField(
         max_length=300,
     )
+    like = models.ManyToManyField(
+        User,
+        related_name="like_comments",
+        blank=True,
+    )
     updated_at = models.DateTimeField(
         auto_now=True,
     )

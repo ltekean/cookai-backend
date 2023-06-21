@@ -226,7 +226,7 @@ class TagArticleView(APIView):
             )
 
 
-class LikeView(APIView):
+class ArticleLikeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, article_id):
@@ -237,6 +237,20 @@ class LikeView(APIView):
             return Response("dislike", status=status.HTTP_200_OK)
         else:
             article.like.add(request.user)
+            return Response("like", status=status.HTTP_200_OK)
+
+
+class CommentLikeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, comment_id):
+        """댓글 좋아요 누르기"""
+        comment = get_object_or_404(Comment, id=comment_id)
+        if request.user in comment.like.all():
+            comment.like.remove(request.user)
+            return Response("dislike", status=status.HTTP_200_OK)
+        else:
+            comment.like.add(request.user)
             return Response("like", status=status.HTTP_200_OK)
 
 
@@ -253,7 +267,6 @@ class BookmarkView(APIView):
             return Response("bookmark", status=status.HTTP_200_OK)
 
 
-# 재료 C
 class RecipeIngredientView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 

@@ -47,6 +47,7 @@ class CategorySerializer(ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
 
     # 댓글 조회 시리얼라이저-직렬화
     class Meta:
@@ -56,10 +57,14 @@ class CommentSerializer(serializers.ModelSerializer):
             "author",
             "created_at",
             "updated_at",
+            "likes_count",
         ]  # author, created_at 등 조회에 필요한 것들
 
     def get_author(self, obj):
         return obj.author.username
+
+    def get_likes_count(self, obj):
+        return obj.like.count()
 
 
 # 레시피 재료 가져오기

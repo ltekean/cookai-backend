@@ -19,7 +19,8 @@ urlpatterns = [
         "recipeingredient/<int:ingredient_id>/",
         views.RecipeIngredientDetailView.as_view(),
     ),
-    path("like/<int:article_id>/", views.LikeView.as_view()),
+    path("like/article/<int:article_id>/", views.ArticleLikeView.as_view()),
+    path("like/comment/<int:comment_id>/", views.CommentLikeView.as_view()),
     # path('<int:post_id>/like/', views.LikeSeeView.as_view(), name='likesee'),
     # path('likes/', views.CommentLikeView.as_view(), name='commentlike'),
     # path('<int:article_id>/order/', views.LinkPlusView.as_view(), name='linkplus'), # 구매링크 추가 - 쿠팡이라 일단 패스
