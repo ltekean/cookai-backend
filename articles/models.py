@@ -1,38 +1,46 @@
 from django.db import models
+from taggit.managers import TaggableManager
 from users.models import User
 
 
 # Create your models here.
-# 카테고리 모델
 class Category(models.Model):
-    name = models.CharField(max_length=10)
-    sorts = [
-        ("A", "A"),
-        ("B", "B"),
-        ("C", "C"),
-    ]
-    sort = models.CharField(choices=sorts, max_length=10)
-    info = models.TextField()
-
-
-# 아티클 모델
-class Article(models.Model):
-    """article 모델
+    """카테고리 모델
 
     Attributes:
-    title : 제목 varchar45
-    content : 내용 text
-    create_at : 작성시간 Datetime
-    update_at : 수정시간 Datetime
-    author : 작성자 int
-    category : 카테고리
-    recipe : 레시피 text(html)
+    name(Char) : 카테고리 이름, 10자 제한
+    info(Text) : 카테고리 설명, 50자 제한
+
+    """
+
+    name = models.CharField(
+        max_length=10,
+    )
+    info = models.TextField(
+        max_length=50,
+    )
+
+
+class Article(models.Model):
+
+    """게시글 모델
+
+    Attributes:
+    author(ForeignKey) : 작성자 외래키, int, CASCADE
+    category(ForeignKey) : 카테고리 모델 외래키, CASCADE
+    title(Varchar) : 제목, 30자 제한, 필수 입력
+    content(Text) : 내용, 500자 제한, 필수 입력
+    create_at(Date) : 작성시간 Datetime
+    update_at(Date) : 수정시간 Datetime
+    recipe(Text) : 레시피 text(html), 500자 제한
+    image(Url) : 이미지, 이미지Url로 불러오기
+    like(MtoM) : User모델과 MtoM, 역참조 : Likes, 빈 값 가능, 중간 모델 : Like
+    bookmark(MtoM) : User모델과 MtoM, 역참조 : Bookmarks, 빈 값 가능, 중간 모델 : Bookmark
 
     """
 
     class Meta:
         db_table = "Article"
-
 
     author = models.ForeignKey(
         User,
@@ -64,38 +72,53 @@ class Article(models.Model):
     image = models.URLField(blank=True, null=True)
     like = models.ManyToManyField(
         User,
-        related_name="liked_articles",
+        related_name="articles",
         blank=True,
-        through="Likes",
     )
-    bookmarks = models.ManyToManyField(
-        User, related_name="bookmarked_articles", blank=True, through="BookMark"
+    bookmark = models.ManyToManyField(
+        User,
+        related_name="bookmarks",
+        blank=True,
+    )
+    tags = TaggableManager(
+        blank=True,
     )
 
 
-# 댓글 모델
 class Comment(models.Model):
-    """Comment 모델
+
+    """댓글 모델
+    게시글에 작성할 댓글 모델입니다!
+
 
     Attributes:
-    comment : 내용 text
-    author : 작성자 int
-    article : 글 int
+
+    author(OtoO) : 작성자 int(역참조 : comments)
+    article(ForeignKey) : 글 int
+    comment(text) : 댓글 내용, 300자 제한, str
+    updated_at (date): 수정시간
+    created_at (date): 가입시간
     """
 
     class meta:
         db_table = "Comment"
 
-    author = models.OneToOneField(
+    author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="comment",
+        related_name="comments",
     )
     article = models.ForeignKey(
-        Article, on_delete=models.CASCADE, related_name="liked_by"
+        Article,
+        on_delete=models.CASCADE,
     )
     comment = models.TextField(
         max_length=300,
+    )
+    like = models.ManyToManyField(
+        User,
+        related_name="like_comments",
+        blank=True,
     )
     updated_at = models.DateTimeField(
         auto_now=True,
@@ -107,33 +130,64 @@ class Comment(models.Model):
 
 # 재료 DB 모델
 class Ingredient(models.Model):
-    ingredient_name = models.CharField(max_length=100)
-    ingredient_info = models.TextField(null=True, default=[], max_length=100)
 
-# Ingredient을 참고하여 쿠팡 구매 링크와, 이미지 url을 저장하는 모델
-class IngredientLink(models.Model):
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    link = models.URLField(max_length=200, null=True, blank=True)
-    link_img = models.URLField(max_length=200, null=True, blank=True)
-
+    ingredient_name = models.CharField(
+        max_length=100,
+        primary_key=True,
+    )
+    ingredient_info = models.TextField(
+        null=True,
+        default=list,
+        max_length=100,
+    )
+    updated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
 
 
 # 레시피 재료 모델
 class RecipeIngredient(models.Model):
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    article = models.ForeignKey(Article, on_delete=models.CASCADE)
-    ingredient_quantity = models.IntegerField(null=False, default=[])
-    ingredient_unit = models.CharField(null=False, default=[], max_length=100)
-
-
-# 중간 모델
-class BookMark(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name="ingredients",
+    )
     article = models.ForeignKey(
-        "Article",
+        Article,
         on_delete=models.CASCADE,
     )
+    ingredient_quantity = models.IntegerField(
+        null=False,
+        default=list,
+    )
+    ingredient_unit = models.CharField(
+        null=False,
+        default=list,
+        max_length=100,
+    )
 
+
+class Likes(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey("Article", on_delete=models.CASCADE)
+
+
+class IngredientLink(models.Model):
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+    )
+    link = models.URLField(
+        max_length=200,
+        null=True,
+        blank=True,
+    )
+    link_img = models.URLField(
+        max_length=200,
+        null=True,
+        blank=True,
+    )
 
 
 class Likes(models.Model):

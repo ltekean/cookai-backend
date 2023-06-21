@@ -70,6 +70,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     "django_crontab",
+    "taggit",
+    "taggit_serializer",
 ]
 
 MIDDLEWARE = [
@@ -115,7 +117,9 @@ DATABASES = {
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-    )
+    ),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
 }
 
 
@@ -175,8 +179,13 @@ CRONJOBS = [
     (
         "*/1 * * * *",
         "users.cron.delete_dormant_user",
-        ">>" + os.path.join(BASE_DIR, "users/log/cron.log"),
-    )
+        ">>" + os.path.join(BASE_DIR, "cron.log"),
+    ),
+    (
+        "*/1 * * * *",
+        "articles.coupang.update_ingredient_links",
+        ">>" + os.path.join(BASE_DIR, "cron.log2"),
+    ),
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True

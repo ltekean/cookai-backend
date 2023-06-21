@@ -1,4 +1,5 @@
 import requests
+
 from django.db import transaction
 from django.conf import settings
 from django.core.mail import EmailMessage
@@ -12,8 +13,12 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
-from users.serializers import UserSerializer, UserFridgeSerializer
-
+from rest_framework_simplejwt.views import TokenObtainPairView
+from users.serializers import (
+    UserSerializer,
+    UserFridgeSerializer,
+    CustomTokenObtainPairSerializer,
+)
 from users.models import User, Fridge
 from users import serializers
 from users.email_tokens import account_activation_token
@@ -30,19 +35,30 @@ class UserView(APIView):
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
+        password2 = request.data.get("password2")
+        if not email:
+            return Response(
+                {"error": "이메일 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if not password or not password2:
+            return Response(
+                {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if password != password2:
+            return Response(
+                {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
         if User.objects.filter(email=email).exists():
             return Response(
                 "해당 이메일을 가진 유저가 이미 있습니다!", status=status.HTTP_400_BAD_REQUEST
             )
-        if not password:
-            raise ParseError
         serializer = serializers.UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(
-                {"message": f"${serializer.errors}"},
+                {"message": f"{serializer.errors}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -56,7 +72,7 @@ class UserSignUpPermitView(APIView):
                 User.objects.filter(pk=uid).update(is_active=True)
                 return redirect(f"{settings.FRONT_DEVELOP_URL}/users/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
-        except KeyError:
+        except:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -72,6 +88,10 @@ class UserResetPasswordPermitView(APIView):
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class KakaoLoginView(APIView):
@@ -113,7 +133,7 @@ class KakaoLoginView(APIView):
             }
             return social_login_validate(**data)
         except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "로그인 실패!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GoogleLoginView(APIView):
@@ -138,7 +158,7 @@ class GoogleLoginView(APIView):
             }
             return social_login_validate(**data)
         except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "로그인 실패!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class NaverLoginView(APIView):
@@ -173,11 +193,9 @@ class NaverLoginView(APIView):
                 "login_type": "naver",
                 "is_active": True,
             }
-
             return social_login_validate(**data)
-
         except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "로그인 실패!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def social_login_validate(**kwargs):
@@ -237,7 +255,7 @@ class ResetPasswordView(APIView):
                     return Response({"ok": "이메일 전송 완료!"}, status=status.HTTP_200_OK)
                 else:
                     return Response(
-                        {"error": "해당 사용자는 소셜로그인 사용자입니다!"},
+                        {"error": "해당 이메일은 소셜로그인 이메일입니다!"},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
         except User.DoesNotExist:
@@ -257,12 +275,16 @@ class ResetPasswordView(APIView):
                     {"error": "일치하는 유저가 존재하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
                 )
             if not new_first_password or not new_second_password:
-                raise ParseError
+                return Response(
+                    {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
             if new_first_password != new_second_password:
-                raise ParseError
+                return Response(
+                    {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
             user.set_password(new_second_password)
             user.save()
-            return Response(status=status.HTTP_200_OK)
+            return Response({"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK)
         except Exception:
             raise ParseError
 
@@ -277,18 +299,35 @@ class ChangePasswordView(APIView):
         if user.login_type == "normal":
             old_password = request.data.get("old_password")
             new_password = request.data.get("new_password")
-            if not old_password or not new_password:
-                raise ParseError
+            new_password2 = request.data.get("new_password2")
+            if not old_password or not new_password or not new_password2:
+                return Response(
+                    {"error": "비밀번호입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
             if old_password == new_password:
-                raise ParseError
+                return Response(
+                    {"error": "예전 비밀번호와 새 비밀번호가 일치합니다!"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if new_password != new_password2:
+                return Response(
+                    {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
             if user.check_password(old_password):
                 user.set_password(new_password)
                 user.save()
-                return Response(status=status.HTTP_200_OK)
+                return Response(
+                    {"message": "비밀번호가 변경되었습니다!"}, status=status.HTTP_200_OK
+                )
             else:
-                raise ParseError
+                return Response(
+                    {"error": "현재 비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
         else:
-            raise ParseError
+            return Response(
+                {"error": "비밀번호 변경은 일반 로그인 계정만 가능합니다!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class UserAvatarGetUploadURLView(APIView):
@@ -338,23 +377,30 @@ class UserDetailView(APIView):
         else:
             raise PermissionDenied
 
-    def delete(self, request, user_id):
-        # """유저 삭제, 주석 추가 예정"""
+    def patch(self, request, user_id):
+        """유저 삭제, 주석 추가 예정"""
         user = get_object_or_404(User, id=user_id)
 
-        if request.user.id == user_id:
+        if request.user.id == user_id and user.check_password(
+            request.data.get("password")
+        ):
             user = request.user
             user.is_active = False
             user.save()
-            return Response("삭제되었습니다!", status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "삭제되었습니다!"}, status=status.HTTP_200_OK)
         else:
-            return Response("권한이 없습니다!", status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "권한이 없습니다!"}, status=status.HTTP_403_FORBIDDEN)
 
 
 class UserDetailFridgeView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request, **kwargs):
+        if kwargs.get("fridge_id"):
+            fridge = get_object_or_404(Fridge, id=kwargs.get("fridge_id"))
+            serializer = UserFridgeSerializer(fridge)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
         all_fridge = Fridge.objects.filter(user=request.user)
         serializer = UserFridgeSerializer(
             all_fridge,
@@ -362,22 +408,35 @@ class UserDetailFridgeView(APIView):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def post(self, request):
+    def post(self, request, **kwargs):
+        if kwargs.get("fridge_id"):
+            return Response(
+                {"error": "올바르지않은 요청입니다"}, status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
         serializer = UserFridgeSerializer(data=request.data)
         if serializer.is_valid():
             fridge = serializer.save(
                 user=request.user,
+                ingredient_id=request.get("ingredient"),
             )
             serializer = UserFridgeSerializer(fridge)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, fridge_id):
+    def delete(self, request, **kwargs):
+        try:
+            fridge_id = kwargs["fridge_id"]
+        except:
+            return Response(
+                {"error": "올바르지않은 요청입니다."}, status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
         fridges = get_object_or_404(Fridge, pk=fridge_id)
+        if fridges.user != request.user:
+            raise PermissionDenied
         if fridges:
             fridges.delete()
-            return Response(status=status.HTTP_200_OK)
+            return Response({"message": "삭제완료"}, status=status.HTTP_200_OK)
         else:
             raise NotFound
 
@@ -388,20 +447,24 @@ class UserFollowView(APIView):
 
     def get(self, request, user_id):
         # """유저 팔로우한 유저들 조회"""
-        follow = User.objects.filter(followings=user_id)
-        serializer = UserSerializer(follow, many=True)
+        user = get_object_or_404(User, id=user_id)
+
+        serializer = UserSerializer(user.followings, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, user_id):
         # """유저 팔로잉 누르기"""
         you = get_object_or_404(User, id=user_id)
+
         me = request.user
         if request.user.id != user_id:
             if me in you.followers.all():
                 you.followers.remove(me)
-                return Response("unfollow", status=status.HTTP_200_OK)
+                return Response({"message": "unfollow"}, status=status.HTTP_200_OK)
             else:
                 you.followers.add(me)
-                return Response("follow", status=status.HTTP_200_OK)
+                return Response({"message": "follow"}, status=status.HTTP_200_OK)
         else:
-            return Response("자신을 팔로우 할 수 없습니다!", status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "자신을 팔로우 할 수 없습니다!"}, status=status.HTTP_403_FORBIDDEN
+            )
