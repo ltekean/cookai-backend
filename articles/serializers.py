@@ -48,6 +48,11 @@ class IngredientSerializer(ModelSerializer):
 
 
 class CategorySerializer(ModelSerializer):
+    article_count = serializers.SerializerMethodField()
+
+    def get_article_count(self, obj):
+        return obj.article_set.count()
+
     class Meta:
         model = Category
         fields = "__all__"
