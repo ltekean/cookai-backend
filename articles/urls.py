@@ -39,7 +39,7 @@ urlpatterns = [
         name="tags",
     ),
     path(  # 레시피 재료 C
-        "<int:article_id>/ingredient/",
+        "<int:article_id>/recipeingredient/",
         views.RecipeIngredientView.as_view(),
         name="r_ingredient",
     ),
