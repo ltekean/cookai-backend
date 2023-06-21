@@ -2,7 +2,14 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
 from taggit.serializers import TagListSerializerField, TaggitSerializer
-from .models import Category, Article, Comment, Ingredient,IngredientLink, RecipeIngredient
+from .models import (
+    Category,
+    Article,
+    Comment,
+    Ingredient,
+    IngredientLink,
+    RecipeIngredient,
+)
 from taggit.models import Tag
 
 
@@ -16,7 +23,7 @@ class ArticleSerializer(TaggitSerializer, serializers.ModelSerializer):
         fields = [
             "category",
             "title",
-            "update_at",
+            "updated_at",
             "like",
             "image",
             "is_author",
@@ -118,7 +125,7 @@ class ArticleListSerializer(ArticleDetailSerializer):
         model = Article
         fields = [
             "title",
-            "create_at",
+            "created_at",
             "image",
             "is_author",
             "comments_count",

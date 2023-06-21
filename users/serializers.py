@@ -69,7 +69,7 @@ class UserSerializer(ModelSerializer):
         return user.article_set.count()
 
     def get_total_like_articles(self, user):
-        return user.like_articles.count()
+        return user.likes.count()
 
     def get_total_like_comments(self, user):
         return user.like_comments.count()
@@ -124,7 +124,7 @@ class PublicUserSerializer(ModelSerializer):
         return user.article_set.count()
 
     def get_total_like_articles(self, user):
-        return user.like_articles.count()
+        return user.likes.count()
 
     def get_total_like_comments(self, user):
         return user.like_comments.count()
