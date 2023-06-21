@@ -18,7 +18,10 @@ from users.serializers import (
     UserSerializer,
     UserFridgeSerializer,
     CustomTokenObtainPairSerializer,
+    PublicUserSerializer,
 )
+from articles.serializers import ArticleSerializer, CommentSerializer
+from articles.models import Article, Comment
 from users.models import User, Fridge
 from users import serializers
 from users.email_tokens import account_activation_token
@@ -360,9 +363,20 @@ class UserDetailView(APIView):
 
     def get(self, request, user_id):
         # """유저 프로필 조회 주석 추가 예정"""
+
         user = get_object_or_404(User, id=user_id)
-        serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.user.id == user_id:
+            serializer = UserSerializer(
+                user,
+                context={"request": request},
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            serializer = PublicUserSerializer(
+                user,
+                context={"request": request},
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, user_id):
         # """유저 프로필 수정"""
@@ -390,6 +404,72 @@ class UserDetailView(APIView):
             return Response({"message": "삭제되었습니다!"}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "권한이 없습니다!"}, status=status.HTTP_403_FORBIDDEN)
+
+
+class UserDetailCommentsView(APIView):
+    def get(self, request, user_id):
+        """유저 프로필 댓글 조회"""
+        user_comments = Comment.objects.filter(author_id=user_id).order_by(
+            "-updated_at"
+        )
+        serializer = CommentSerializer(
+            user_comments,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserDetailArticlesView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request, user_id):
+        """유저 프로필 게시글 조회"""
+        user_articles = Article.objects.filter(author_id=user_id).order_by(
+            "-updated_at"
+        )
+        serializer = ArticleSerializer(
+            user_articles,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserDetailLikeArticlesView(APIView):
+    def get(self, request, user_id):
+        """유저 프로필 좋아요 누른 게시글 조회"""
+        user_articles = Article.objects.filter(like=user_id).order_by("-updated_at")
+        serializer = ArticleSerializer(
+            user_articles,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserDetailLikeCommentsView(APIView):
+    def get(self, request, user_id):
+        """유저 프로필 좋아요 누른 댓글 조회"""
+        user_comments = Comment.objects.filter(like=user_id).order_by("-updated_at")
+        serializer = CommentSerializer(
+            user_comments,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserDetailArticlesBookmarksView(APIView):
+    def get(self, request, user_id):
+        """유저 프로필 좋아요 누른 게시글 조회"""
+        user_articles = Article.objects.filter(bookmark=user_id).order_by("-updated_at")
+        serializer = ArticleSerializer(
+            user_articles,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class UserDetailFridgeView(APIView):
@@ -442,18 +522,23 @@ class UserDetailFridgeView(APIView):
 
 
 class UserFollowView(APIView):
-    # """팔로우한 유저 조회, 유저 팔로우 토글. 주석추가예정"""
+    """팔로우한 유저 조회, 유저 팔로우 토글. 주석추가예정"""
+
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request, user_id):
-        # """유저 팔로우한 유저들 조회"""
+        """팔로우한 유저들 조회"""
         user = get_object_or_404(User, id=user_id)
 
-        serializer = UserSerializer(user.followings, many=True)
+        serializer = UserSerializer(
+            user.followings,
+            many=True,
+            context={"request": request},
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, user_id):
-        # """유저 팔로잉 누르기"""
+        """유저 팔로잉 누르기"""
         you = get_object_or_404(User, id=user_id)
 
         me = request.user
@@ -468,3 +553,19 @@ class UserFollowView(APIView):
             return Response(
                 {"error": "자신을 팔로우 할 수 없습니다!"}, status=status.HTTP_403_FORBIDDEN
             )
+
+
+class UserFollowerView(APIView):
+    """자신을 팔로우한 유저 조회, 유저 팔로우 토글. 주석추가예정"""
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request, user_id):
+        """팔로우한 유저들 조회"""
+        user = get_object_or_404(User, id=user_id)
+        serializer = UserSerializer(
+            user.followers,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)

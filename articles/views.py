@@ -2,10 +2,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework import status, permissions, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.renderers import JSONRenderer
-from articles.paginations import ArticlePagination
+from articles.paginations import ArticlePagination, CommentPagination
 from users.models import Fridge
-from rest_framework.exceptions import NotFound
 from articles.models import (
     Article,
     Comment,
@@ -21,7 +19,7 @@ from articles.serializers import (
     ArticleListSerializer,
     CategorySerializer,
     ArticleDetailSerializer,
-    CommentCreateSerializer,
+    CommentSerializer,
     IngredientSerializer,
     RecipeIngredientCreateSerializer,
     IngredientLinkSerializer,
@@ -31,6 +29,7 @@ from django.conf import settings
 import requests
 from django.db.models import Q
 from taggit.models import Tag
+from articles.coupang import save_coupang_links_to_ingredient_links
 
 
 # Create your views here.
@@ -41,10 +40,7 @@ class ArticleView(generics.ListCreateAPIView):
     pagination_class = ArticlePagination
     serializer_class = ArticleListSerializer
     queryset = Article.objects.all().order_by("create_at")
-
-    # def search_tag(self):
-    #     queryset= tag_queryset.
-
+    
     def search_author(self):
         selector = self.request.GET.get("selector")
         return Q(author__username__icontains=selector)
@@ -210,12 +206,28 @@ class IngredientDetailView(APIView):
         )
 
 
-# 댓글 작성 뷰
-class CommentView(APIView):
+# 댓글 작성/조회 뷰
+class CommentView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CommentPagination
+    serializer_class = CommentSerializer
+    queryset = None
+
+    def get_queryset(self):
+        queryset = Comment.objects.filter(article_id=self.article_id)
+        order = self.request.GET.get("order", None)
+        if order == "1":
+            return queryset.order_by("-like_count")
+        if order == "2":
+            return queryset.order_by("created_at")
+        return queryset.order_by("-created_at")
+
+    def get(self, request, *args, **kwargs):
+        self.article_id = kwargs.get("article_id")
+        return super().get(request, *args, **kwargs)
 
     def post(self, request, article_id):
-        serializer = CommentCreateSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save(author=request.user, article_id=article_id)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -223,10 +235,10 @@ class CommentView(APIView):
 
 
 class CommentDetailView(APIView):
-    def put(self, request, article_id, comment_id):
+    def put(self, request, comment_id):
         comment = get_object_or_404(Comment, id=comment_id)
         if request.user == comment.author:
-            serializer = CommentCreateSerializer(comment, data=request.data)
+            serializer = CommentSerializer(comment, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -390,6 +402,16 @@ class LinkPlusView(APIView):
 
         # 없는 Ingredient와 연결된 IngredientLink 조회
         # column_name+__in : 리스트 안에 지정한 문자열들 중에 하나라도 포함된 데이터를 찾을 때 사용
+        ingredient_links = IngredientLink.objects.filter(
+            ingredient__in=missing_ingredients
+        )
+
+        # 존재하지 않는 IngredientLink 인스턴스 생성 및 저장
+        for ingredient in missing_ingredients:
+            if not IngredientLink.objects.filter(ingredient=ingredient).exists():
+                save_coupang_links_to_ingredient_links(ingredient)
+
+        # 다시 IngredientLink를 조회
         ingredient_links = IngredientLink.objects.filter(
             ingredient__in=missing_ingredients
         )
