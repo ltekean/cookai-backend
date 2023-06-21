@@ -6,7 +6,14 @@ from rest_framework.renderers import JSONRenderer
 from articles.paginations import ArticlePagination
 from users.models import Fridge
 from rest_framework.exceptions import NotFound
-from articles.models import Article, Comment, Category, Ingredient, IngredientLink, RecipeIngredient
+from articles.models import (
+    Article,
+    Comment,
+    Category,
+    Ingredient,
+    IngredientLink,
+    RecipeIngredient,
+)
 from articles.permissions import IsAuthenticatedOrReadOnlyExceptBookMark
 from django.db.models import Count
 from articles.serializers import (
@@ -16,7 +23,7 @@ from articles.serializers import (
     IngredientSerializer,
     RecipeIngredientCreateSerializer,
     IngredientLinkSerializer,
-    TagSerializer
+    TagSerializer,
 )
 from django.conf import settings
 import requests
@@ -49,7 +56,7 @@ class ArticleView(generics.ListCreateAPIView):
 
     def search_author(self):
         selector = self.request.GET.get("selector")
-        return Q(authr__username__icontains=selector)
+        return Q(author__username__icontains=selector)
 
     def search_title_content(self):
         selector = self.request.GET.get("selector")
