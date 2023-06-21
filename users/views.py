@@ -18,6 +18,7 @@ from users.serializers import (
     UserSerializer,
     UserFridgeSerializer,
     CustomTokenObtainPairSerializer,
+    PublicUserSerializer,
 )
 from users.models import User, Fridge
 from users import serializers
@@ -361,8 +362,12 @@ class UserDetailView(APIView):
     def get(self, request, user_id):
         # """유저 프로필 조회 주석 추가 예정"""
         user = get_object_or_404(User, id=user_id)
-        serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.user.id == user_id:
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        elif request.user.id != user_id:
+            serializer = PublicUserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, user_id):
         # """유저 프로필 수정"""
