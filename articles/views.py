@@ -39,8 +39,8 @@ class ArticleView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnlyExceptBookMark]
     pagination_class = ArticlePagination
     serializer_class = ArticleListSerializer
-    queryset = Article.objects.all().order_by("create_at")
-    
+    queryset = Article.objects.all().order_by("created_at")
+
     def search_author(self):
         selector = self.request.GET.get("selector")
         return Q(author__username__icontains=selector)
@@ -126,7 +126,7 @@ class ArticleView(generics.ListCreateAPIView):
 # class ArticleCategoryView(APIView):
 #     def get(self, request, category_id):
 #         categorizing = Category.objects.get(id=category_id)
-#         articles = categorizing.article_set.order_by("create_at")
+#         articles = categorizing.article_set.order_by("created_at")
 #         serializer = ArticleSerializer(articles, many=True)
 #         return Response(serializer.data, status=status.HTTP_200_OK)
 class CategoryListView(APIView):
