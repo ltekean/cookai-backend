@@ -43,4 +43,15 @@ urlpatterns = [
         name="user_detail_fridge",
     ),
     path("<int:user_id>/follow/", views.UserFollowView.as_view(), name="user_follow"),
+    path(
+        "<int:user_id>/follower/",
+        views.UserFollowerView.as_view(),
+        name="user_follower",
+    ),
+    # 내가 쓴 댓글
+    # 내가 쓴 글
+    # 내가 좋아요 누른 글
+    # 내가 좋아요 누른 댓글
+    # 내가 북마크 한 글
+    # 남의 페이지 들어갈때 뜨는것
 ]

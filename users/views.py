@@ -424,18 +424,19 @@ class UserDetailFridgeView(APIView):
 
 
 class UserFollowView(APIView):
-    # """팔로우한 유저 조회, 유저 팔로우 토글. 주석추가예정"""
+    """팔로우한 유저 조회, 유저 팔로우 토글. 주석추가예정"""
+
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request, user_id):
-        # """유저 팔로우한 유저들 조회"""
+        """팔로우한 유저들 조회"""
         user = get_object_or_404(User, id=user_id)
 
         serializer = UserSerializer(user.followings, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, user_id):
-        # """유저 팔로잉 누르기"""
+        """유저 팔로잉 누르기"""
         you = get_object_or_404(User, id=user_id)
 
         me = request.user
@@ -450,3 +451,16 @@ class UserFollowView(APIView):
             return Response(
                 {"error": "자신을 팔로우 할 수 없습니다!"}, status=status.HTTP_403_FORBIDDEN
             )
+
+
+class UserFollowerView(APIView):
+    """자신을 팔로우한 유저 조회, 유저 팔로우 토글. 주석추가예정"""
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request, user_id):
+        """팔로우한 유저들 조회"""
+        user = get_object_or_404(User, id=user_id)
+
+        serializer = UserSerializer(user.followers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

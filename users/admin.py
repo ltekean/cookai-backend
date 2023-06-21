@@ -5,7 +5,7 @@ from users.models import User, Fridge
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    readonly_fields = ("last_login",)
+    readonly_fields = ("last_login", "followers_list")
     list_display = [
         "username",
         "age",
@@ -30,6 +30,7 @@ class UserAdmin(BaseUserAdmin):
                     "age",
                     "gender",
                     "followings",
+                    "followers_list",
                 ),
                 "classes": ("wide",),
             },
