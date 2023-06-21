@@ -2,7 +2,14 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
 from taggit.serializers import TagListSerializerField, TaggitSerializer
-from .models import Category, Article, Comment, Ingredient,IngredientLink, RecipeIngredient
+from .models import (
+    Category,
+    Article,
+    Comment,
+    Ingredient,
+    IngredientLink,
+    RecipeIngredient,
+)
 from taggit.models import Tag
 
 
@@ -41,6 +48,11 @@ class IngredientSerializer(ModelSerializer):
 
 
 class CategorySerializer(ModelSerializer):
+    article_count = serializers.SerializerMethodField()
+
+    def get_article_count(self, obj):
+        return obj.article_set.count()
+
     class Meta:
         model = Category
         fields = "__all__"
