@@ -6,7 +6,14 @@ from rest_framework.renderers import JSONRenderer
 from articles.paginations import ArticlePagination
 from users.models import Fridge
 from rest_framework.exceptions import NotFound
-from articles.models import Article, Comment, Category, Ingredient, IngredientLink, RecipeIngredient
+from articles.models import (
+    Article,
+    Comment,
+    Category,
+    Ingredient,
+    IngredientLink,
+    RecipeIngredient,
+)
 from articles.permissions import IsAuthenticatedOrReadOnlyExceptBookMark
 from django.db.models import Count
 from articles.serializers import (
@@ -16,10 +23,11 @@ from articles.serializers import (
     IngredientSerializer,
     RecipeIngredientCreateSerializer,
     IngredientLinkSerializer,
-    TagSerializer
+    TagSerializer,
 )
 from django.conf import settings
 import requests
+from django.db.models import Q
 from taggit.models import Tag
 
 
@@ -46,10 +54,60 @@ class ArticleView(generics.ListCreateAPIView):
         )
         return queryset
 
+    def search_author(self):
+        selector = self.request.GET.get("selector")
+        return Q(author__username__icontains=selector)
+
+    def search_title_content(self):
+        selector = self.request.GET.get("selector")
+        q = Q(title__icontains=selector)
+        q.add(Q(content__icontains=selector), q.OR)
+        q.add(Q(recipe__icontaions=selector), q.OR)
+
+        if self.request.GET.get("recipe"):
+            q2 = ~Q(recipe__exact=None)
+            q2.add(~Q(counts=0), q2.OR)
+            q.add(q2, q.AND)
+        return q
+
+    def search_ingredient(self):
+        selector = self.request.GET.get("selector")
+        ingredients = Ingredient.objects.filter(ingredient_name__icontains=selector)
+        q = Q()
+        for ingredient in ingredients:
+            q.add(Q(recipeingredient_set__ingredient__in=[ingredient]), q.OR)
+        return q
+
+    def search_ingredient_title_content(self):
+        q = self.search_title_content()
+        q.add(self.search_ingredient(), q.OR)
+        return q
+
+    def search_tag(self):
+        selector = self.request.GET.get("selector")
+        return Q(tags__name__in=[selector])
+
+    def search(self):
+        types = {
+            "0": self.search_author,  # author
+            "1": self.search_title_content,  # title+con(recipeonly)
+            "2": self.search_ingredient,  # ingredient
+            "3": self.search_ingredient_title_content,  # title+con+ingredient
+            "4": self.search_tag,  # tag
+        }
+        q = Q()
+        filter_key = self.request.GET.get("type", None)
+        query_filter = types.get(filter_key, q)
+        queryset = Article.objects.annotate(
+            counts=Count("recipeingredient_set")
+        ).filter(query_filter)
+        return queryset
+
     def get_queryset(self):
         query_select = {
             "bookmarked": self.bookmarked,
             "liked": self.liked,
+            "search": self.search,
         }
         selection = self.request.GET.get("filter", None)
         return query_select.get(selection, super().get_queryset)()
