@@ -2,10 +2,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework import status, permissions, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.renderers import JSONRenderer
-from articles.paginations import ArticlePagination
+from articles.paginations import ArticlePagination, CommentPagination
 from users.models import Fridge
-from rest_framework.exceptions import NotFound
 from articles.models import (
     Article,
     Comment,
@@ -19,7 +17,7 @@ from django.db.models import Count
 from articles.serializers import (
     ArticleSerializer,
     ArticleDetailSerializer,
-    CommentCreateSerializer,
+    CommentSerializer,
     IngredientSerializer,
     RecipeIngredientCreateSerializer,
     IngredientLinkSerializer,
@@ -205,12 +203,28 @@ class IngredientDetailView(APIView):
         )
 
 
-# 댓글 작성 뷰
-class CommentView(APIView):
+# 댓글 작성/조회 뷰
+class CommentView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CommentPagination
+    serializer_class = CommentSerializer
+    queryset = None
+
+    def get_queryset(self):
+        queryset = Comment.objects.filter(article_id=self.article_id)
+        order = self.request.GET.get("order", None)
+        if order == "1":
+            return queryset.order_by("-like_count")
+        if order == "2":
+            return queryset.order_by("create_at")
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        self.article_id = kwargs.get("article_id")
+        return super().get(request, *args, **kwargs)
 
     def post(self, request, article_id):
-        serializer = CommentCreateSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save(author=request.user, article_id=article_id)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -218,10 +232,10 @@ class CommentView(APIView):
 
 
 class CommentDetailView(APIView):
-    def put(self, request, article_id, comment_id):
+    def put(self, request, comment_id):
         comment = get_object_or_404(Comment, id=comment_id)
         if request.user == comment.author:
-            serializer = CommentCreateSerializer(comment, data=request.data)
+            serializer = CommentSerializer(comment, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
