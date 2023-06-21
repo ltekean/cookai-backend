@@ -1,6 +1,13 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from .models import Category, Article, Comment, Ingredient, RecipeIngredient
+from .models import (
+    Category,
+    Article,
+    Comment,
+    Ingredient,
+    IngredientLink,
+    RecipeIngredient,
+)
 
 
 # 게시글 C
@@ -158,3 +165,9 @@ class RecipeIngredientCreateSerializer(ModelSerializer):
             ingredient = Ingredient.objects.create(ingredient_name=ingredient_name)
             ingredient.save()
         return super().save(**kwargs)
+
+
+class IngredientLinkSerializer(ModelSerializer):
+    class Meta:
+        model = IngredientLink
+        fields = ("link", "link_img")

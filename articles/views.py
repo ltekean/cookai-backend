@@ -3,7 +3,15 @@ from rest_framework import status, permissions, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from articles.paginations import ArticlePagination
-from articles.models import Article, Comment, Category, Ingredient, RecipeIngredient
+from articles.models import (
+    Article,
+    Comment,
+    Category,
+    Ingredient,
+    IngredientLink,
+    RecipeIngredient,
+)
+from users.models import Fridge
 from articles.permissions import IsAuthenticatedOrReadOnlyExceptBookMark
 from django.db.models import Count
 from articles.serializers import (
@@ -14,6 +22,7 @@ from articles.serializers import (
     CommentCreateSerializer,
     IngredientSerializer,
     RecipeIngredientCreateSerializer,
+    IngredientLinkSerializer,
 )
 from django.conf import settings
 import requests
@@ -262,3 +271,31 @@ class RecipeIngredientDetailView(APIView):
         return Response(
             {"message": "recipe ingredient가 삭제되었습니다"}, status=status.HTTP_204_NO_CONTENT
         )
+
+
+class LinkPlusView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, article_id):
+        # 로그인된 사용자의 Fridge 조회
+        user_fridge_ingredients = Fridge.objects.filter(user=request.user).values_list(
+            "ingredient", flat=True
+        )
+
+        # article_id와 연결된 RecipeIngredient 조회
+        recipe_ingredients = RecipeIngredient.objects.filter(
+            article_id=article_id
+        ).values_list("ingredient", flat=True)
+
+        # 사용자의 Fridge에 없는 Ingredient 찾기
+        missing_ingredients = set(recipe_ingredients) - set(user_fridge_ingredients)
+
+        # 없는 Ingredient와 연결된 IngredientLink 조회
+        # column_name+__in : 리스트 안에 지정한 문자열들 중에 하나라도 포함된 데이터를 찾을 때 사용
+        ingredient_links = IngredientLink.objects.filter(
+            ingredient__in=missing_ingredients
+        )
+
+        # JSON 형태로 반환
+        serialized_links = IngredientLinkSerializer(ingredient_links, many=True)
+        return Response(serialized_links.data, status=status.HTTP_200_OK)
