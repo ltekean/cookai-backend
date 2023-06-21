@@ -1,7 +1,8 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
+
 from taggit.serializers import TagListSerializerField, TaggitSerializer
-from .models import Category, Article, Comment, Ingredient, RecipeIngredient
+from .models import Category, Article, Comment, Ingredient,IngredientLink, RecipeIngredient
 from taggit.models import Tag
 
 
@@ -166,3 +167,9 @@ class RecipeIngredientCreateSerializer(ModelSerializer):
             ingredient = Ingredient.objects.create(ingredient_name=ingredient_name)
             ingredient.save()
         return super().save(**kwargs)
+
+
+class IngredientLinkSerializer(ModelSerializer):
+    class Meta:
+        model = IngredientLink
+        fields = ("link", "link_img")

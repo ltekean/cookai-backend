@@ -82,7 +82,7 @@ class FridgeAdmin(admin.ModelAdmin):
         (
             "Profile",
             {
-                "fields": ("user",),
+                "fields": ("user", "ingredient"),
             },
         )
     ]
@@ -91,7 +91,7 @@ class FridgeAdmin(admin.ModelAdmin):
             None,
             {
                 "classes": ["wide"],
-                "fields": ["ingredient"],
+                "fields": ["user", "ingredient"],
             },
         ),
     ]
