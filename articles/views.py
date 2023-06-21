@@ -216,8 +216,8 @@ class CommentView(generics.ListCreateAPIView):
         if order == "1":
             return queryset.order_by("-like_count")
         if order == "2":
-            return queryset.order_by("create_at")
-        return queryset
+            return queryset.order_by("created_at")
+        return queryset.order_by("-created_at")
 
     def get(self, request, *args, **kwargs):
         self.article_id = kwargs.get("article_id")
