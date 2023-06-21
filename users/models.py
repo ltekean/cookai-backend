@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from .validators import validate_password
 
 
 class UserManager(BaseUserManager):
@@ -77,9 +78,7 @@ class User(AbstractUser):
         max_length=150,
         unique=True,
     )
-    password = models.CharField(
-        max_length=256,
-    )
+    password = models.CharField(max_length=256, validators=[validate_password])
     avatar = models.URLField(
         blank=True,
         null=True,

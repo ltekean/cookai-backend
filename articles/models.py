@@ -86,8 +86,10 @@ class Article(models.Model):
 
 
 class Comment(models.Model):
+
     """댓글 모델
     게시글에 작성할 댓글 모델입니다!
+
 
     Attributes:
 
@@ -128,6 +130,7 @@ class Comment(models.Model):
 
 # 재료 DB 모델
 class Ingredient(models.Model):
+
     ingredient_name = models.CharField(
         max_length=100,
         primary_key=True,
@@ -136,6 +139,10 @@ class Ingredient(models.Model):
         null=True,
         default=list,
         max_length=100,
+    )
+    updated_at = models.DateTimeField(
+        null=True,
+        blank=True,
     )
 
 
@@ -161,7 +168,11 @@ class RecipeIngredient(models.Model):
     )
 
 
-# Ingredient을 참고하여 쿠팡 구매 링크와, 이미지 url을 저장하는 모델
+class Likes(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey("Article", on_delete=models.CASCADE)
+
+
 class IngredientLink(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
@@ -177,3 +188,8 @@ class IngredientLink(models.Model):
         null=True,
         blank=True,
     )
+
+
+class Likes(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey("Article", on_delete=models.CASCADE)
