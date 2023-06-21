@@ -136,6 +136,14 @@ class UserFridgeSerializer(ModelSerializer):
     class Meta:
         model = Fridge
         fields = ("__all__",)
+        extra_kwargs = {
+            "user": {
+                "read_only": True,
+            },
+            "ingredient": {
+                "read_only": True,
+            },
+        }
 
         def save(self, **kwargs):
             ingredient_name = kwargs.get("ingredient_id", None)

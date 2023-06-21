@@ -70,6 +70,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     "django_crontab",
+    "taggit",
+    "taggit_serializer",
 ]
 
 MIDDLEWARE = [

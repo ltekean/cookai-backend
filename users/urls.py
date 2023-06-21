@@ -38,9 +38,14 @@ urlpatterns = [
     ),
     path("<int:user_id>/", views.UserDetailView.as_view(), name="user_detail"),
     path(
-        "<int:user_id>/fridge/",
+        "fridge/",
         views.UserDetailFridgeView.as_view(),
-        name="user_detail_fridge",
+        name="user_fridge",
+    ),
+    path(
+        "fridge/<int:fridge_id>/",
+        views.UserDetailFridgeView.as_view(),
+        name="user_fridge_detail",
     ),
     path("<int:user_id>/follow/", views.UserFollowView.as_view(), name="user_follow"),
     path(

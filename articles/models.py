@@ -1,4 +1,5 @@
 from django.db import models
+from taggit.managers import TaggableManager
 from users.models import User
 
 
@@ -79,6 +80,9 @@ class Article(models.Model):
         related_name="bookmarks",
         blank=True,
     )
+    tags = TaggableManager(
+        blank=True,
+    )
 
 
 class Comment(models.Model):
@@ -110,6 +114,11 @@ class Comment(models.Model):
     )
     comment = models.TextField(
         max_length=300,
+    )
+    like = models.ManyToManyField(
+        User,
+        related_name="like_comments",
+        blank=True,
     )
     updated_at = models.DateTimeField(
         auto_now=True,
