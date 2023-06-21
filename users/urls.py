@@ -48,10 +48,12 @@ urlpatterns = [
         views.UserFollowerView.as_view(),
         name="user_follower",
     ),
+    # 어드민 만들기
     # 내가 쓴 댓글
     # 내가 쓴 글
     # 내가 좋아요 누른 글
     # 내가 좋아요 누른 댓글
     # 내가 북마크 한 글
     # 남의 페이지 들어갈때 뜨는것
+    # 남의 글 복사하기? > 보류
 ]

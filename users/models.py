@@ -124,10 +124,14 @@ class User(AbstractUser):
     objects = UserManager()
 
     def followers_list(self):
-        return self.followers.username
+        follower_list = ""
+        followers = self.followers.all()
+        for follower in followers:
+            follower_list += f"{follower.username}\n"
+        return follower_list
 
     def __str__(self):
-        return str(self.user)
+        return str(self.username)
 
     class Meta:
         verbose_name_plural = "Users"
@@ -151,6 +155,9 @@ class Fridge(models.Model):
         "articles.Ingredient",
         on_delete=models.CASCADE,
     )
+
+    def __str__(self):
+        return str(self.user)
 
     class Meta:
         verbose_name_plural = "Fridges"
