@@ -2,10 +2,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework import status, permissions, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.renderers import JSONRenderer
-from articles.paginations import ArticlePagination
+from articles.paginations import ArticlePagination, CommentPagination
 from users.models import Fridge
-from rest_framework.exceptions import NotFound
 from articles.models import (
     Article,
     Comment,
@@ -18,8 +16,10 @@ from articles.permissions import IsAuthenticatedOrReadOnlyExceptBookMark
 from django.db.models import Count
 from articles.serializers import (
     ArticleSerializer,
+    ArticleListSerializer,
+    CategorySerializer,
     ArticleDetailSerializer,
-    CommentCreateSerializer,
+    CommentSerializer,
     IngredientSerializer,
     RecipeIngredientCreateSerializer,
     IngredientLinkSerializer,
@@ -29,6 +29,7 @@ from django.conf import settings
 import requests
 from django.db.models import Q
 from taggit.models import Tag
+from articles.coupang import save_coupang_links_to_ingredient_links
 
 
 # Create your views here.
@@ -37,23 +38,9 @@ from taggit.models import Tag
 class ArticleView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnlyExceptBookMark]
     pagination_class = ArticlePagination
-    serializer_class = ArticleSerializer
+    serializer_class = ArticleListSerializer
     queryset = Article.objects.all().order_by("create_at")
-
-    # def search_tag(self):
-    #     queryset= tag_queryset.
-    def bookmarked(self):
-        queryset = self.request.user.bookmarked_articles.all()
-        return queryset.order_by("bookmark", "create_at")
-
-    def liked(self):
-        queryset = (
-            Article.objects.all()
-            .annotate(like_count=Count("like"))
-            .order_by("-like_count", "-create_at")
-        )
-        return queryset
-
+    
     def search_author(self):
         selector = self.request.GET.get("selector")
         return Q(author__username__icontains=selector)
@@ -87,7 +74,7 @@ class ArticleView(generics.ListCreateAPIView):
         selector = self.request.GET.get("selector")
         return Q(tags__name__in=[selector])
 
-    def search(self):
+    def search(self, type_key):
         types = {
             "0": self.search_author,  # author
             "1": self.search_title_content,  # title+con(recipeonly)
@@ -95,36 +82,36 @@ class ArticleView(generics.ListCreateAPIView):
             "3": self.search_ingredient_title_content,  # title+con+ingredient
             "4": self.search_tag,  # tag
         }
-        q = Q()
-        filter_key = self.request.GET.get("type", None)
-        query_filter = types.get(filter_key, q)
-        queryset = Article.objects.annotate(
-            counts=Count("recipeingredient_set")
-        ).filter(query_filter)
-        return queryset
+        query_filter = types.get(type_key, Q)()
+        return query_filter
 
     def get_queryset(self):
-        query_select = {
-            "bookmarked": self.bookmarked,
-            "liked": self.liked,
-            "search": self.search,
-        }
-        selection = self.request.GET.get("filter", None)
-        return query_select.get(selection, super().get_queryset)()
-
-
-# 카테고리 띄우기
-class ArticleCategoryView(APIView):
-    def get(self, request, category_id):
-        categorizing = Category.objects.get(id=category_id)
-        articles = categorizing.article_set.order_by("create_at")
-        serializer = ArticleSerializer(articles, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# 게시글 작성
-class ArticleCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+        search_key = self.request.GET.get("search", None)
+        q = Q()
+        if search_key:
+            q = self.search(search_key)
+        category_id = self.request.GET.get("category")
+        if category_id:
+            try:
+                category_id = int(category_id)
+                q.add(Q(category_id=category_id), q.AND)
+            except:
+                pass
+        order = self.request.GET.get("order")
+        if order == "1":
+            queryset = (
+                Article.objects.annotate(counts=Count("recipeingredient_set"))
+                .filter(q)
+                .annotate(like_count=Count("like"))
+                .order_by("-like_count", "-created_at")
+            )
+        else:
+            queryset = (
+                Article.objects.annotate(counts=Count("recipeingredient_set"))
+                .filter(q)
+                .order_by("-created_at")
+            )
+        return queryset
 
     def post(self, request):
         serializer = ArticleSerializer(data=request.data, context={"request": request})
@@ -133,6 +120,20 @@ class ArticleCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# # 카테고리 띄우기
+# class ArticleCategoryView(APIView):
+#     def get(self, request, category_id):
+#         categorizing = Category.objects.get(id=category_id)
+#         articles = categorizing.article_set.order_by("create_at")
+#         serializer = ArticleSerializer(articles, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+class CategoryListView(APIView):
+    def get(self, request):
+        categorys = Category.objects.all()
+        serializer = CategorySerializer(categorys, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class IngredientCreateView(APIView):
@@ -205,12 +206,28 @@ class IngredientDetailView(APIView):
         )
 
 
-# 댓글 작성 뷰
-class CommentView(APIView):
+# 댓글 작성/조회 뷰
+class CommentView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CommentPagination
+    serializer_class = CommentSerializer
+    queryset = None
+
+    def get_queryset(self):
+        queryset = Comment.objects.filter(article_id=self.article_id)
+        order = self.request.GET.get("order", None)
+        if order == "1":
+            return queryset.order_by("-like_count")
+        if order == "2":
+            return queryset.order_by("created_at")
+        return queryset.order_by("-created_at")
+
+    def get(self, request, *args, **kwargs):
+        self.article_id = kwargs.get("article_id")
+        return super().get(request, *args, **kwargs)
 
     def post(self, request, article_id):
-        serializer = CommentCreateSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save(author=request.user, article_id=article_id)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -218,10 +235,10 @@ class CommentView(APIView):
 
 
 class CommentDetailView(APIView):
-    def put(self, request, article_id, comment_id):
+    def put(self, request, comment_id):
         comment = get_object_or_404(Comment, id=comment_id)
         if request.user == comment.author:
-            serializer = CommentCreateSerializer(comment, data=request.data)
+            serializer = CommentSerializer(comment, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -271,19 +288,19 @@ class TagSearchView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class TagArticleView(APIView):
-    def get(self, request, tag_id):
-        try:
-            target_tag = Tag.objects.get(id=tag_id)
-            target_article = Article.objects.filter(tags__name__in=[target_tag])
-            serializer = ArticleSerializer(
-                target_article, many=True, context={"request": request}
-            )
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except:
-            return Response(
-                {"error": "해당 태그를 찾을 수 없습니다!"}, status=status.HTTP_404_NOT_FOUND
-            )
+# class TagArticleView(APIView):
+#     def get(self, request, tag_id):
+#         try:
+#             target_tag = Tag.objects.get(id=tag_id)
+#             target_article = Article.objects.filter(tags__name__in=[target_tag])
+#             serializer = ArticleSerializer(
+#                 target_article, many=True, context={"request": request}
+#             )
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         except:
+#             return Response(
+#                 {"error": "해당 태그를 찾을 수 없습니다!"}, status=status.HTTP_404_NOT_FOUND
+#             )
 
 
 class ArticleLikeView(APIView):
@@ -385,6 +402,16 @@ class LinkPlusView(APIView):
 
         # 없는 Ingredient와 연결된 IngredientLink 조회
         # column_name+__in : 리스트 안에 지정한 문자열들 중에 하나라도 포함된 데이터를 찾을 때 사용
+        ingredient_links = IngredientLink.objects.filter(
+            ingredient__in=missing_ingredients
+        )
+
+        # 존재하지 않는 IngredientLink 인스턴스 생성 및 저장
+        for ingredient in missing_ingredients:
+            if not IngredientLink.objects.filter(ingredient=ingredient).exists():
+                save_coupang_links_to_ingredient_links(ingredient)
+
+        # 다시 IngredientLink를 조회
         ingredient_links = IngredientLink.objects.filter(
             ingredient__in=missing_ingredients
         )

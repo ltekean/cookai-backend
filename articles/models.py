@@ -30,8 +30,8 @@ class Article(models.Model):
     category(ForeignKey) : 카테고리 모델 외래키, CASCADE
     title(Varchar) : 제목, 30자 제한, 필수 입력
     content(Text) : 내용, 500자 제한, 필수 입력
-    create_at(Date) : 작성시간 Datetime
-    update_at(Date) : 수정시간 Datetime
+    created_at(Date) : 작성시간 Datetime
+    updated_at(Date) : 수정시간 Datetime
     recipe(Text) : 레시피 text(html), 500자 제한
     image(Url) : 이미지, 이미지Url로 불러오기
     like(MtoM) : User모델과 MtoM, 역참조 : Likes, 빈 값 가능, 중간 모델 : Like
@@ -60,10 +60,10 @@ class Article(models.Model):
         default="",
         null=False,
     )
-    update_at = models.DateTimeField(
+    updated_at = models.DateTimeField(
         auto_now=True,
     )
-    create_at = models.DateTimeField(
+    created_at = models.DateTimeField(
         auto_now_add=True,
     )
     recipe = models.TextField(
@@ -72,7 +72,7 @@ class Article(models.Model):
     image = models.URLField(blank=True, null=True)
     like = models.ManyToManyField(
         User,
-        related_name="articles",
+        related_name="likes",
         blank=True,
     )
     bookmark = models.ManyToManyField(
@@ -130,7 +130,6 @@ class Comment(models.Model):
 
 # 재료 DB 모델
 class Ingredient(models.Model):
-
     ingredient_name = models.CharField(
         max_length=100,
         primary_key=True,
@@ -168,11 +167,6 @@ class RecipeIngredient(models.Model):
     )
 
 
-class Likes(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    article = models.ForeignKey("Article", on_delete=models.CASCADE)
-
-
 class IngredientLink(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
@@ -188,8 +182,3 @@ class IngredientLink(models.Model):
         null=True,
         blank=True,
     )
-
-
-class Likes(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    article = models.ForeignKey("Article", on_delete=models.CASCADE)

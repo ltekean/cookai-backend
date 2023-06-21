@@ -5,7 +5,7 @@ from users.models import User, Fridge
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    readonly_fields = ("last_login",)
+    readonly_fields = ("last_login", "followers_list")
     list_display = [
         "username",
         "age",
@@ -30,6 +30,7 @@ class UserAdmin(BaseUserAdmin):
                     "age",
                     "gender",
                     "followings",
+                    "followers_list",
                 ),
                 "classes": ("wide",),
             },
@@ -71,32 +72,33 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(Fridge)
 class FridgeAdmin(admin.ModelAdmin):
-    list_display = [
-        "user",
-        "ingredient",
-    ]
-    list_filter = [
-        "user",
-    ]
-    fieldsets = [
-        (
-            "Profile",
-            {
-                "fields": ("user", "ingredient"),
-            },
-        )
-    ]
-    add_fieldsets = [
-        (
-            None,
-            {
-                "classes": ["wide"],
-                "fields": ["user", "ingredient"],
-            },
-        ),
-    ]
-    search_fields = [
-        "user__email",
-        "ingredient__ingredient_name",
-        "user__username",
-    ]
+    pass
+    # list_display = [
+    #     "user",
+    #     "ingredient",
+    # ]
+    # list_filter = [
+    #     "user",
+    # ]
+    # fieldsets = [
+    #     (
+    #         "Profile",
+    #         {
+    #             "fields": ("user",),
+    #         },
+    #     )
+    # ]
+    # add_fieldsets = [
+    #     (
+    #         None,
+    #         {
+    #             "classes": ["wide"],
+    #             "fields": ["ingredient"],
+    #         },
+    #     ),
+    # ]
+    # search_fields = [
+    #     "user__email",
+    #     "ingredient__ingredient_name",
+    #     "user__username",
+    # ]
