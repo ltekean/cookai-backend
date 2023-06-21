@@ -8,9 +8,7 @@ urlpatterns = [
     path("category/<int:category_id>/", views.ArticleCategoryView.as_view()),
     path("<int:article_id>/", views.ArticleDetailView.as_view()),
     path("<int:article_id>/comment/", views.CommentView.as_view()),
-    path(
-        "<int:article_id>/comment/<int:comment_id>/", views.CommentDetailView.as_view()
-    ),
+    path("comment/<int:comment_id>/", views.CommentDetailView.as_view()),
     path("get-url/", views.ArticleGetUploadURLView.as_view()),
     path("tags/", views.TagSearchView.as_view()),
     path("tags/<int:tag_id>/", views.TagArticleView.as_view()),
