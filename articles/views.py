@@ -62,14 +62,17 @@ class ArticleView(generics.ListCreateAPIView):
         selector = self.request.GET.get("selector")
         q = Q(title__icontains=selector)
         q.add(Q(content__icontains=selector), q.OR)
+        q.add(Q(recipe__icontaions=selector), q.OR)
 
         if self.request.GET.get("recipe"):
-            q.add(~Q(counts=0), q.AND)
+            q2 = ~Q(recipe__exact=None)
+            q2.add(~Q(counts=0), q2.OR)
+            q.add(q2, q.AND)
         return q
 
     def search_ingredient(self):
         selector = self.request.GET.get("selector")
-        ingredients = Ingredient.objects.filter(ingredient_name=selector)
+        ingredients = Ingredient.objects.filter(ingredient_name__icontains=selector)
         q = Q()
         for ingredient in ingredients:
             q.add(Q(recipeingredient_set__ingredient__in=[ingredient]), q.OR)
@@ -81,7 +84,7 @@ class ArticleView(generics.ListCreateAPIView):
         return q
 
     def search_tag(self):
-        selector = int(self.request.GET.get("selector"))
+        selector = self.request.GET.get("selector")
         return Q(tags__name__in=[selector])
 
     def search(self):
