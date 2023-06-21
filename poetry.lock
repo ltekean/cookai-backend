@@ -213,6 +213,34 @@ files = [
 djangorestframework = "*"
 
 [[package]]
+name = "django-taggit"
+version = "4.0.0"
+description = "django-taggit is a reusable Django application for simple tagging."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "django-taggit-4.0.0.tar.gz", hash = "sha256:4d52de9d37245a9b9f98c0ec71fdccf1d2283e38e8866d40a7ae6a3b6787a161"},
+    {file = "django_taggit-4.0.0-py3-none-any.whl", hash = "sha256:eb800dabef5f0a4e047ab0751f82cf805bc4a9e972037ef12bf519f52cd92480"},
+]
+
+[package.dependencies]
+Django = ">=3.2"
+
+[[package]]
+name = "django-taggit-serializer"
+version = "0.1.7"
+description = "The Django Taggit serializer for tDjango REST Framework"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-taggit-serializer-0.1.7.tar.gz", hash = "sha256:f712eb2482079be452bcd1e82b18a820e26427c3ee1cef2b4fcd4d6b8b9f14d0"},
+]
+
+[package.dependencies]
+django-taggit = "*"
+six = "*"
+
+[[package]]
 name = "djangorestframework"
 version = "3.14.0"
 description = "Web APIs for Django, made easy."
@@ -389,6 +417,17 @@ testing = ["build[virtualenv]", "filelock (>=3.4.0)", "flake8-2020", "ini2toml[l
 testing-integration = ["build[virtualenv]", "filelock (>=3.4.0)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "pytest", "pytest-enabler", "pytest-xdist", "tomli", "virtualenv (>=13.0.0)", "wheel"]
 
 [[package]]
+name = "six"
+version = "1.16.0"
+description = "Python 2 and 3 compatibility utilities"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+files = [
+    {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
+    {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
+]
+
+[[package]]
 name = "sqlparse"
 version = "0.4.4"
 description = "A non-validating SQL parser."
@@ -446,4 +485,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.9.dev0"
-content-hash = "e60352b8c1ca93b476439b9b4204d6c9eedd1cdca2e8d420cfb07733d6037492"
+content-hash = "f862490b83d4b6a41dfca357057e01f58808bdefd3981d0aadfad90a0736392c"
