@@ -38,19 +38,19 @@ class ArticleView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnlyExceptBookMark]
     pagination_class = ArticlePagination
     serializer_class = ArticleSerializer
-    queryset = Article.objects.all().order_by("create_at")
+    queryset = Article.objects.all().order_by("created_at")
 
     # def search_tag(self):
     #     queryset= tag_queryset.
     def bookmarked(self):
         queryset = self.request.user.bookmarked_articles.all()
-        return queryset.order_by("bookmark", "create_at")
+        return queryset.order_by("bookmark", "created_at")
 
     def liked(self):
         queryset = (
             Article.objects.all()
             .annotate(like_count=Count("like"))
-            .order_by("-like_count", "-create_at")
+            .order_by("-like_count", "-created_at")
         )
         return queryset
 
@@ -117,7 +117,7 @@ class ArticleView(generics.ListCreateAPIView):
 class ArticleCategoryView(APIView):
     def get(self, request, category_id):
         categorizing = Category.objects.get(id=category_id)
-        articles = categorizing.article_set.order_by("create_at")
+        articles = categorizing.article_set.order_by("created_at")
         serializer = ArticleSerializer(articles, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
