@@ -29,6 +29,7 @@ from django.conf import settings
 import requests
 from django.db.models import Q
 from taggit.models import Tag
+from articles.coupang import save_coupang_links_to_ingredient_links
 
 
 # Create your views here.
@@ -38,19 +39,19 @@ class ArticleView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnlyExceptBookMark]
     pagination_class = ArticlePagination
     serializer_class = ArticleSerializer
-    queryset = Article.objects.all().order_by("create_at")
+    queryset = Article.objects.all().order_by("created_at")
 
     # def search_tag(self):
     #     queryset= tag_queryset.
     def bookmarked(self):
         queryset = self.request.user.bookmarked_articles.all()
-        return queryset.order_by("bookmark", "create_at")
+        return queryset.order_by("bookmark", "created_at")
 
     def liked(self):
         queryset = (
             Article.objects.all()
             .annotate(like_count=Count("like"))
-            .order_by("-like_count", "-create_at")
+            .order_by("-like_count", "-created_at")
         )
         return queryset
 
@@ -117,7 +118,7 @@ class ArticleView(generics.ListCreateAPIView):
 class ArticleCategoryView(APIView):
     def get(self, request, category_id):
         categorizing = Category.objects.get(id=category_id)
-        articles = categorizing.article_set.order_by("create_at")
+        articles = categorizing.article_set.order_by("created_at")
         serializer = ArticleSerializer(articles, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -385,6 +386,16 @@ class LinkPlusView(APIView):
 
         # 없는 Ingredient와 연결된 IngredientLink 조회
         # column_name+__in : 리스트 안에 지정한 문자열들 중에 하나라도 포함된 데이터를 찾을 때 사용
+        ingredient_links = IngredientLink.objects.filter(
+            ingredient__in=missing_ingredients
+        )
+
+        # 존재하지 않는 IngredientLink 인스턴스 생성 및 저장
+        for ingredient in missing_ingredients:
+            if not IngredientLink.objects.filter(ingredient=ingredient).exists():
+                save_coupang_links_to_ingredient_links(ingredient)
+
+        # 다시 IngredientLink를 조회
         ingredient_links = IngredientLink.objects.filter(
             ingredient__in=missing_ingredients
         )

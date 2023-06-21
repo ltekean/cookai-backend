@@ -123,6 +123,19 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["username"]
     objects = UserManager()
 
+    def followers_list(self):
+        follower_list = ""
+        followers = self.followers.all()
+        for follower in followers:
+            follower_list += f"{follower.username}\n"
+        return follower_list
+
+    def __str__(self):
+        return str(self.username)
+
+    class Meta:
+        verbose_name_plural = "Users"
+
 
 class Fridge(models.Model):
     """냉장고 모델
@@ -144,4 +157,7 @@ class Fridge(models.Model):
     )
 
     def __str__(self):
-        return str(self.ingredient)
+        return str(self.user)
+
+    class Meta:
+        verbose_name_plural = "Fridges"
