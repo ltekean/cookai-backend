@@ -86,12 +86,8 @@ class ArticleView(generics.ListCreateAPIView):
             "3": self.search_ingredient_title_content,  # title+con+ingredient
             "4": self.search_tag,  # tag
         }
-        q = Q()
-        query_filter = types.get(type_key, q)()
-        queryset = Article.objects.annotate(
-            counts=Count("recipeingredient_set")
-        ).filter(query_filter)
-        return queryset
+        query_filter = types.get(type_key, Q)()
+        return query_filter
 
     def get_queryset(self):
         search_key = self.request.GET.get("search", None)
