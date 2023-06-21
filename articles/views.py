@@ -117,6 +117,14 @@ class ArticleView(generics.ListCreateAPIView):
             )
         return queryset
 
+    def post(self, request):
+        serializer = ArticleSerializer(data=request.data, context={"request": request})
+        if serializer.is_valid():
+            serializer.save(author=request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # # 카테고리 띄우기
 # class ArticleCategoryView(APIView):
@@ -130,19 +138,6 @@ class CategoryListView(APIView):
         categorys = Category.objects.all()
         serializer = CategorySerializer(categorys, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# 게시글 작성
-class ArticleCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request):
-        serializer = ArticleSerializer(data=request.data, context={"request": request})
-        if serializer.is_valid():
-            serializer.save(author=request.user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class IngredientCreateView(APIView):
