@@ -38,6 +38,31 @@ urlpatterns = [
     ),
     path("<int:user_id>/", views.UserDetailView.as_view(), name="user_detail"),
     path(
+        "<int:user_id>/comments/",
+        views.UserDetailCommentsView.as_view(),
+        name="user_detail_comment",
+    ),
+    path(
+        "<int:user_id>/articles/",
+        views.UserDetailArticlesView.as_view(),
+        name="user_detail_article",
+    ),
+    path(
+        "<int:user_id>/articles/likes/",
+        views.UserDetailLikeArticlesView.as_view(),
+        name="user_detail_like_article",
+    ),
+    path(
+        "<int:user_id>/comments/likes/",
+        views.UserDetailLikeCommentsView.as_view(),
+        name="user_detail_like_comment",
+    ),
+    path(
+        "<int:user_id>/articles/bookmarks/",
+        views.UserDetailArticlesBookmarksView.as_view(),
+        name="user_detail_article_bookmark",
+    ),
+    path(
         "fridge/",
         views.UserDetailFridgeView.as_view(),
         name="user_fridge",
@@ -47,5 +72,22 @@ urlpatterns = [
         views.UserDetailFridgeView.as_view(),
         name="user_fridge_detail",
     ),
-    path("<int:user_id>/follow/", views.UserFollowView.as_view(), name="user_follow"),
+    path(
+        "<int:user_id>/following/",
+        views.UserFollowView.as_view(),
+        name="user_following",
+    ),
+    path(
+        "<int:user_id>/follower/",
+        views.UserFollowerView.as_view(),
+        name="user_follower",
+    ),
+    # 어드민 만들기
+    # 내가 쓴 댓글
+    # 내가 쓴 글
+    # 내가 좋아요 누른 글
+    # 내가 좋아요 누른 댓글
+    # 내가 북마크 한 글
+    # 남의 페이지 들어갈때 뜨는것
+    # 남의 글 복사하기? > 보류
 ]
