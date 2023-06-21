@@ -1,12 +1,12 @@
 import requests
 
-from django.db import transaction
+from django.db.models import Count
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.shortcuts import redirect
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -20,8 +20,9 @@ from users.serializers import (
     CustomTokenObtainPairSerializer,
     PublicUserSerializer,
 )
-from articles.serializers import ArticleSerializer, CommentSerializer
+from articles.serializers import ArticleListSerializer, CommentSerializer
 from articles.models import Article, Comment
+from articles.paginations import ArticlePagination, CommentPagination
 from users.models import User, Fridge
 from users import serializers
 from users.email_tokens import account_activation_token
@@ -406,74 +407,78 @@ class UserDetailView(APIView):
             return Response({"error": "권한이 없습니다!"}, status=status.HTTP_403_FORBIDDEN)
 
 
-class UserDetailCommentsView(APIView):
-    def get(self, request, user_id):
-        """유저 프로필 댓글 조회"""
-        user_comments = Comment.objects.filter(author_id=user_id).order_by(
-            "-updated_at"
-        )
-        serializer = CommentSerializer(
-            user_comments,
-            many=True,
-            context={"request": request},
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class UserDetailArticlesView(generics.ListAPIView):
+    pagination_class = ArticlePagination
+    serializer_class = ArticleListSerializer
+    queryset = Article.objects.none()
+
+    def my_article(self):
+        return Article.objects.filter(author_id=self.user_id)
+
+    def liked_article(self):
+        return Article.objects.filter(like=self.user_id)
+
+    def bookmarked_article(self):
+        return Article.objects.filter(bookmark=self.user_id)
+
+    def get_queryset(self):
+        query_types = {
+            "0": self.my_article,
+            "1": self.liked_article,
+            "2": self.bookmarked_article,
+        }
+        query_key = self.request.GET.get("filter", None)
+        order = self.request.GET.get("order", None)
+        queryset = query_types.get(query_key, self.my_article)()
+        if order == "1":
+            queryset = queryset.annotate(like_count=Count("like")).order_by(
+                "-like_count"
+            )
+        else:
+            queryset = queryset = queryset.order_by("-created_at")
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        self.user_id = kwargs.get("user_id", None)
+        return super().get(request, *args, **kwargs)
 
 
-class UserDetailArticlesView(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+class UserDetailCommentsView(generics.ListAPIView):
+    pagination_class = CommentPagination
+    serializer_class = CommentSerializer
+    queryset = Comment.objects.none()
 
-    def get(self, request, user_id):
-        """유저 프로필 게시글 조회"""
-        user_articles = Article.objects.filter(author_id=user_id).order_by(
-            "-updated_at"
-        )
-        serializer = ArticleSerializer(
-            user_articles,
-            many=True,
-            context={"request": request},
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def my_comment(self):
+        return Comment.objects.filter(author_id=self.user_id)
 
+    def liked_comment(self):
+        return Comment.objects.filter(like=self.user_id)
 
-class UserDetailLikeArticlesView(APIView):
-    def get(self, request, user_id):
-        """유저 프로필 좋아요 누른 게시글 조회"""
-        user_articles = Article.objects.filter(like=user_id).order_by("-updated_at")
-        serializer = ArticleSerializer(
-            user_articles,
-            many=True,
-            context={"request": request},
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_queryset(self):
+        query_types = {
+            "0": self.my_comment,
+            "1": self.liked_comment,
+        }
+        query_key = self.request.GET.get("filter", None)
+        order = self.request.GET.get("order", None)
+        queryset = query_types.get(query_key, self.my_comment)()
+        if order == "1":
+            queryset = queryset.annotate(like_count=Count("like")).order_by(
+                "-like_count"
+            )
+        else:
+            queryset = queryset = queryset.order_by("-created_at")
+        return queryset
 
-
-class UserDetailLikeCommentsView(APIView):
-    def get(self, request, user_id):
-        """유저 프로필 좋아요 누른 댓글 조회"""
-        user_comments = Comment.objects.filter(like=user_id).order_by("-updated_at")
-        serializer = CommentSerializer(
-            user_comments,
-            many=True,
-            context={"request": request},
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class UserDetailArticlesBookmarksView(APIView):
-    def get(self, request, user_id):
-        """유저 프로필 좋아요 누른 게시글 조회"""
-        user_articles = Article.objects.filter(bookmark=user_id).order_by("-updated_at")
-        serializer = ArticleSerializer(
-            user_articles,
-            many=True,
-            context={"request": request},
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get(self, request, *args, **kwargs):
+        self.user_id = kwargs.get("user_id", None)
+        return super().get(request, *args, **kwargs)
 
 
 class UserDetailFridgeView(APIView):
-    permission_classes = [IsAuthenticated]
+    pagination_class = ArticlePagination
+    serializer_class = ArticleListSerializer
+    queryset = Article.objects.none()
 
     def get(self, request, **kwargs):
         if kwargs.get("fridge_id"):
