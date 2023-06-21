@@ -29,6 +29,7 @@ from django.conf import settings
 import requests
 from django.db.models import Q
 from taggit.models import Tag
+from articles.coupang import save_coupang_links_to_ingredient_links
 
 
 # Create your views here.
@@ -385,6 +386,16 @@ class LinkPlusView(APIView):
 
         # 없는 Ingredient와 연결된 IngredientLink 조회
         # column_name+__in : 리스트 안에 지정한 문자열들 중에 하나라도 포함된 데이터를 찾을 때 사용
+        ingredient_links = IngredientLink.objects.filter(
+            ingredient__in=missing_ingredients
+        )
+
+        # 존재하지 않는 IngredientLink 인스턴스 생성 및 저장
+        for ingredient in missing_ingredients:
+            if not IngredientLink.objects.filter(ingredient=ingredient).exists():
+                save_coupang_links_to_ingredient_links(ingredient)
+
+        # 다시 IngredientLink를 조회
         ingredient_links = IngredientLink.objects.filter(
             ingredient__in=missing_ingredients
         )
