@@ -20,6 +20,12 @@ class Category(models.Model):
         max_length=50,
     )
 
+    def __str__(self):
+        return f"{self.name} : {self.info.title()}"
+
+    class Meta:
+        verbose_name_plural = "Categories"
+
 
 class Article(models.Model):
 
@@ -84,6 +90,16 @@ class Article(models.Model):
         blank=True,
     )
 
+    def __str__(self):
+        return str(self.title)
+
+    def tag_list(self):
+        tags = ""
+        for tag in self.tags.all():
+            tags += f"{tag.name},"
+        result = tags[0:-1]
+        return result
+
 
 class Comment(models.Model):
 
@@ -127,6 +143,9 @@ class Comment(models.Model):
         auto_now_add=True,
     )
 
+    def __str__(self):
+        return str(self.article)
+
 
 # 재료 DB 모델
 class Ingredient(models.Model):
@@ -143,6 +162,9 @@ class Ingredient(models.Model):
         null=True,
         blank=True,
     )
+
+    def __str__(self):
+        return str(self.ingredient_name)
 
 
 # 레시피 재료 모델
@@ -166,6 +188,9 @@ class RecipeIngredient(models.Model):
         max_length=100,
     )
 
+    def __str__(self):
+        return str(self.ingredient)
+
 
 class IngredientLink(models.Model):
     ingredient = models.ForeignKey(
@@ -182,3 +207,6 @@ class IngredientLink(models.Model):
         null=True,
         blank=True,
     )
+
+    def __str__(self):
+        return str(self.ingredient)
