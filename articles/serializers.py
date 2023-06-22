@@ -66,8 +66,10 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = [
+            "id",
             "comment",
             "author",
+            "is_author",
             "article",
             "created_at",
             "updated_at",
@@ -75,6 +77,12 @@ class CommentSerializer(serializers.ModelSerializer):
         ]  # author, created_at 등 조회에 필요한 것들
         extra_kwargs = {
             "author": {
+                "read_only": True,
+            },
+            "id": {
+                "read_only": True,
+            },
+            "is_author": {
                 "read_only": True,
             },
             "likes_count": {
@@ -90,6 +98,10 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def get_likes_count(self, obj):
         return obj.like.count()
+
+    def get_is_author(self, article):
+        request = self.context["request"]
+        return article.author == request.user
 
 
 # 레시피 재료 가져오기
@@ -140,6 +152,7 @@ class ArticleListSerializer(ArticleDetailSerializer):
     class Meta:
         model = Article
         fields = [
+            "id",
             "title",
             "created_at",
             "image",
@@ -147,6 +160,11 @@ class ArticleListSerializer(ArticleDetailSerializer):
             "comments_count",
             "likes_count",
         ]
+        extra_kwargs = {
+            "id": {
+                "read_only": True,
+            },
+        }
 
 
 class TagSerializer(serializers.ModelSerializer):
