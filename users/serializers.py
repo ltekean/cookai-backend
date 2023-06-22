@@ -1,6 +1,8 @@
-from django.core.mail import EmailMessage
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
+from django.conf import settings
 from rest_framework.serializers import (
     ModelSerializer,
     ValidationError,
@@ -46,15 +48,22 @@ class UserSerializer(ModelSerializer):
         user.set_password(password)
         user.save()
 
-        uidb64 = urlsafe_base64_encode(force_bytes(user.id))
-        token = account_activation_token.make_token(user)
-        to_email = user.email
-        email = EmailMessage(
-            "안녕하세요 Cookai입니다. 아래 링크를 클릭해 인증을 완료하세요!",
-            f"http://127.0.0.1:8000/users/activate/{uidb64}/{token}",
-            to=[to_email],
+        html = render_to_string(
+            "users/register_email.html",
+            {
+                "backend_base_url": settings.BACK_DEVELOP_URL,
+                "uidb64": urlsafe_base64_encode(force_bytes(user.id)).encode().decode(),
+                "token": account_activation_token.make_token(user),
+            },
         )
-        email.send()
+        to_email = user.email
+        send_mail(
+            "안녕하세요 Cookai입니다. 인증메일이 도착했어요!",
+            "_",
+            settings.DEFAULT_FROM_MAIL,
+            [to_email],
+            html_message=html,
+        )
         return user
 
     def get_is_host(self, user):
