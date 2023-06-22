@@ -58,7 +58,6 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
-    "admin_volt.apps.AdminVoltConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -194,4 +193,3 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ALL_ORIGINS = True
 AUTH_USER_MODEL = "users.User"
-LOGIN_REDIRECT_URL = "/"
