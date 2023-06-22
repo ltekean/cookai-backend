@@ -52,8 +52,8 @@ class ArticleView(generics.ListCreateAPIView):
         q.add(Q(recipe__icontains=selector), q.OR)
 
         if self.request.GET.get("recipe"):
-            q2 = ~Q(recipe__exact=None)
-            q2.add(~Q(counts=0), q2.OR)
+            q2 = Q(recipe__isnull=False)
+            q2.add(Q(counts__gt=0), q2.OR)
             q.add(q2, q.AND)
         return q
 
@@ -106,6 +106,7 @@ class ArticleView(generics.ListCreateAPIView):
                 .order_by("-like_count", "-created_at")
             )
         else:
+            Article.objects.annotate(counts=Count("recipeingredient"))
             queryset = (
                 Article.objects.annotate(counts=Count("recipeingredient"))
                 .filter(q)
