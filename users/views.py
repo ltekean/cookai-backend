@@ -435,7 +435,7 @@ class UserDetailArticlesView(generics.ListAPIView):
                 "-like_count"
             )
         else:
-            queryset = queryset = queryset.order_by("-created_at")
+            queryset = queryset.order_by("-created_at")
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -467,7 +467,7 @@ class UserDetailCommentsView(generics.ListAPIView):
                 "-like_count"
             )
         else:
-            queryset = queryset = queryset.order_by("-created_at")
+            queryset = queryset.order_by("-created_at")
         return queryset
 
     def get(self, request, *args, **kwargs):
