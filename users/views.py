@@ -82,7 +82,7 @@ class UserSignUpPermitView(APIView):
                 html = render_to_string(
                     "users/success_register_email.html",
                     {
-                        "front_base_url": settings.FRONT_DEVELOP_URL,
+                        "front_base_url": settings.FRONT_BASE_URL,
                     },
                 )
                 to_email = user.email
@@ -93,7 +93,7 @@ class UserSignUpPermitView(APIView):
                     [to_email],
                     html_message=html,
                 )
-                return redirect(f"{settings.FRONT_DEVELOP_URL}/users/login.html")
+                return redirect(f"{settings.FRONT_BASE_URL}/users/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
@@ -268,7 +268,7 @@ class ResetPasswordView(APIView):
                     html = render_to_string(
                         "users/reset_password_email.html",
                         {
-                            "backend_base_url": settings.BACK_DEVELOP_URL,
+                            "backend_base_url": settings.BACKEND_BASE_URL,
                             "uidb64": urlsafe_base64_encode(force_bytes(user.id))
                             .encode()
                             .decode(),
