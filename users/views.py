@@ -1,11 +1,12 @@
 import requests
-
+from django.db import transaction
 from django.db.models import Count
 from django.conf import settings
-from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.shortcuts import redirect
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -56,7 +57,10 @@ class UserView(APIView):
             return Response(
                 "해당 이메일을 가진 유저가 이미 있습니다!", status=status.HTTP_400_BAD_REQUEST
             )
-        serializer = serializers.UserSerializer(data=request.data)
+        serializer = serializers.UserSerializer(
+            data=request.data,
+            context={"request": request},
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -74,6 +78,20 @@ class UserSignUpPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 User.objects.filter(pk=uid).update(is_active=True)
+                html = render_to_string(
+                    "users/success_register_email.html",
+                    {
+                        "front_base_url": settings.FRONT_DEVELOP_URL,
+                    },
+                )
+                to_email = user.email
+                send_mail(
+                    "안녕하세요 Cookai입니다. 회원가입을 축하드립니다!",
+                    "_",
+                    settings.DEFAULT_FROM_MAIL,
+                    [to_email],
+                    html_message=html,
+                )
                 return redirect(f"{settings.FRONT_DEVELOP_URL}/users/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except:
@@ -246,17 +264,28 @@ class ResetPasswordView(APIView):
             user = User.objects.get(email=user_email)
             if user:
                 if user.login_type == "normal":
-                    # url에 포함될 user.id 에러 방지용  encoding하기
-                    uidb64 = urlsafe_base64_encode(force_bytes(user.id))
-                    token = account_activation_token.make_token(user)
-                    to_email = user.email
-                    email = EmailMessage(
-                        "안녕하세요 Cookai입니다. 아래 링크를 클릭해 인증을 완료하세요!",
-                        f"http://127.0.0.1:8000/users/reset/{uidb64}/{token}",
-                        to=[to_email],
+                    # f"http://127.0.0.1:8000/users/reset/{uidb64}/{token}",
+                    html = render_to_string(
+                        "users/reset_password_email.html",
+                        {
+                            "backend_base_url": settings.BACK_DEVELOP_URL,
+                            "uidb64": urlsafe_base64_encode(force_bytes(user.id))
+                            .encode()
+                            .decode(),
+                            "token": account_activation_token.make_token(user),
+                        },
                     )
-                    email.send()
-                    return Response({"ok": "이메일 전송 완료!"}, status=status.HTTP_200_OK)
+                    to_email = user.email
+                    send_mail(
+                        "안녕하세요 Cookai입니다. 비밀번호 초기화 메일이 도착했어요!",
+                        "_",
+                        settings.DEFAULT_FROM_MAIL,
+                        [to_email],
+                        html_message=html,
+                    )
+                    return Response(
+                        {"message": "이메일 전송 완료!"}, status=status.HTTP_200_OK
+                    )
                 else:
                     return Response(
                         {"error": "해당 이메일은 소셜로그인 이메일입니다!"},
