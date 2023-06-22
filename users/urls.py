@@ -47,21 +47,6 @@ urlpatterns = [
         name="user_detail_article",
     ),
     path(
-        "<int:user_id>/articles/likes/",
-        views.UserDetailLikeArticlesView.as_view(),
-        name="user_detail_like_article",
-    ),
-    path(
-        "<int:user_id>/comments/likes/",
-        views.UserDetailLikeCommentsView.as_view(),
-        name="user_detail_like_comment",
-    ),
-    path(
-        "<int:user_id>/articles/bookmarks/",
-        views.UserDetailArticlesBookmarksView.as_view(),
-        name="user_detail_article_bookmark",
-    ),
-    path(
         "fridge/",
         views.UserDetailFridgeView.as_view(),
         name="user_fridge",
