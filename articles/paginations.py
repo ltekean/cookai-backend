@@ -14,7 +14,7 @@ class ArticlePagination(PageNumberPagination):
         max_page_size(int): 최대 페이지 수
     """
 
-    page_size = 2
+    page_size = 4
     page_query_param = "page"
     max_page_size = 100
 

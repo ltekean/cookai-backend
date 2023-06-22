@@ -59,7 +59,7 @@ class CategorySerializer(ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SerializerMethodField()
+    is_author = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
 
     # 댓글 조회 시리얼라이저-직렬화
