@@ -8,7 +8,6 @@ from rest_framework.serializers import (
     ValidationError,
     SerializerMethodField,
 )
-from django.conf import settings
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from articles.models import Ingredient
 from .models import User, Fridge
