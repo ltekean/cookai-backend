@@ -76,6 +76,20 @@ class UserSignUpPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 User.objects.filter(pk=uid).update(is_active=True)
+                html = render_to_string(
+                    "users/success_register_email.html",
+                    {
+                        "front_base_url": settings.FRONT_DEVELOP_URL,
+                    },
+                )
+                to_email = user.email
+                send_mail(
+                    "안녕하세요 Cookai입니다. 회원가입을 축하드립니다!",
+                    "_",
+                    settings.DEFAULT_FROM_MAIL,
+                    [to_email],
+                    html_message=html,
+                )
                 return redirect(f"{settings.FRONT_DEVELOP_URL}/users/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except:
