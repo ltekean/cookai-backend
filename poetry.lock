@@ -162,6 +162,16 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-admin-volt"
+version = "1.0.10"
+description = "Modern template for Django admin interface"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-admin-volt-1.0.10.tar.gz", hash = "sha256:7f1eec85a41906fd50bd19bfc4a7a1f6515bd324b6fbe52b1befa4e5462fe8b8"},
+]
+
+[[package]]
 name = "django-cors-headers"
 version = "4.1.0"
 description = "django-cors-headers is a Django application for handling the server headers required for Cross-Origin Resource Sharing (CORS)."
@@ -587,4 +597,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.9.dev0"
-content-hash = "bd5877e4a0e5ae23f97883d7c925bc21762941d61d90071750b9ded0f2be3ee9"
+content-hash = "73090bc6fbd1a3d39ab9d86d93ff60344a2b2708df98352e32ca495dae198a1f"
