@@ -1,10 +1,8 @@
 from django.urls import path
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
 )
 from . import views
-
 
 urlpatterns = [
     path("", views.UserView.as_view(), name="user_view"),
@@ -46,21 +44,6 @@ urlpatterns = [
         "<int:user_id>/articles/",
         views.UserDetailArticlesView.as_view(),
         name="user_detail_article",
-    ),
-    path(
-        "<int:user_id>/articles/likes/",
-        views.UserDetailLikeArticlesView.as_view(),
-        name="user_detail_like_article",
-    ),
-    path(
-        "<int:user_id>/comments/likes/",
-        views.UserDetailLikeCommentsView.as_view(),
-        name="user_detail_like_comment",
-    ),
-    path(
-        "<int:user_id>/articles/bookmarks/",
-        views.UserDetailArticlesBookmarksView.as_view(),
-        name="user_detail_article_bookmark",
     ),
     path(
         "fridge/",
