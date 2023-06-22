@@ -476,9 +476,7 @@ class UserDetailCommentsView(generics.ListAPIView):
 
 
 class UserDetailFridgeView(APIView):
-    pagination_class = ArticlePagination
-    serializer_class = ArticleListSerializer
-    queryset = Article.objects.none()
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, **kwargs):
         if kwargs.get("fridge_id"):
