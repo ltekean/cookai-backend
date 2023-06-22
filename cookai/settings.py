@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "taggit",
+    "taggit_serializer",
     "users",
     "articles",
     "ai_process",
@@ -45,8 +47,6 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     "django_crontab",
-    "taggit",
-    "taggit_serializer",
 ]
 
 MIDDLEWARE = [
