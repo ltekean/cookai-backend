@@ -51,7 +51,7 @@ class UserSerializer(ModelSerializer):
         html = render_to_string(
             "users/register_email.html",
             {
-                "backend_base_url": settings.BACK_DEVELOP_URL,
+                "backend_base_url": settings.BACKEND_BASE_URL,
                 "uidb64": urlsafe_base64_encode(force_bytes(user.id)).encode().decode(),
                 "token": account_activation_token.make_token(user),
             },

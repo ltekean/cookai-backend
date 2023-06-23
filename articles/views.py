@@ -33,9 +33,6 @@ from articles.coupang import save_coupang_links_to_ingredient_links
 from datetime import datetime, timedelta
 
 
-# Create your views here.
-
-
 class ArticleView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnlyExceptBookMark]
     pagination_class = ArticlePagination

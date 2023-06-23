@@ -103,10 +103,11 @@ class UserSignUpPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 User.objects.filter(pk=uid).update(is_active=True)
+
                 html = render_to_string(
                     "users/success_register_email.html",
                     {
-                        "front_base_url": settings.FRONT_DEVELOP_URL,
+                        "front_base_url": settings.FRONT_BASE_URL,
                     },
                 )
                 to_email = user.email
@@ -117,7 +118,7 @@ class UserSignUpPermitView(APIView):
                     [to_email],
                     html_message=html,
                 )
-                return redirect(f"{settings.FRONT_DEVELOP_URL}/users/login.html")
+                return redirect(f"{settings.FRONT_BASE_URL}/users/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
@@ -130,7 +131,7 @@ class UserResetPasswordPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 return redirect(
-                    f"{settings.FRONT_DEVELOP_URL}/users/password_change.html?uid={uid}"
+                    f"{settings.FRONT_BASE_URL}/users/password_change.html?uid={uid}"
                 )
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
@@ -153,7 +154,7 @@ class KakaoLoginView(APIView):
             data = {
                 "grant_type": "authorization_code",
                 "client_id": settings.KK_API_KEY,
-                "redirect_uri": "http://127.0.0.1:5500/index.html",
+                "redirect_uri": f"{settings.FRONT_BASE_URL}/index.html",
                 "code": auth_code,
             }
             kakao_token = requests.post(
@@ -289,11 +290,10 @@ class ResetPasswordView(APIView):
             user = User.objects.get(email=user_email)
             if user:
                 if user.login_type == "normal":
-                    # f"http://127.0.0.1:8000/users/reset/{uidb64}/{token}",
                     html = render_to_string(
                         "users/reset_password_email.html",
                         {
-                            "backend_base_url": settings.BACK_DEVELOP_URL,
+                            "backend_base_url": settings.BACKEND_BASE_URL,
                             "uidb64": urlsafe_base64_encode(force_bytes(user.id))
                             .encode()
                             .decode(),
