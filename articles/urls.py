@@ -13,7 +13,9 @@ urlpatterns = [
         views.CategoryListView.as_view(),
         name="category",
     ),
-    path(
+
+    path(  # 게시글 RUD
+
         "<int:article_id>/",
         views.ArticleDetailView.as_view(),
         name="article_detail",
@@ -48,7 +50,8 @@ urlpatterns = [
         views.RecipeIngredientDetailView.as_view(),
         name="r_ingredient_detail",
     ),
-    path(
+
+    path(  # 구매링크 추가
         "<int:article_id>/order/",
         views.LinkPlusView.as_view(),
         name="order",
