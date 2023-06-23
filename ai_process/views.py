@@ -1,11 +1,10 @@
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import ImageUploadSerializer
-
+from .models import ImageUpload
 from roboflow import Roboflow
-
+from rest_framework.permissions import IsAuthenticated
 import os
 from rest_framework import status, permissions
 from rest_framework.response import Response
@@ -16,27 +15,39 @@ from articles.models import (
 from articles.serializers import ArticleListSerializer
 from ai_process.recommend import collaborative_filtering, content_base
 
+
 class ImageUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        image_serializer = ImageUploadSerializer(data=request.data)
+        image_serializer = ImageUploadSerializer(data=request.data, partial=True)
         if image_serializer.is_valid():
-            image_serializer.save()
-            
+            try:
+                obj = ImageUpload.objects.get(pk=request.user.id)
+                obj.delete()
+            except:
+                pass
+            image_serializer.save(user=request.user)
+            image_file = image_serializer.validated_data["image"]
+            obj = ImageUpload.objects.get(pk=request.user.id)
+
             rf = Roboflow(api_key=os.environ.get("RF_API_KEY"))
             project = rf.workspace().project("cookai")
             model = project.version("3").model
-            
-            image_file = image_serializer.validated_data["image"]
-            
-            prediction = model.predict(image_file.path, confidence=40, overlap=30).json()
-        
-            return Response({"result":prediction}, status=201)
+
+            prediction = model.predict(
+                "./media/" + str(obj.image), confidence=40, overlap=30
+            ).json()
+
+            obj.image.delete(save=False)
+            obj.delete()
+            return Response({"result": prediction}, status=201)
         else:
             return Response(image_serializer.errors, status=400)
 
-class TestView(APIView):
+
+class RecommendView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -52,4 +63,3 @@ class TestView(APIView):
             articles, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
-
