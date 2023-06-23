@@ -151,7 +151,7 @@ class PublicUserSerializer(ModelSerializer):
 class UserFridgeSerializer(ModelSerializer):
     class Meta:
         model = Fridge
-        fields = ("__all__",)
+        fields = "__all__"
         extra_kwargs = {
             "user": {
                 "read_only": True,
@@ -161,16 +161,16 @@ class UserFridgeSerializer(ModelSerializer):
             },
         }
 
-        def save(self, **kwargs):
-            ingredient_name = kwargs.get("ingredient_id", None)
-            if not ingredient_name:
-                raise ValidationError({"ingredient_id": "재료를 입력해주세요"})
-            try:
-                ingredient = Ingredient.objects.get(ingredient_name=ingredient_name)
-            except Ingredient.DoesNotExist:
-                ingredient = Ingredient.objects.create(ingredient_name=ingredient_name)
-                ingredient.save()
-            return super().save(**kwargs)
+    def save(self, **kwargs):
+        ingredient_name = kwargs.get("ingredient_id", None)
+        if not ingredient_name:
+            raise ValidationError({"ingredient_id": "재료를 입력해주세요"})
+        try:
+            ingredient = Ingredient.objects.get(ingredient_name=ingredient_name)
+        except Ingredient.DoesNotExist:
+            ingredient = Ingredient.objects.create(ingredient_name=ingredient_name)
+            ingredient.save()
+        return super().save(**kwargs)
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):

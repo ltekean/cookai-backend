@@ -71,6 +71,31 @@ class UserView(APIView):
             )
 
 
+class UserAvatarGetUploadURLView(APIView):
+    def post(self, request):
+        """GetUploadURL.post
+
+        사용자가 사진을 첨부해서 클라우드플레어에 전송하기전에 먼저 일회용 업로드 url을 요청합니다.
+
+        Args:
+            url (str): 클라우드플레어에서 미리 지정한 일회용 url 요청 링크
+            one_time_url (str): post요청이 성공할 경우 클라우드플레어에서 온 response. 일회용 업로드 url을 포함하고 있습니다.
+        return:
+            result(str)): 일회용 url
+
+        """
+        url = f"https://api.cloudflare.com/client/v4/accounts/{settings.CF_ID}/images/v2/direct_upload"
+        one_time_url = requests.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {settings.CF_TOKEN}",
+            },
+        )
+        one_time_url = one_time_url.json()
+        result = one_time_url.get("result")
+        return Response(result)
+
+
 class UserSignUpPermitView(APIView):
     def get(self, request, uidb64, token):
         try:
@@ -363,31 +388,6 @@ class ChangePasswordView(APIView):
             )
 
 
-class UserAvatarGetUploadURLView(APIView):
-    def post(self, request):
-        """GetUploadURL.post
-
-        사용자가 사진을 첨부해서 클라우드플레어에 전송하기전에 먼저 일회용 업로드 url을 요청합니다.
-
-        Args:
-            url (str): 클라우드플레어에서 미리 지정한 일회용 url 요청 링크
-            one_time_url (str): post요청이 성공할 경우 클라우드플레어에서 온 response. 일회용 업로드 url을 포함하고 있습니다.
-        return:
-            result(str)): 일회용 url
-
-        """
-        url = f"https://api.cloudflare.com/client/v4/accounts/{settings.CF_ID}/images/v2/direct_upload"
-        one_time_url = requests.post(
-            url,
-            headers={
-                "Authorization": f"Bearer {settings.CF_TOKEN}",
-            },
-        )
-        one_time_url = one_time_url.json()
-        result = one_time_url.get("result")
-        return Response(result)
-
-
 class UserDetailView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -412,7 +412,12 @@ class UserDetailView(APIView):
         # """유저 프로필 수정"""
         user = get_object_or_404(User, id=user_id)
         if request.user.id == user_id:
-            serializer = UserSerializer(user, data=request.data, partial=True)
+            serializer = UserSerializer(
+                user,
+                data=request.data,
+                partial=True,
+                context={"request": request},
+            )
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -529,7 +534,7 @@ class UserDetailFridgeView(APIView):
         if serializer.is_valid():
             fridge = serializer.save(
                 user=request.user,
-                ingredient_id=request.get("ingredient"),
+                ingredient_id=request.data.get("ingredient"),
             )
             serializer = UserFridgeSerializer(fridge)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -572,8 +577,9 @@ class UserFollowView(APIView):
     def post(self, request, user_id):
         """유저 팔로잉 누르기"""
         you = get_object_or_404(User, id=user_id)
-
+        print(you)
         me = request.user
+        print(me)
         if request.user.id != user_id:
             if me in you.followers.all():
                 you.followers.remove(me)
