@@ -13,7 +13,7 @@ urlpatterns = [
         views.CategoryListView.as_view(),
         name="category",
     ),
-    path(  # 게시글 UD
+    path(  # 게시글 RUD
         "<int:article_id>/",
         views.ArticleDetailView.as_view(),
         name="article_detail",
@@ -48,7 +48,7 @@ urlpatterns = [
         views.RecipeIngredientDetailView.as_view(),
         name="r_ingredient_detail",
     ),
-    path(  # 구매링크 추가 - 쿠팡이라 일단 패스
+    path(  # 구매링크 추가
         "<int:article_id>/order/",
         views.LinkPlusView.as_view(),
         name="order",
