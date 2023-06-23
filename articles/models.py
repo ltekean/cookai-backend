@@ -74,6 +74,8 @@ class Article(models.Model):
     )
     recipe = models.TextField(
         max_length=500,
+        blank=True,
+        null=True,
     )
     image = models.URLField(blank=True, null=True)
     like = models.ManyToManyField(
