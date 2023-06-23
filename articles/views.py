@@ -49,11 +49,11 @@ class ArticleView(generics.ListCreateAPIView):
         selector = self.request.GET.get("selector")
         q = Q(title__icontains=selector)
         q.add(Q(content__icontains=selector), q.OR)
-        q.add(Q(recipe__icontaions=selector), q.OR)
+        q.add(Q(recipe__icontains=selector), q.OR)
 
         if self.request.GET.get("recipe"):
-            q2 = ~Q(recipe__exact=None)
-            q2.add(~Q(counts=0), q2.OR)
+            q2 = Q(recipe__isnull=False)
+            q2.add(Q(counts__gt=0), q2.OR)
             q.add(q2, q.AND)
         return q
 
@@ -62,7 +62,7 @@ class ArticleView(generics.ListCreateAPIView):
         ingredients = Ingredient.objects.filter(ingredient_name__icontains=selector)
         q = Q()
         for ingredient in ingredients:
-            q.add(Q(recipeingredient_set__ingredient__in=[ingredient]), q.OR)
+            q.add(Q(recipeingredient__ingredient__in=[ingredient]), q.OR)
         return q
 
     def search_ingredient_title_content(self):
@@ -76,11 +76,11 @@ class ArticleView(generics.ListCreateAPIView):
 
     def search(self, type_key):
         types = {
-            "0": self.search_author,  # author
-            "1": self.search_title_content,  # title+con(recipeonly)
-            "2": self.search_ingredient,  # ingredient
-            "3": self.search_ingredient_title_content,  # title+con+ingredient
-            "4": self.search_tag,  # tag
+            "0": self.search_author,  # author 통과
+            "1": self.search_title_content,  # title+con(recipeonly) 통과
+            "2": self.search_ingredient,  # ingredient 통과
+            "3": self.search_ingredient_title_content,  # title+con+ingredient 통과
+            "4": self.search_tag,  # tag 통과
         }
         query_filter = types.get(type_key, Q)()
         return query_filter
@@ -100,14 +100,15 @@ class ArticleView(generics.ListCreateAPIView):
         order = self.request.GET.get("order")
         if order == "1":
             queryset = (
-                Article.objects.annotate(counts=Count("recipeingredient_set"))
+                Article.objects.annotate(counts=Count("recipeingredient"))
                 .filter(q)
                 .annotate(like_count=Count("like"))
                 .order_by("-like_count", "-created_at")
             )
         else:
+            Article.objects.annotate(counts=Count("recipeingredient"))
             queryset = (
-                Article.objects.annotate(counts=Count("recipeingredient_set"))
+                Article.objects.annotate(counts=Count("recipeingredient"))
                 .filter(q)
                 .order_by("-created_at")
             )
@@ -160,8 +161,10 @@ class ArticleDetailView(APIView):
 
     def put(self, request, article_id):
         art_put = get_object_or_404(Article, id=article_id)
-        if request.user == art_put.user:
-            serializer = ArticleSerializer(art_put, data=request.data)
+        if request.user == art_put.author:
+            serializer = ArticleSerializer(
+                art_put, data=request.data, context={"request": request}
+            )
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -169,7 +172,7 @@ class ArticleDetailView(APIView):
 
     def delete(self, request, article_id):
         art_del = get_object_or_404(Article, id=article_id)
-        if request.user == art_del.user:
+        if request.user == art_del.author:
             art_del.delete()
             return Response(
                 {"message": "게시글이 삭제되었습니다"}, status=status.HTTP_204_NO_CONTENT
@@ -227,7 +230,9 @@ class CommentView(generics.ListCreateAPIView):
         return super().get(request, *args, **kwargs)
 
     def post(self, request, article_id):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(
+            data=request.data, context={"request": request}
+        )
         if serializer.is_valid():
             serializer.save(author=request.user, article_id=article_id)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -235,10 +240,12 @@ class CommentView(generics.ListCreateAPIView):
 
 
 class CommentDetailView(APIView):
-    def put(self, request, comment_id):
+    def put(self, request, article_id, comment_id):
         comment = get_object_or_404(Comment, id=comment_id)
         if request.user == comment.author:
-            serializer = CommentSerializer(comment, data=request.data)
+            serializer = CommentSerializer(
+                comment, data=request.data, context={"request": request}
+            )
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
