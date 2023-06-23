@@ -44,6 +44,7 @@ FRONT_DEVELOP_URL = "http://127.0.0.1:5500"
 BACK_DEVELOP_URL = "http://127.0.0.1:8000"
 COUPANG_ACCESS_KEY = os.environ.get("COUPANG_ACCESS_KEY")
 COUPANG_SECRET_KEY = os.environ.get("COUPANG_SECRET_KEY")
+RF_API_KEY = os.environ.get("RF_API_KEY")
 
 
 # SECURITY WARNING: don't run with debug turned on in production!

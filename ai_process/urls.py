@@ -1,6 +1,9 @@
 from django.urls import path
-from ai_process.views import TestView
+
+from .views import ImageUploadView,TestView
 
 urlpatterns = [
+    path("upload/", ImageUploadView.as_view(), name="image_upload"),
     path("", TestView.as_view()),
+
 ]

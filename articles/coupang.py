@@ -10,6 +10,7 @@ from django.utils import timezone
 from urllib.parse import urlencode
 from articles.models import Ingredient, IngredientLink
 from django.conf import settings
+from ratelimiter import RateLimiter
 
 
 ACCESS_KEY = settings.COUPANG_ACCESS_KEY
@@ -34,12 +35,10 @@ class CoupangManage:
         )
 
     def get_productsdata(self, request_method, authorization, keyword, limit):
-        URL = (
-            "/v2/providers/affiliate_open_api/apis/openapi/products/search?keyword="
-            + urllib.parse.quote(keyword)
-            + "&limit="
-            + str(limit)
-        )
+        query = {"keyword": keyword, "limit": limit}
+        encoded_query = urlencode(query)
+
+        URL = f"/v2/providers/affiliate_open_api/apis/openapi/products/search?{encoded_query}"
         url = "{}{}".format(self.DOMAIN, URL)
 
         response = requests.request(
@@ -86,12 +85,17 @@ class CoupangManage:
         return products
 
 
+# 전역 변수로 RateLimiter 객체 생성 (60초에 50회 제한)
+coupang_api_limiter = RateLimiter(max_calls=50, period=60)
+
+
 def save_coupang_links_to_ingredient_links(ingredient_name):
     # CoupangManage 객체 생성
     coupang_api = CoupangManage()
 
-    # 키워드를 기반으로 상품 정보검색
-    product_links = coupang_api.get_products_by_keyword(ingredient_name, 10)
+    # ratelimiter 적용하여 키워드를 기반으로 상품 정보 검색
+    with coupang_api_limiter:
+        product_links = coupang_api.get_products_by_keyword(ingredient_name, 10)
 
     # Ingredient DB에서 Ingredient_name 찾기
     try:
@@ -111,20 +115,18 @@ def save_coupang_links_to_ingredient_links(ingredient_name):
         ingredient_link.save()
 
 
-def update_ingredient_links(limit_per_minute=50, interval_days=1):
+def update_ingredient_links(interval_days=3):
     new_ingredients = Ingredient.objects.filter(
         updated_at__isnull=True
     ) | Ingredient.objects.filter(
         updated_at__lt=timezone.now() - timezone.timedelta(days=interval_days)
     )
 
-    for index, ingredient in enumerate(new_ingredients):
-        if index < limit_per_minute * 24 * 60:
-            ingredient_name = ingredient.ingredient_name
+    for ingredient in new_ingredients:
+        ingredient_name = ingredient.ingredient_name
+        with coupang_api_limiter:
             save_coupang_links_to_ingredient_links(ingredient_name)
-            ingredient.updated_at = timezone.now()
-            ingredient.save()
-        else:
-            break
+        ingredient.updated_at = timezone.now()
+        ingredient.save()
     else:
         print("coupang")
