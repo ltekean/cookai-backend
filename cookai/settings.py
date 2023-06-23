@@ -8,6 +8,27 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = os.environ.get("SECRET_KEY")
+CF_ID = os.environ.get("CF_ID")
+CF_TOKEN = os.environ.get("CF_TOKEN")
+GC_API_KEY = os.environ.get("GC_API_KEY")
+GC_ID = os.environ.get("GC_ID")
+GC_SECRET = os.environ.get("GC_SECRET")
+NC_ID = os.environ.get("NC_ID")
+NC_SECRET = os.environ.get("NC_SECRET")
+KK_API_KEY = os.environ.get("KK_API_KEY")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_HOST_USER = os.environ.get("EMAIL")
+EMAIL_HOST_PASSWORD = os.environ.get("PASSWORD")
+DEFAULT_FROM_MAIL = EMAIL_HOST_USER
+FRONT_BASE_URL = "http://127.0.0.1:5500"
+BACKEND_BASE_URL = "http://127.0.0.1:8000"
+COUPANG_ACCESS_KEY = os.environ.get("COUPANG_ACCESS_KEY")
+COUPANG_SECRET_KEY = os.environ.get("COUPANG_SECRET_KEY")
+RF_API_KEY = os.environ.get("RF_API_KEY")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -16,6 +37,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "taggit",
+    "taggit_serializer",
     "users",
     "articles",
     "ai_process",
@@ -41,7 +64,7 @@ ROOT_URLCONF = "cookai.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -59,7 +82,9 @@ WSGI_APPLICATION = "cookai.wsgi.application"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-    )
+    ),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -104,23 +129,13 @@ CRONJOBS = [
         "*/1 * * * *",
         "users.cron.delete_dormant_user",
         ">>" + os.path.join(BASE_DIR, "cron.log"),
-    )
+    ),
+    (
+        "*/1 * * * *",
+        "articles.coupang.update_ingredient_links",
+        ">>" + os.path.join(BASE_DIR, "cron2.log"),
+    ),
 ]
-
-SECRET_KEY = os.environ.get("SECRET_KEY")
-CF_ID = os.environ.get("CF_ID")
-CF_TOKEN = os.environ.get("CF_TOKEN")
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_USE_TLS = True
-EMAIL_PORT = 587
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_HOST_USER = os.environ.get("EMAIL")
-EMAIL_HOST_PASSWORD = os.environ.get("PASSWORD")
-DEFAULT_FROM_MAIL = EMAIL_HOST_USER
-COUPANG_ACCESS_KEY = os.environ.get("COUPANG_ACCESS_KEY")
-COUPANG_SECRET_KEY = os.environ.get("COUPANG_SECRET_KEY")
-
-
 # 환경변수에 따라 DEBUG모드 여부를 결정합니다.
 DEBUG = os.environ.get("DEBUG", "0")
 

@@ -1,19 +1,29 @@
 import requests
 from django.db import transaction
+from django.db.models import Count
 from django.conf import settings
-from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.shortcuts import redirect
-from rest_framework import status
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
-from users.serializers import UserSerializer, UserFridgeSerializer
-
+from rest_framework_simplejwt.views import TokenObtainPairView
+from users.serializers import (
+    UserSerializer,
+    UserFridgeSerializer,
+    CustomTokenObtainPairSerializer,
+    PublicUserSerializer,
+)
+from articles.serializers import ArticleListSerializer, CommentSerializer
+from articles.models import Article, Comment
+from articles.paginations import ArticlePagination, CommentPagination
 from users.models import User, Fridge
 from users import serializers
 from users.email_tokens import account_activation_token
@@ -30,19 +40,33 @@ class UserView(APIView):
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
+        password2 = request.data.get("password2")
+        if not email:
+            return Response(
+                {"error": "이메일 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if not password or not password2:
+            return Response(
+                {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if password != password2:
+            return Response(
+                {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
         if User.objects.filter(email=email).exists():
             return Response(
                 "해당 이메일을 가진 유저가 이미 있습니다!", status=status.HTTP_400_BAD_REQUEST
             )
-        if not password:
-            raise ParseError
-        serializer = serializers.UserSerializer(data=request.data)
+        serializer = serializers.UserSerializer(
+            data=request.data,
+            context={"request": request},
+        )
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(
-                {"message": f"${serializer.errors}"},
+                {"message": f"{serializer.errors}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -54,9 +78,24 @@ class UserSignUpPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 User.objects.filter(pk=uid).update(is_active=True)
+
+                html = render_to_string(
+                    "users/success_register_email.html",
+                    {
+                        "front_base_url": settings.FRONT_BASE_URL,
+                    },
+                )
+                to_email = user.email
+                send_mail(
+                    "안녕하세요 Cookai입니다. 회원가입을 축하드립니다!",
+                    "_",
+                    settings.DEFAULT_FROM_MAIL,
+                    [to_email],
+                    html_message=html,
+                )
                 return redirect(f"{settings.FRONT_BASE_URL}/users/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
-        except KeyError:
+        except:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -72,6 +111,10 @@ class UserResetPasswordPermitView(APIView):
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class KakaoLoginView(APIView):
@@ -113,7 +156,7 @@ class KakaoLoginView(APIView):
             }
             return social_login_validate(**data)
         except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "로그인 실패!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GoogleLoginView(APIView):
@@ -138,7 +181,7 @@ class GoogleLoginView(APIView):
             }
             return social_login_validate(**data)
         except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "로그인 실패!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class NaverLoginView(APIView):
@@ -173,11 +216,9 @@ class NaverLoginView(APIView):
                 "login_type": "naver",
                 "is_active": True,
             }
-
             return social_login_validate(**data)
-
         except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "로그인 실패!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def social_login_validate(**kwargs):
@@ -224,20 +265,30 @@ class ResetPasswordView(APIView):
             user = User.objects.get(email=user_email)
             if user:
                 if user.login_type == "normal":
-                    # url에 포함될 user.id 에러 방지용  encoding하기
-                    uidb64 = urlsafe_base64_encode(force_bytes(user.id))
-                    token = account_activation_token.make_token(user)
-                    to_email = user.email
-                    email = EmailMessage(
-                        "안녕하세요 Cookai입니다. 아래 링크를 클릭해 인증을 완료하세요!",
-                        f"{settings.BACKEND_BASE_URL}/users/reset/{uidb64}/{token}",
-                        to=[to_email],
+                    html = render_to_string(
+                        "users/reset_password_email.html",
+                        {
+                            "backend_base_url": settings.BACKEND_BASE_URL,
+                            "uidb64": urlsafe_base64_encode(force_bytes(user.id))
+                            .encode()
+                            .decode(),
+                            "token": account_activation_token.make_token(user),
+                        },
                     )
-                    email.send()
-                    return Response({"ok": "이메일 전송 완료!"}, status=status.HTTP_200_OK)
+                    to_email = user.email
+                    send_mail(
+                        "안녕하세요 Cookai입니다. 비밀번호 초기화 메일이 도착했어요!",
+                        "_",
+                        settings.DEFAULT_FROM_MAIL,
+                        [to_email],
+                        html_message=html,
+                    )
+                    return Response(
+                        {"message": "이메일 전송 완료!"}, status=status.HTTP_200_OK
+                    )
                 else:
                     return Response(
-                        {"error": "해당 사용자는 소셜로그인 사용자입니다!"},
+                        {"error": "해당 이메일은 소셜로그인 이메일입니다!"},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
         except User.DoesNotExist:
@@ -257,12 +308,16 @@ class ResetPasswordView(APIView):
                     {"error": "일치하는 유저가 존재하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
                 )
             if not new_first_password or not new_second_password:
-                raise ParseError
+                return Response(
+                    {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
             if new_first_password != new_second_password:
-                raise ParseError
+                return Response(
+                    {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
             user.set_password(new_second_password)
             user.save()
-            return Response(status=status.HTTP_200_OK)
+            return Response({"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK)
         except Exception:
             raise ParseError
 
@@ -277,18 +332,35 @@ class ChangePasswordView(APIView):
         if user.login_type == "normal":
             old_password = request.data.get("old_password")
             new_password = request.data.get("new_password")
-            if not old_password or not new_password:
-                raise ParseError
+            new_password2 = request.data.get("new_password2")
+            if not old_password or not new_password or not new_password2:
+                return Response(
+                    {"error": "비밀번호입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
             if old_password == new_password:
-                raise ParseError
+                return Response(
+                    {"error": "예전 비밀번호와 새 비밀번호가 일치합니다!"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if new_password != new_password2:
+                return Response(
+                    {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
             if user.check_password(old_password):
                 user.set_password(new_password)
                 user.save()
-                return Response(status=status.HTTP_200_OK)
+                return Response(
+                    {"message": "비밀번호가 변경되었습니다!"}, status=status.HTTP_200_OK
+                )
             else:
-                raise ParseError
+                return Response(
+                    {"error": "현재 비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
         else:
-            raise ParseError
+            return Response(
+                {"error": "비밀번호 변경은 일반 로그인 계정만 가능합니다!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class UserAvatarGetUploadURLView(APIView):
@@ -321,9 +393,20 @@ class UserDetailView(APIView):
 
     def get(self, request, user_id):
         # """유저 프로필 조회 주석 추가 예정"""
+
         user = get_object_or_404(User, id=user_id)
-        serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.user.id == user_id:
+            serializer = UserSerializer(
+                user,
+                context={"request": request},
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            serializer = PublicUserSerializer(
+                user,
+                context={"request": request},
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, user_id):
         # """유저 프로필 수정"""
@@ -338,23 +421,98 @@ class UserDetailView(APIView):
         else:
             raise PermissionDenied
 
-    def delete(self, request, user_id):
-        # """유저 삭제, 주석 추가 예정"""
+    def patch(self, request, user_id):
+        """유저 삭제, 주석 추가 예정"""
         user = get_object_or_404(User, id=user_id)
 
-        if request.user.id == user_id:
+        if request.user.id == user_id and user.check_password(
+            request.data.get("password")
+        ):
             user = request.user
             user.is_active = False
             user.save()
-            return Response("삭제되었습니다!", status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "삭제되었습니다!"}, status=status.HTTP_200_OK)
         else:
-            return Response("권한이 없습니다!", status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "권한이 없습니다!"}, status=status.HTTP_403_FORBIDDEN)
+
+
+class UserDetailArticlesView(generics.ListAPIView):
+    pagination_class = ArticlePagination
+    serializer_class = ArticleListSerializer
+    queryset = Article.objects.none()
+
+    def my_article(self):
+        return Article.objects.filter(author_id=self.user_id)
+
+    def liked_article(self):
+        return Article.objects.filter(like=self.user_id)
+
+    def bookmarked_article(self):
+        return Article.objects.filter(bookmark=self.user_id)
+
+    def get_queryset(self):
+        query_types = {
+            "0": self.my_article,
+            "1": self.liked_article,
+            "2": self.bookmarked_article,
+        }
+        query_key = self.request.GET.get("filter", None)
+        order = self.request.GET.get("order", None)
+        queryset = query_types.get(query_key, self.my_article)()
+        if order == "1":
+            queryset = queryset.annotate(like_count=Count("like")).order_by(
+                "-like_count"
+            )
+        else:
+            queryset = queryset.order_by("-created_at")
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        self.user_id = kwargs.get("user_id", None)
+        return super().get(request, *args, **kwargs)
+
+
+class UserDetailCommentsView(generics.ListAPIView):
+    pagination_class = CommentPagination
+    serializer_class = CommentSerializer
+    queryset = Comment.objects.none()
+
+    def my_comment(self):
+        return Comment.objects.filter(author_id=self.user_id)
+
+    def liked_comment(self):
+        return Comment.objects.filter(like=self.user_id)
+
+    def get_queryset(self):
+        query_types = {
+            "0": self.my_comment,
+            "1": self.liked_comment,
+        }
+        query_key = self.request.GET.get("filter", None)
+        order = self.request.GET.get("order", None)
+        queryset = query_types.get(query_key, self.my_comment)()
+        if order == "1":
+            queryset = queryset.annotate(like_count=Count("like")).order_by(
+                "-like_count"
+            )
+        else:
+            queryset = queryset.order_by("-created_at")
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        self.user_id = kwargs.get("user_id", None)
+        return super().get(request, *args, **kwargs)
 
 
 class UserDetailFridgeView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request, **kwargs):
+        if kwargs.get("fridge_id"):
+            fridge = get_object_or_404(Fridge, id=kwargs.get("fridge_id"))
+            serializer = UserFridgeSerializer(fridge)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
         all_fridge = Fridge.objects.filter(user=request.user)
         serializer = UserFridgeSerializer(
             all_fridge,
@@ -362,46 +520,84 @@ class UserDetailFridgeView(APIView):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def post(self, request):
+    def post(self, request, **kwargs):
+        if kwargs.get("fridge_id"):
+            return Response(
+                {"error": "올바르지않은 요청입니다"}, status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
         serializer = UserFridgeSerializer(data=request.data)
         if serializer.is_valid():
             fridge = serializer.save(
                 user=request.user,
+                ingredient_id=request.get("ingredient"),
             )
             serializer = UserFridgeSerializer(fridge)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, fridge_id):
+    def delete(self, request, **kwargs):
+        try:
+            fridge_id = kwargs["fridge_id"]
+        except:
+            return Response(
+                {"error": "올바르지않은 요청입니다."}, status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
         fridges = get_object_or_404(Fridge, pk=fridge_id)
+        if fridges.user != request.user:
+            raise PermissionDenied
         if fridges:
             fridges.delete()
-            return Response(status=status.HTTP_200_OK)
+            return Response({"message": "삭제완료"}, status=status.HTTP_200_OK)
         else:
             raise NotFound
 
 
 class UserFollowView(APIView):
-    # """팔로우한 유저 조회, 유저 팔로우 토글. 주석추가예정"""
+    """팔로우한 유저 조회, 유저 팔로우 토글. 주석추가예정"""
+
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request, user_id):
-        # """유저 팔로우한 유저들 조회"""
-        follow = User.objects.filter(followings=user_id)
-        serializer = UserSerializer(follow, many=True)
+        """팔로우한 유저들 조회"""
+        user = get_object_or_404(User, id=user_id)
+
+        serializer = UserSerializer(
+            user.followings,
+            many=True,
+            context={"request": request},
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, user_id):
-        # """유저 팔로잉 누르기"""
+        """유저 팔로잉 누르기"""
         you = get_object_or_404(User, id=user_id)
+
         me = request.user
         if request.user.id != user_id:
             if me in you.followers.all():
                 you.followers.remove(me)
-                return Response("unfollow", status=status.HTTP_200_OK)
+                return Response({"message": "unfollow"}, status=status.HTTP_200_OK)
             else:
                 you.followers.add(me)
-                return Response("follow", status=status.HTTP_200_OK)
+                return Response({"message": "follow"}, status=status.HTTP_200_OK)
         else:
-            return Response("자신을 팔로우 할 수 없습니다!", status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "자신을 팔로우 할 수 없습니다!"}, status=status.HTTP_403_FORBIDDEN
+            )
+
+
+class UserFollowerView(APIView):
+    """자신을 팔로우한 유저 조회, 유저 팔로우 토글. 주석추가예정"""
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request, user_id):
+        """팔로우한 유저들 조회"""
+        user = get_object_or_404(User, id=user_id)
+        serializer = UserSerializer(
+            user.followers,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
