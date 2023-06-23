@@ -1,37 +1,40 @@
-from rest_framework.generics import get_object_or_404
-from rest_framework import status, permissions, generics
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
+from .serializers import ImageUploadSerializer
+
+from roboflow import Roboflow
+
+import os
+from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from articles.paginations import ArticlePagination, CommentPagination
-from users.models import Fridge
 from articles.models import (
     Article,
-    Category,
-    Ingredient,
-    IngredientLink,
-    RecipeIngredient,
 )
-from articles.permissions import IsAuthenticatedOrReadOnlyExceptBookMark
-from django.db.models import Count
-from articles.serializers import (
-    ArticleSerializer,
-    ArticleListSerializer,
-    CategorySerializer,
-    ArticleDetailSerializer,
-    CommentSerializer,
-    IngredientSerializer,
-    RecipeIngredientCreateSerializer,
-    IngredientLinkSerializer,
-    TagSerializer,
-)
-from django.conf import settings
-import requests
-from django.db.models import Q, Count
-from taggit.models import Tag
-from articles.coupang import save_coupang_links_to_ingredient_links
-
+from articles.serializers import ArticleListSerializer
 from ai_process.recommend import collaborative_filtering, content_base
 
+class ImageUploadView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, *args, **kwargs):
+        image_serializer = ImageUploadSerializer(data=request.data)
+        if image_serializer.is_valid():
+            image_serializer.save()
+            
+            rf = Roboflow(api_key=os.environ.get("RF_API_KEY"))
+            project = rf.workspace().project("cookai")
+            model = project.version("3").model
+            
+            image_file = image_serializer.validated_data["image"]
+            
+            prediction = model.predict(image_file.path, confidence=40, overlap=30).json()
+        
+            return Response({"result":prediction}, status=201)
+        else:
+            return Response(image_serializer.errors, status=400)
 
 class TestView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -49,3 +52,4 @@ class TestView(APIView):
             articles, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
+
