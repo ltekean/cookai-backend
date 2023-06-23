@@ -283,17 +283,6 @@ files = [
 Django = ">=1.8"
 
 [[package]]
-name = "django-dotenv"
-version = "1.4.2"
-description = "foreman reads from .env. manage.py doesn't. Let's fix that."
-optional = false
-python-versions = "*"
-files = [
-    {file = "django-dotenv-1.4.2.tar.gz", hash = "sha256:3812bb0f4876cf31f902aad140f0645e120e51ee30eb7c40c22050f58a0e4adb"},
-    {file = "django_dotenv-1.4.2-py2.py3-none-any.whl", hash = "sha256:a9b1b40a70bd321acd231926acedb9bd2c5e873e33a1873b34a7276d196a765e"},
-]
-
-[[package]]
 name = "django-rest-framework"
 version = "0.1.0"
 description = "alias."
@@ -1265,4 +1254,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.9.dev0"
-content-hash = "6b614c8de1f46199e06e13afe5f626bcb349dce3b175ac53337ef0eadd8e7b96"
+content-hash = "a1609aac9778e370967555416b8c9877d0331dd62fc0c55c62ad56675a3125fe"
