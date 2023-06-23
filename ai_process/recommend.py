@@ -1,7 +1,6 @@
 # user - article table 만들어야하는데
 from articles.models import Article
 from users.models import User, Fridge
-from django_pandas.io import read_frame
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
@@ -56,11 +55,8 @@ def collaborative_filtering(user_id):
     df.columns = ["pk", "article"]
     df["score"] = 2 * df["article"] / df["article"]
     users = User.objects.prefetch_related("bookmarks").values("pk", "bookmarks__pk")
-
-    df2 = read_frame(
-        User.objects.all().select_related("bookmarks"),
-        fieldnames=["pk", "bookmarks"],
-    )
+    users2 = User.objects.prefetch_related("bookmarks").values("pk", "bookmarks__pk")
+    df2 = pd.DataFrame(list(users2))
     df2.columns = ["pk", "article"]
     df2["score"] = 4 * df2["article"] / df2["article"]
     df = pd.concat([df, df2], ignore_index=True)
