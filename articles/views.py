@@ -284,7 +284,9 @@ class ArticleGetUploadURLView(APIView):
         one_time_url = one_time_url.json()
         result = one_time_url.get("result")
         print(result)
-        return Response(result)
+        print(result["id"])
+        print(result["uploadURL"])
+        return JsonResponse({"id": result["id"], "uploadURL": result["uploadURL"]})
 
 
 class TagSearchView(APIView):
