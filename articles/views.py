@@ -12,6 +12,7 @@ from articles.models import (
     IngredientLink,
     RecipeIngredient,
 )
+from django.http import JsonResponse
 from articles.permissions import IsAuthenticatedOrReadOnlyExceptBookMark
 from django.db.models import Count
 from articles.serializers import (
@@ -282,7 +283,8 @@ class ArticleGetUploadURLView(APIView):
         )
         one_time_url = one_time_url.json()
         result = one_time_url.get("result")
-        return Response(result)
+        print(result)
+        return JsonResponse(result)
 
 
 class TagSearchView(APIView):
@@ -354,7 +356,6 @@ class RecipeIngredientView(APIView):
 
     def post(self, request, article_id):
         serializer = RecipeIngredientCreateSerializer(data=request.data)
-        print(request.data.get("ingredient"))
         if serializer.is_valid():
             serializer.save(
                 article_id=article_id, ingredient_id=request.data.get("ingredient")
