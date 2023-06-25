@@ -73,7 +73,6 @@ class Article(models.Model):
         auto_now_add=True,
     )
     recipe = models.TextField(
-        max_length=500,
         blank=True,
         null=True,
     )
