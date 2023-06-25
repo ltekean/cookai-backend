@@ -21,6 +21,7 @@ class ArticleSerializer(TaggitSerializer, serializers.ModelSerializer):
     class Meta:
         model = Article
         fields = [
+            "id",
             "category",
             "title",
             "updated_at",

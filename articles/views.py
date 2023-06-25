@@ -354,6 +354,7 @@ class RecipeIngredientView(APIView):
 
     def post(self, request, article_id):
         serializer = RecipeIngredientCreateSerializer(data=request.data)
+        print(request.data.get("ingredient"))
         if serializer.is_valid():
             serializer.save(
                 article_id=article_id, ingredient_id=request.data.get("ingredient")
