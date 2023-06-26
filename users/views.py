@@ -38,16 +38,17 @@ class UserView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
+        print(request.data)
         email = request.data.get("email")
         password = request.data.get("password")
-        password2 = request.data.get("password2")
-        if not email:
-            return Response(
-                {"error": "이메일 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
-            )
+        password2 = request.data.get("second_psssword")
         if not password or not password2:
             return Response(
                 {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if not email:
+            return Response(
+                {"error": "이메일 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
             )
         if password != password2:
             return Response(

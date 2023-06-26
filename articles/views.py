@@ -283,9 +283,6 @@ class ArticleGetUploadURLView(APIView):
         )
         one_time_url = one_time_url.json()
         result = one_time_url.get("result")
-        print(result)
-        print(result["id"])
-        print(result["uploadURL"])
         return Response(result)
 
 
