@@ -14,6 +14,7 @@ from articles.models import (
 )
 from articles.serializers import ArticleListSerializer
 from ai_process.recommend import collaborative_filtering, content_base
+from .labels import LABELS
 
 
 class ImageUploadView(APIView):
@@ -39,10 +40,12 @@ class ImageUploadView(APIView):
             prediction = model.predict(
                 "./media/" + str(obj.image), confidence=40, overlap=30
             ).json()
-
+            results = []
+            for p in prediction["predictions"]:
+                results.append(LABELS[p["class"]])
             obj.image.delete(save=False)
             obj.delete()
-            return Response({"result": prediction}, status=201)
+            return Response({"results": results}, status=201)
         else:
             return Response(image_serializer.errors, status=400)
 
