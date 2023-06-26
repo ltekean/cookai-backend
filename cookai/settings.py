@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
-    "django_crontab",
 ]
 
 MIDDLEWARE = [
@@ -124,18 +123,6 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": False,
 }
-CRONJOBS = [
-    (
-        "*/1 * * * *",
-        "users.cron.delete_dormant_user",
-        ">>" + os.path.join(BASE_DIR, "cron.log"),
-    ),
-    (
-        "*/1 * * * *",
-        "articles.coupang.update_ingredient_links",
-        ">>" + os.path.join(BASE_DIR, "cron2.log"),
-    ),
-]
 # 환경변수에 따라 DEBUG모드 여부를 결정합니다.
 DEBUG = os.environ.get("DEBUG", "0")
 
