@@ -62,6 +62,7 @@ class CategorySerializer(ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     is_author = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
 
     # 댓글 조회 시리얼라이저-직렬화
     class Meta:
@@ -70,6 +71,7 @@ class CommentSerializer(serializers.ModelSerializer):
             "id",
             "comment",
             "author",
+            "user",
             "is_author",
             "article",
             "created_at",
@@ -83,6 +85,9 @@ class CommentSerializer(serializers.ModelSerializer):
             "id": {
                 "read_only": True,
             },
+            "user": {
+                "read_only": True,
+            },
             "is_author": {
                 "read_only": True,
             },
@@ -94,7 +99,7 @@ class CommentSerializer(serializers.ModelSerializer):
             },
         }
 
-    def get_author(self, obj):
+    def get_user(self, obj):
         return obj.author.username
 
     def get_likes_count(self, obj):
@@ -127,6 +132,7 @@ class ArticleDetailSerializer(serializers.ModelSerializer, TaggitSerializer):
     user = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
+    categoryname = serializers.SerializerMethodField()
     recipeingredient_set = RecipeIngredientSerializer(
         many=True
     )  # related_name을 이용해서 변수 이름을 정하자
@@ -134,6 +140,9 @@ class ArticleDetailSerializer(serializers.ModelSerializer, TaggitSerializer):
     class Meta:
         model = Article
         fields = "__all__"
+
+    def get_categoryname(self, obj):
+        return str(obj.category)
 
     def get_user(self, obj):
         return obj.author.username
