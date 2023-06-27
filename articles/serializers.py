@@ -6,6 +6,7 @@ from .models import (
     Category,
     Article,
     Comment,
+    Recomment,
     Ingredient,
     IngredientLink,
     RecipeIngredient,
@@ -63,6 +64,7 @@ class CommentSerializer(serializers.ModelSerializer):
     is_author = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    # recomments = serializers.SerializerMethodField()
 
     # 댓글 조회 시리얼라이저-직렬화
     class Meta:
@@ -77,6 +79,7 @@ class CommentSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "likes_count",
+            # "recomments",
         ]  # author, created_at 등 조회에 필요한 것들
         extra_kwargs = {
             "author": {
@@ -108,6 +111,73 @@ class CommentSerializer(serializers.ModelSerializer):
     def get_is_author(self, article):
         request = self.context["request"]
         return article.author == request.user
+
+    # def get_recomments(self, instance):
+    #     serializer = self.__class__(instance.recomments, many=True)
+    #     serializer.bind("", self)
+    #     return serializer.data
+
+
+class RecommentSerializer(serializers.ModelSerializer):
+    is_author = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    # recomments = serializers.SerializerMethodField()
+
+    # 댓글 조회 시리얼라이저-직렬화
+    class Meta:
+        model = Recomment
+        fields = [
+            "id",
+            "comment",
+            "recomment",
+            "author",
+            "user",
+            "is_author",
+            "article",
+            "created_at",
+            "updated_at",
+            "likes_count",
+            # "recomments",
+        ]  # author, created_at 등 조회에 필요한 것들
+        extra_kwargs = {
+            "author": {
+                "read_only": True,
+            },
+            "id": {
+                "read_only": True,
+            },
+            "user": {
+                "read_only": True,
+            },
+            "is_author": {
+                "read_only": True,
+            },
+            "likes_count": {
+                "read_only": True,
+            },
+            "article": {
+                "read_only": True,
+            },
+            "comment": {
+                "read_only": True,
+            },
+        }
+
+    def get_user(self, obj):
+        return obj.author.username
+
+    def get_likes_count(self, obj):
+        return obj.like.count()
+
+    def get_is_author(self, article):
+        request = self.context["request"]
+        return article.author == request.user
+
+    # def get_recomments(self, instance):
+    #     serializer = self.__class__(instance.recomments, many=True)
+    #     serializer.bind("", self)
+    #     return serializer.data
 
 
 # 레시피 재료 가져오기

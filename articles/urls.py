@@ -13,9 +13,7 @@ urlpatterns = [
         views.CategoryListView.as_view(),
         name="category",
     ),
-
     path(  # 게시글 RUD
-
         "<int:article_id>/",
         views.ArticleDetailView.as_view(),
         name="article_detail",
@@ -29,6 +27,16 @@ urlpatterns = [
         "<int:article_id>/comment/<int:comment_id>/",
         views.CommentDetailView.as_view(),
         name="comment_detail",
+    ),
+    path(
+        "<int:article_id>/recomment/<int:comment_id>/",
+        views.RecommentView.as_view(),
+        name="recomment",
+    ),
+    path(
+        "<int:article_id>/recomment/<int:comment_id>/<int:recomment_id>/",
+        views.RecommentDetailView.as_view(),
+        name="recomment_detail",
     ),
     path(
         "get-url/",
@@ -50,7 +58,6 @@ urlpatterns = [
         views.RecipeIngredientDetailView.as_view(),
         name="r_ingredient_detail",
     ),
-
     path(  # 구매링크 추가
         "<int:article_id>/order/",
         views.LinkPlusView.as_view(),
