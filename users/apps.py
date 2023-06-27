@@ -8,10 +8,11 @@ class UsersConfig(AppConfig):
 
     def ready(self):
         if settings.SCHEDULER_DEFAULT:
-            from .users_operator import UserCommand
+            from .operator import Command
 
-            # 한번 불려야 하는데 두번 불림.
-            # 두번 불리는 이유: https://stackoverflow.com/questions/33814615/how-to-avoid-appconfig-ready-method-running-twice-in-django
-            #  Reload와 main 두가지 프로세스가 뜬다고 함.
-            #  또는 python manage.py runserver --noreload  로 실행하면 됨.
-            UserCommand.start(self)
+            Command.start(self)
+
+    # 한번 불려야 하는데 두번 불림.
+    # 두번 불리는 이유: https://stackoverflow.com/questions/33814615/how-to-avoid-appconfig-ready-method-running-twice-in-django
+    #  Reload와 main 두가지 프로세스가 뜬다고 함.
+    #  또는 python manage.py runserver --noreload  로 실행하면 됨.
