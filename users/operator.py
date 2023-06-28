@@ -38,7 +38,7 @@ class Command(BaseCommand):
     help = "Runs delete_dormant_user."
 
     def start(self, *args, **options):
-        scheduler = BackgroundScheduler(
+        scheduler = BlockingScheduler(
             timezone=settings.TIME_ZONE
         )  # BlockingScheduler를 사용할 수도 있습니다.
         scheduler.add_jobstore(DjangoJobStore(), "default")
