@@ -1,5 +1,5 @@
 import logging
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from django.conf import settings
@@ -34,44 +34,47 @@ def delete_old_job_executions(max_age=604_800):
     DjangoJobExecution.objects.delete_old_job_executions(max_age)
 
 
-def delete_dormant_user_start():
-    scheduler = BackgroundScheduler(timezone=settings.TIME_ZONE)
-    scheduler.add_jobstore(DjangoJobStore(), "default")
-    scheduler.add_job(
-        delete_dormant_user,
-        trigger=CronTrigger(minute="*/3"),
-        id="delete_dormant_user",  # id는 고유해야합니다.
-        max_instances=1,
-        replace_existing=True,
-    )
-    logger.info("Added job 'delete_dormant_user'.")
+class Command(BaseCommand):
+    help = "Runs delete_dormant_user."
 
+    def start(self, *args, **options):
+        scheduler = BackgroundScheduler(
+            timezone=settings.TIME_ZONE
+        )  # BlockingScheduler를 사용할 수도 있습니다.
+        scheduler.add_jobstore(SQLAlchemyJobStore(), "default")
 
-def update_ingredient_links_start():
-    scheduler = BackgroundScheduler(
-        timezone=settings.TIME_ZONE
-    )  # BlockingScheduler를 사용할 수도 있습니다.
-    scheduler.add_jobstore(DjangoJobStore(), "default")
-    scheduler.add_job(
-        update_ingredient_links,
-        trigger=CronTrigger(day_of_week="0-6", hour="04", minute="00"),
-        id="update_ingredient_links",  # id는 고유해야합니다.
-        max_instances=1,
-        replace_existing=True,
-    )
-    logger.info("Added job 'update_ingredient_links'.")
+        scheduler.add_job(
+            delete_dormant_user,
+            trigger=CronTrigger(minute="*/3"),
+            id="delete_dormant_user",  # id는 고유해야합니다.
+            max_instances=1,
+            replace_existing=True,
+        )
+        logger.info("Added job 'delete_dormant_user'.")
 
+        scheduler.add_job(
+            update_ingredient_links,
+            trigger=CronTrigger(day_of_week="0-6", hour="04", minute="00"),
+            id="update_ingredient_links",  # id는 고유해야합니다.
+            max_instances=1,
+            replace_existing=True,
+        )
 
-def delete_old_job_executions_start():
-    scheduler = BackgroundScheduler(timezone=settings.TIME_ZONE)
-    scheduler.add_jobstore(DjangoJobStore(), "default")
-    scheduler.add_job(
-        delete_old_job_executions,
-        trigger=CronTrigger(
-            day_of_week="mon", hour="05", minute="00"
-        ),  # 실행 시간입니다. 여기선 매주 월요일 3시에 실행합니다.
-        id="delete_old_job_executions",
-        max_instances=1,
-        replace_existing=True,
-    )
-    logger.info("Added weekly job: 'delete_old_job_executions'.")
+        logger.info("Added job 'update_ingredient_links'.")
+        scheduler.add_job(
+            delete_old_job_executions,
+            trigger=CronTrigger(
+                day_of_week="mon", hour="05", minute="00"
+            ),  # 실행 시간입니다. 여기선 매주 월요일 3시에 실행합니다.
+            id="delete_old_job_executions",
+            max_instances=1,
+            replace_existing=True,
+        )
+        logger.info("Added weekly job: 'delete_old_job_executions'.")
+        try:
+            logger.info("Starting scheduler...")
+            scheduler.start()
+        except KeyboardInterrupt:
+            logger.info("Stopping scheduler...")
+            scheduler.shutdown()
+            logger.info("Scheduler shut down successfully!")

@@ -8,11 +8,9 @@ class UsersConfig(AppConfig):
 
     def ready(self):
         if settings.SCHEDULER_DEFAULT:
-            from . import operator
+            from .operator import Command
 
-            operator.delete_dormant_user_start()
-            operator.update_ingredient_links_start()
-            operator.delete_old_job_executions_start()
+            Command.start(self)
 
     # 한번 불려야 하는데 두번 불림.
     # 두번 불리는 이유: https://stackoverflow.com/questions/33814615/how-to-avoid-appconfig-ready-method-running-twice-in-django
