@@ -41,7 +41,7 @@ class Command(BaseCommand):
         scheduler = BackgroundScheduler(
             timezone=settings.TIME_ZONE
         )  # BlockingScheduler를 사용할 수도 있습니다.
-        scheduler.add_jobstore(SQLAlchemyJobStore(), "default")
+        scheduler.add_jobstore(DjangoJobStore(), "default")
 
         scheduler.add_job(
             delete_dormant_user,
