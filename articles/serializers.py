@@ -169,6 +169,7 @@ class ArticleListSerializer(ArticleDetailSerializer):
             "is_author",
             "comments_count",
             "likes_count",
+            "user",
         ]
         extra_kwargs = {
             "id": {
