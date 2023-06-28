@@ -113,6 +113,7 @@ def save_coupang_links_to_ingredient_links(ingredient_name):
             ingredient=ingredient, link=link, link_img=link_img
         )
         ingredient_link.save()
+        ingredient.save()
 
 
 def update_ingredient_links(interval_days=3):
