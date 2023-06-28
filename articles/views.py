@@ -52,7 +52,7 @@ class ArticleView(generics.ListCreateAPIView):
 
         if self.request.GET.get("recipe"):
             q2 = Q(recipe__isnull=False)
-            q2.add(Q(counts__gt=0), q2.OR)
+            q2.add(Q(counts__gt=0), q2.AND)
             q.add(q2, q.AND)
         return q
 
