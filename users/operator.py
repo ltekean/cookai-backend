@@ -47,8 +47,7 @@ class Command(BaseCommand):
 
         scheduler.add_job(
             delete_dormant_user,
-            # trigger=CronTrigger(day_of_week="0-6", hour="03", minute="00"),
-            trigger=CronTrigger(minute="*/1"),
+            trigger=CronTrigger(day_of_week="0-6", hour="03", minute="00"),
             id="delete_dormant_user",  # id는 고유해야합니다.
             max_instances=1,
             replace_existing=True,
