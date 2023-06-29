@@ -392,7 +392,7 @@ class LinkPlusView(APIView):
             ingredient__in=missing_ingredients
         )
 
-        # 현재 시간과 3일 전 시간 구하기
+        # 현재 시간과 5일 전 시간 구하기
         now = timezone.now()
         five_days_ago = now - timedelta(days=5)
 

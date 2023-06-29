@@ -149,9 +149,9 @@ class Ingredient(models.Model):
     def __str__(self):
         return str(self.ingredient_name)
 
-    def save(self, *args, **kwargs):
+    def update_timestamp(self):
         self.updated_at = timezone.now()
-        super(Ingredient, self).save(*args, **kwargs)
+        super(Ingredient, self).save()
 
 
 # 레시피 재료 모델
