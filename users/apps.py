@@ -6,11 +6,11 @@ class UsersConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "users"
 
-    def ready(self):
-        if settings.SCHEDULER_DEFAULT:
-            from .operator import Command
+    # def ready(self):
+    #     if settings.SCHEDULER_DEFAULT:
+    #         from .operator import Command
 
-            Command.start(self)
+    #         Command.start(self)
 
     # 한번 불려야 하는데 두번 불림.
     # 두번 불리는 이유: https://stackoverflow.com/questions/33814615/how-to-avoid-appconfig-ready-method-running-twice-in-django
