@@ -5,7 +5,6 @@ import time
 import requests
 import json
 import urllib.request
-import secrets
 from django.utils import timezone
 from urllib.parse import urlencode
 from articles.models import Ingredient, IngredientLink

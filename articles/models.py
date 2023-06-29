@@ -21,6 +21,12 @@ class Category(models.Model):
         max_length=50,
     )
 
+    def __str__(self):
+        return f"{self.name} : {self.info.title()}"
+
+    class Meta:
+        verbose_name_plural = "Categories"
+
 
 class Article(models.Model):
 
@@ -31,8 +37,8 @@ class Article(models.Model):
     category(ForeignKey) : 카테고리 모델 외래키, CASCADE
     title(Varchar) : 제목, 30자 제한, 필수 입력
     content(Text) : 내용, 500자 제한, 필수 입력
-    create_at(Date) : 작성시간 Datetime
-    update_at(Date) : 수정시간 Datetime
+    created_at(Date) : 작성시간 Datetime
+    updated_at(Date) : 수정시간 Datetime
     recipe(Text) : 레시피 text(html), 500자 제한
     image(Url) : 이미지, 이미지Url로 불러오기
     like(MtoM) : User모델과 MtoM, 역참조 : Likes, 빈 값 가능, 중간 모델 : Like
@@ -61,19 +67,20 @@ class Article(models.Model):
         default="",
         null=False,
     )
-    update_at = models.DateTimeField(
+    updated_at = models.DateTimeField(
         auto_now=True,
     )
-    create_at = models.DateTimeField(
+    created_at = models.DateTimeField(
         auto_now_add=True,
     )
     recipe = models.TextField(
-        max_length=500,
+        blank=True,
+        null=True,
     )
     image = models.URLField(blank=True, null=True)
     like = models.ManyToManyField(
         User,
-        related_name="articles",
+        related_name="likes",
         blank=True,
     )
     bookmark = models.ManyToManyField(
@@ -84,6 +91,16 @@ class Article(models.Model):
     tags = TaggableManager(
         blank=True,
     )
+
+    def __str__(self):
+        return str(self.title)
+
+    def tag_list(self):
+        tags = ""
+        for tag in self.tags.all():
+            tags += f"{tag.name},"
+        result = tags[0:-1]
+        return result
 
 
 class Comment(models.Model):
@@ -128,6 +145,9 @@ class Comment(models.Model):
         auto_now_add=True,
     )
 
+    def __str__(self):
+        return str(self.article)
+
 
 # 재료 DB 모델
 class Ingredient(models.Model):
@@ -154,6 +174,7 @@ class Ingredient(models.Model):
         super(Ingredient, self).save()
 
 
+
 # 레시피 재료 모델
 class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(
@@ -175,10 +196,8 @@ class RecipeIngredient(models.Model):
         max_length=100,
     )
 
-
-class Likes(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    article = models.ForeignKey("Article", on_delete=models.CASCADE)
+    def __str__(self):
+        return str(self.ingredient)
 
 
 class IngredientLink(models.Model):
@@ -197,7 +216,5 @@ class IngredientLink(models.Model):
         blank=True,
     )
 
-
-class Likes(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    article = models.ForeignKey("Article", on_delete=models.CASCADE)
+    def __str__(self):
+        return str(self.ingredient)
