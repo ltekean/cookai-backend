@@ -1,5 +1,5 @@
 import logging
-from apscheduler.schedulers.blocking import BlockingScheduler
+import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from django.conf import settings
@@ -14,11 +14,13 @@ logger = logging.getLogger(__name__)
 
 
 def delete_dormant_user():
-    # 실행시킬 Job
-    # 여기서 정의하지 않고, import 해도 됨
-    dormant_user = User.objects.filter(is_active=False)
-    dormant_user.delete()
-    print("operating")
+    dormant_users = User.objects.filter(is_active=False)
+    for user in dormant_users:
+        last_updated_date = (user.updated_at + datetime.timedelta(hours=9)).date()
+        now_date = datetime.date.today()
+        dormant_seconds = int((now_date - last_updated_date).total_seconds())
+        if dormant_seconds > 604800:
+            user.delete()
 
 
 @util.close_old_connections
@@ -45,7 +47,7 @@ class Command(BaseCommand):
 
         scheduler.add_job(
             delete_dormant_user,
-            trigger=CronTrigger(minute="*/3"),
+            trigger=CronTrigger(day_of_week="0-6", hour="03", minute="00"),
             id="delete_dormant_user",  # id는 고유해야합니다.
             max_instances=1,
             replace_existing=True,
