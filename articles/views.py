@@ -32,6 +32,10 @@ from django.db.models import Q
 from taggit.models import Tag
 from articles.coupang import save_coupang_links_to_ingredient_links
 from datetime import datetime, timedelta
+from django.utils import timezone
+
+
+# Create your views here.
 
 
 class ArticleView(generics.ListCreateAPIView):
@@ -412,8 +416,8 @@ class LinkPlusView(APIView):
             ingredient__in=missing_ingredients
         )
 
-        # 현재 시간과 3일 전 시간 구하기
-        now = datetime.now()
+        # 현재 시간과 5일 전 시간 구하기
+        now = timezone.now()
         five_days_ago = now - timedelta(days=5)
 
         # 존재하지 않는 IngredientLink 인스턴스 생성 및 저장
@@ -422,9 +426,12 @@ class LinkPlusView(APIView):
             if not ingredient_links.exists():
                 save_coupang_links_to_ingredient_links(ingredient)
             else:
-                # link가 등록된 재료라도 `updated_at`이 3일 이상 지났다면 최신화하기
+                # link가 등록된 재료라도 `updated_at`이 5일 이상 지났다면 최신화하기
                 existing_link = ingredient_links.first()
-                if existing_link.updated_at <= five_days_ago:
+                if (
+                    existing_link.ingredient.updated_at is None
+                    or existing_link.ingredient.updated_at <= five_days_ago
+                ):
                     save_coupang_links_to_ingredient_links(ingredient)
 
         # 다시 IngredientLink를 조회

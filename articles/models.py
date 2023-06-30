@@ -1,6 +1,7 @@
 from django.db import models
 from taggit.managers import TaggableManager
 from users.models import User
+from django.utils import timezone
 
 
 # Create your models here.
@@ -160,12 +161,18 @@ class Ingredient(models.Model):
         max_length=100,
     )
     updated_at = models.DateTimeField(
+        auto_now=True,
         null=True,
         blank=True,
     )
 
     def __str__(self):
         return str(self.ingredient_name)
+
+    def update_timestamp(self):
+        self.updated_at = timezone.now()
+        super(Ingredient, self).save()
+
 
 
 # 레시피 재료 모델
