@@ -23,8 +23,9 @@ from users.serializers import (
 )
 from articles.serializers import ArticleListSerializer, CommentSerializer
 from articles.models import Article, Comment
-from articles.paginations import ArticlePagination, CommentPagination
+from articles.paginations import ArticlePagination
 from users.models import User, Fridge
+from users.users_paginations import UserCommentPagination
 from users import serializers
 from users.email_tokens import account_activation_token
 
@@ -479,7 +480,7 @@ class UserDetailArticlesView(generics.ListAPIView):
 
 
 class UserDetailCommentsView(generics.ListAPIView):
-    pagination_class = CommentPagination
+    pagination_class = UserCommentPagination
     serializer_class = CommentSerializer
     queryset = Comment.objects.none()
 
