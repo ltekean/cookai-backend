@@ -455,11 +455,15 @@ class UserDetailArticlesView(generics.ListAPIView):
     def bookmarked_article(self):
         return Article.objects.filter(bookmark=self.user_id)
 
+    def follow_article(self):
+        return Article.objects.filter(author__followers=self.user_id)
+
     def get_queryset(self):
         query_types = {
             "0": self.my_article,
             "1": self.liked_article,
             "2": self.bookmarked_article,
+            "3": self.follow_article,
         }
         query_key = self.request.GET.get("filter", None)
         order = self.request.GET.get("order", None)
