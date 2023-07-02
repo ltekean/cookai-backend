@@ -11,13 +11,7 @@ class UserCommentPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class UserFollowerPagination(PageNumberPagination):
+class UserFollowPagination(PageNumberPagination):
     page_size = 10
-    page_query_param = "user_follower_page"
-    max_page_size = 100
-
-
-class UserFollowingPagination(PageNumberPagination):
-    page_size = 10
-    page_query_param = "user_following_page"
+    page_query_param = "follow"
     max_page_size = 100
