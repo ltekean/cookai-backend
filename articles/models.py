@@ -2,6 +2,7 @@ from django.db import models
 from taggit.managers import TaggableManager
 from users.models import User
 from django.utils import timezone
+from .validators import validate_gt0
 
 
 # Create your models here.
@@ -174,7 +175,6 @@ class Ingredient(models.Model):
         super(Ingredient, self).save()
 
 
-
 # 레시피 재료 모델
 class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(
@@ -186,9 +186,10 @@ class RecipeIngredient(models.Model):
         Article,
         on_delete=models.CASCADE,
     )
-    ingredient_quantity = models.IntegerField(
+    ingredient_quantity = models.FloatField(
         null=False,
         default=list,
+        validators=[validate_gt0],
     )
     ingredient_unit = models.CharField(
         null=False,
