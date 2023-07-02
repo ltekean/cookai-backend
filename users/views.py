@@ -25,7 +25,7 @@ from articles.serializers import ArticleListSerializer, CommentSerializer
 from articles.models import Article, Comment
 from articles.paginations import ArticlePagination
 from users.models import User, Fridge
-from users.users_paginations import UserCommentPagination
+from users.users_paginations import UserCommentPagination, UserFollowPagination
 from users import serializers
 from users.email_tokens import account_activation_token
 
@@ -609,3 +609,31 @@ class UserFollowerView(APIView):
             context={"request": request},
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserDetailFollowView(generics.ListAPIView):
+    pagination_class = UserFollowPagination
+    serializer_class = UserSerializer
+    queryset = User.objects.none()
+    # queryset = User.objects.none()
+
+    def my_followings(self):
+        user = get_object_or_404(User, id=self.user_id)
+        return user.followings.all()
+
+    def my_followers(self):
+        user = get_object_or_404(User, id=self.user_id)
+        return user.followers.all()
+
+    def get_queryset(self):
+        query_types = {
+            "0": self.my_followings,
+            "1": self.my_followers,
+        }
+        query_key = self.request.GET.get("filter", None)
+        queryset = query_types.get(query_key, self.my_followings)()
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        self.user_id = kwargs.get("user_id", None)
+        return super().get(request, *args, **kwargs)
