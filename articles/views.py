@@ -62,10 +62,14 @@ class ArticleView(generics.ListCreateAPIView):
 
     def search_ingredient(self):
         selector = self.request.GET.get("selector")
-        ingredients = Ingredient.objects.filter(ingredient_name__icontains=selector)
-        q = Q()
-        for ingredient in ingredients:
-            q.add(Q(recipeingredient__ingredient__in=[ingredient]), q.OR)
+        ingredient_q = Q()
+        for ingredient_ in selector.split(","):
+            if ingredient_ == "":
+                continue
+            ingredient_q.add(Q(ingredient_name__icontains=ingredient_), ingredient_q.OR)
+        ingredients = Ingredient.objects.filter(ingredient_q)
+        q = Q(recipeingredient__ingredient__in=ingredients)
+
         return q
 
     def search_ingredient_title_content(self):
