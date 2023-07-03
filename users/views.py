@@ -119,7 +119,7 @@ class UserSignUpPermitView(APIView):
                     [to_email],
                     html_message=html,
                 )
-                return redirect(f"{settings.FRONT_BASE_URL}/users/login.html")
+                return redirect(f"{settings.FRONT_BASE_URL}/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
