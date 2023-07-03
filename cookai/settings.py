@@ -144,10 +144,12 @@ if DEBUG == "1":
     FRONT_BASE_URL = "https://cookai.today"
     BACKEND_BASE_URL = "https://www.backend.cookai.today"
     CORS_ALLOWED_ORIGINS = [
+        "backend",
         "https://cookai.today",
         "https://www.backend.cookai.today",
     ]
     CSRF_TRUSTED_ORIGINS = [
+        "backend",
         "https://cookai.today",
         "https://www.backend.cookai.today",
     ]
@@ -155,6 +157,7 @@ if DEBUG == "1":
 elif DEBUG == "0":
     DEBUG = True
     ALLOWED_HOSTS = [
+        "backend",
         "localhost",
         "127.0.0.1",
     ]
