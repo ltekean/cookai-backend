@@ -23,6 +23,7 @@ class CoupangManage:
     def generateHmac(self, method, url, secretKey, accessKey):
         path, *query = url.split("?")
         os.environ["TZ"] = "Asia/Seoul"
+        time.tzset()
         datetime = time.strftime("%y%m%d") + "T" + time.strftime("%H%M%S") + "Z"
         message = datetime + method + path + (query[0] if query else "")
         signature = hmac.new(
