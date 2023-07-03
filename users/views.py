@@ -339,7 +339,7 @@ class ResetPasswordView(APIView):
                     {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
                 )
             user.set_password(new_second_password)
-            user.save()
+            user.save(is_active=True)
             return Response({"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK)
         except Exception:
             raise ParseError
