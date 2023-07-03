@@ -20,6 +20,7 @@ from users.serializers import (
     UserFridgeSerializer,
     CustomTokenObtainPairSerializer,
     PublicUserSerializer,
+    UserPasswordSerializer,
 )
 from articles.serializers import ArticleListSerializer, CommentSerializer
 from articles.models import Article, Comment
@@ -338,9 +339,15 @@ class ResetPasswordView(APIView):
                 return Response(
                     {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
                 )
-            user.set_password(new_second_password)
-            user.save(is_active=True)
-            return Response({"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK)
+            serializer = UserPasswordSerializer(password=new_second_password)
+            if serializer.is_valid():
+                user.set_password(new_second_password)
+                user.save(is_active=True)
+                return Response(
+                    {"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK
+                )
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception:
             raise ParseError
 

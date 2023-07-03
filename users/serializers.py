@@ -148,6 +148,12 @@ class PublicUserSerializer(ModelSerializer):
         return user.followers.count()
 
 
+class UserPasswordSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("password",)
+
+
 class UserFridgeSerializer(ModelSerializer):
     class Meta:
         model = Fridge
