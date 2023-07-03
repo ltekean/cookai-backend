@@ -339,7 +339,11 @@ class ResetPasswordView(APIView):
                 return Response(
                     {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
                 )
-            serializer = UserPasswordSerializer(password=new_second_password)
+            serializer = UserSerializer(
+                user,
+                password=new_second_password,
+                partial=True,
+            )
             if serializer.is_valid():
                 user.set_password(new_second_password)
                 user.save(is_active=True)
