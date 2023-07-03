@@ -112,6 +112,10 @@ def save_coupang_links_to_ingredient_links(ingredient_name):
             ingredient=ingredient, link=link, link_img=link_img
         )
         ingredient_link.save()
+        ingredient.save()
+
+    # 모든 링크가 저장된 후서야 Ingredient의 updated_at을 업데이트
+    ingredient.update_timestamp()
 
 
 def update_ingredient_links(interval_days=3):

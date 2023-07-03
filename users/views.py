@@ -39,10 +39,9 @@ class UserView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        print(request.data)
         email = request.data.get("email")
         password = request.data.get("password")
-        password2 = request.data.get("second_psssword")
+        password2 = request.data.get("second_password")
         if not password or not password2:
             return Response(
                 {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
@@ -57,7 +56,7 @@ class UserView(APIView):
             )
         if User.objects.filter(email=email).exists():
             return Response(
-                "해당 이메일을 가진 유저가 이미 있습니다!", status=status.HTTP_400_BAD_REQUEST
+                {"error": "해당 이메일을 가진 유저가 이미 있습니다!"}, status=status.HTTP_400_BAD_REQUEST
             )
         serializer = serializers.UserSerializer(
             data=request.data,
@@ -68,7 +67,7 @@ class UserView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(
-                {"message": f"{serializer.errors}"},
+                serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -457,11 +456,15 @@ class UserDetailArticlesView(generics.ListAPIView):
     def bookmarked_article(self):
         return Article.objects.filter(bookmark=self.user_id)
 
+    def follow_article(self):
+        return Article.objects.filter(author__followers=self.user_id)
+
     def get_queryset(self):
         query_types = {
             "0": self.my_article,
             "1": self.liked_article,
             "2": self.bookmarked_article,
+            "3": self.follow_article,
         }
         query_key = self.request.GET.get("filter", None)
         order = self.request.GET.get("order", None)
@@ -579,9 +582,7 @@ class UserFollowView(APIView):
     def post(self, request, user_id):
         """유저 팔로잉 누르기"""
         you = get_object_or_404(User, id=user_id)
-        print(you)
         me = request.user
-        print(me)
         if request.user.id != user_id:
             if me in you.followers.all():
                 you.followers.remove(me)
