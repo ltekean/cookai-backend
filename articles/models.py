@@ -209,12 +209,12 @@ class IngredientLink(models.Model):
     link = models.URLField(
         null=True,
         blank=True,
-        max_length=500,
+        max_length=100000,
     )
     link_img = models.URLField(
         null=True,
         blank=True,
-        max_length=500,
+        max_length=100000,
     )
 
     def __str__(self):
