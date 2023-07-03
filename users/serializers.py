@@ -168,7 +168,7 @@ class PublicUserSerializer(ModelSerializer):
 class UserPasswordSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ("password",)
+        fields = "password"
 
     def validate(self, validated_data):
         """비밀번호 유효성 검사"""
