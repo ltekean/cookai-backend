@@ -232,13 +232,10 @@ class NaverLoginView(APIView):
                 },
             )
             user_data = user_data.json().get("response")
-            birthyear = user_data.get("birthyear")
-            birthday = user_data.get("birthday")
             data = {
                 "avatar": user_data.get("profile_image"),
                 "email": user_data.get("email"),
                 "username": user_data.get("nickname"),
-                "age": f"{birthyear}-{birthday}",
                 "login_type": "naver",
                 "is_active": True,
             }
