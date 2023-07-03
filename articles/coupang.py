@@ -50,6 +50,7 @@ class CoupangManage:
         )
         retdata = json.dumps(response.json(), indent=4).encode("utf-8")
         jsondata = json.loads(retdata)
+        print(retdata)
         data = jsondata["data"]
         productdata = data["productData"]
 
