@@ -155,6 +155,7 @@ if DEBUG == "1":
 elif DEBUG == "0":
     DEBUG = True
     ALLOWED_HOSTS = [
+        "backend",
         "localhost",
         "127.0.0.1",
     ]
