@@ -207,12 +207,10 @@ class IngredientLink(models.Model):
         on_delete=models.CASCADE,
     )
     link = models.URLField(
-        max_length=200,
         null=True,
         blank=True,
     )
     link_img = models.URLField(
-        max_length=200,
         null=True,
         blank=True,
     )
