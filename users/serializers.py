@@ -44,7 +44,7 @@ class UserSerializer(ModelSerializer):
             },
         }
 
-    def validate_password(self, validated_data):
+    def validate(self, validated_data):
         """비밀번호 유효성 검사"""
         password = validated_data.pop("password")
         if len(password) < 8:
@@ -170,7 +170,7 @@ class UserPasswordSerializer(ModelSerializer):
         model = User
         fields = ("password",)
 
-    def validate_password(self, validated_data):
+    def validate(self, validated_data):
         """비밀번호 유효성 검사"""
         password = validated_data.pop("password")
         if len(password) < 8:
