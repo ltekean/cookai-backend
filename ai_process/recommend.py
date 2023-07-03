@@ -11,12 +11,13 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 def recommend_by_collabo(
     df_svd_preds: pd.DataFrame,
     user_id,
+    user_list,
     ori_article_df,
     ori_ratings_df,
     num_recommendations=1,
 ):
     # 현재는 index로 적용이 되어있으므로 user_id - 1을 해야함.
-    user_row_number = user_id - 1
+    user_row_number = user_list[user_id]["index"]
 
     # 최종적으로 만든 pred_df에서 사용자 index맞는 아티클 데이터를 예상평점이 높은 순으로 정렬 됌
     sorted_user_predictions = df_svd_preds.iloc[user_row_number].sort_values(
@@ -50,6 +51,9 @@ def collaborative_filtering(user_id):
     """ """
     print("coll")
     users = User.objects.prefetch_related("likes").values("pk", "likes__pk")
+    user_list = User.objects.all().values("pk")
+    user_list = pd.DataFrame(list(user_list))
+    user_list.reset_index(inplace=True)
     # Create the DataFrame
     df = pd.DataFrame(list(users))
     df.columns = ["pk", "article"]
@@ -60,20 +64,21 @@ def collaborative_filtering(user_id):
     df2.columns = ["pk", "article"]
     df2["score"] = 4 * df2["article"] / df2["article"]
     df = pd.concat([df, df2], ignore_index=True)
+    df = df.merge(right=user_list, on="pk")
     articles = Article.objects.all().values("pk", "author")
     df3 = pd.DataFrame(list(articles))
     df3.columns = ["article", "author"]
     df = df.merge(right=df3, how="outer", on="article")
-    unique_pk = df["pk"].dropna().unique()
+    unique_index = df["index"].dropna().unique()
     pvt = df.pivot_table(
         values="score",
-        index=["pk"],
+        index=["index"],
         columns=["article"],
         dropna=False,
         fill_value=0,
         aggfunc=np.sum,
     )
-    pvt = pvt.reindex(unique_pk, fill_value=0).sort_index()
+    pvt = pvt.reindex(unique_index, fill_value=0).sort_index()
     matrix = pvt.values
 
     # user_ratings_mean은 사용자의 평균 score
@@ -89,10 +94,14 @@ def collaborative_filtering(user_id):
         np.dot(u, sigma), vt
     ) + user_ratings_mean.reshape(-1, 1)
     df_svd_preds = pd.DataFrame(svd_user_predicted_ratings, columns=pvt.columns)
-    df = df.groupby(["pk", "article"]).sum()
+    print(df_svd_preds)
+    df = df.groupby(["index", "article"]).sum()
     df = df.reset_index()
+    # user_list={}
+    user_list = user_list.set_index("pk").T.to_dict()
+    print(user_list)
     already_rated, predictions = recommend_by_collabo(
-        df_svd_preds, user_id, df3, df, 10
+        df_svd_preds, user_id, user_list, df3, df, 10
     )
     ret = {
         pk: score
