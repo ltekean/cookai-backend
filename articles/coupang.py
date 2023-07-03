@@ -22,7 +22,7 @@ class CoupangManage:
     # HMAC서명 생성
     def generateHmac(self, method, url, secretKey, accessKey):
         path, *query = url.split("?")
-        os.environ["TZ"] = "GMT+0"
+        os.environ["TZ"] = "Asia/Seoul"
         datetime = time.strftime("%y%m%d") + "T" + time.strftime("%H%M%S") + "Z"
         message = datetime + method + path + (query[0] if query else "")
         signature = hmac.new(
@@ -50,7 +50,6 @@ class CoupangManage:
         )
         retdata = json.dumps(response.json(), indent=4).encode("utf-8")
         jsondata = json.loads(retdata)
-        print(retdata)
         data = jsondata["data"]
         productdata = data["productData"]
 
