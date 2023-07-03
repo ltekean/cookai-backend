@@ -15,11 +15,11 @@ Cookai는 다양한 레시피를 공유하고, 자신에게 맞는 레시피를 
 
 ### 🧑‍🤝‍🧑 팀원 구성 및 역할 분담
 
-- 팀장😄 <a href="https://guco.tistory.com/">최창수</a><br>[BE] 댓글 좋아요, 게시글 북마크, 검색 기능, 테스트코드 <br>[FE] 메인페이지, 게시글 목록, 댓글 좋아요, 게시글 북마크
-- 팀원😄 <a href="https://velog.io/@rlagurwns112">김혁준</a><br> [BE] 게시글 모델(CRUD), 이미지 CloudFlare와 연동 <br>[FE] 게시글 CRUD, 게시글 및 유저 프로필 이미지 업로드
-- 팀원😄 <a href="https://codemte.tistory.com/">이기웅</a><br>[BE] 유저 모델, 로그인(토큰 방식), 회원가입, 소셜 로그인 <br>[FE] 게시글 상세보기, 댓글 유튜브 iframe, Header, Footer, 소셜 로그인
-- 팀원😄 <a href="https://05-archives.tistory.com/">이정민</a><br>[BE] 유저 프로필(RUD), 팔로잉, 유저시리얼라이저 <br>[FE] 프로필페이지, 팔로잉 리스트, 유저 정보수정
-- 팀원😄 <a href="https://woongpang.tistory.com/">임라온</a><br>[BE] 댓글 모델(CRUD), OPENAI , YOUTUBE API 연동 <br>[FE] 댓글 CRUD, 수정&삭제 버튼 권한부여
+- 팀장😄 <a href="https://github.com/2017250297-choi">최창수</a><br>[BE] 댓글 좋아요, 게시글 북마크, 검색 기능, 테스트코드 <br>[FE] 메인페이지, 게시글 목록, 댓글 좋아요, 게시글 북마크
+- 팀원😄 <a href="https://github.com/hyukjunkim1116">김혁준</a><br> [BE] 게시글 모델(CRUD), 이미지 CloudFlare와 연동 <br>[FE] 게시글 CRUD, 게시글 및 유저 프로필 이미지 업로드
+- 팀원😄 <a href="https://github.com/woongpang/">이기웅</a><br>[BE] 유저 모델, 로그인(토큰 방식), 회원가입, 소셜 로그인 <br>[FE] 게시글 상세보기, 댓글 유튜브 iframe, Header, Footer, 소셜 로그인
+- 팀원😄 <a href="https://github.com/ltekean/">이정민</a><br>[BE] 유저 프로필(RUD), 팔로잉, 유저시리얼라이저 <br>[FE] 프로필페이지, 팔로잉 리스트, 유저 정보수정
+- 팀원😄 <a href="https://github.com/R40N/">임라온</a><br>[BE] 댓글 모델(CRUD), OPENAI , YOUTUBE API 연동 <br>[FE] 댓글 CRUD, 수정&삭제 버튼 권한부여
   <br>
   <br>
 
