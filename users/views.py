@@ -116,7 +116,7 @@ class UserSignUpPermitView(APIView):
                 User.objects.filter(pk=uid).update(is_active=True)
 
                 html = render_to_string(
-                    "users/email.html",
+                    "users/register_email.html",
                     {
                         "front_base_url": settings.FRONT_BASE_URL,
                         "user": user,
