@@ -213,6 +213,11 @@ class RecipeIngredientCreateSerializer(ModelSerializer):
 
 
 class IngredientLinkSerializer(ModelSerializer):
+    ingredient_name = serializers.SerializerMethodField()
+
     class Meta:
         model = IngredientLink
-        fields = ("link", "link_img")
+        fields = ("ingredient_name", "link", "link_img")
+
+    def get_ingredient_name(self, obj):
+        return obj.ingredient.ingredient_name
