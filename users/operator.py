@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def delete_dormant_user():
     dormant_users = User.objects.filter(is_active=False)
     for user in dormant_users:
-        last_updated_date = (user.updated_at + datetime.timedelta(hours=9)).date()
+        last_updated_date = (user.updated_at).date()
         now_date = datetime.date.today()
         dormant_seconds = int((now_date - last_updated_date).total_seconds())
         if dormant_seconds > 604800:

@@ -1,3 +1,4 @@
+import re
 import requests
 from django.db import transaction
 from django.db.models import Count
@@ -11,7 +12,11 @@ from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
+from rest_framework.exceptions import (
+    NotFound,
+    PermissionDenied,
+    ParseError,
+)
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -21,12 +26,12 @@ from users.serializers import (
     CustomTokenObtainPairSerializer,
     PublicUserSerializer,
 )
+from users import serializers
 from articles.serializers import ArticleListSerializer, CommentSerializer
 from articles.models import Article, Comment
 from articles.paginations import ArticlePagination
 from users.models import User, Fridge
 from users.users_paginations import UserCommentPagination, UserFollowPagination
-from users import serializers
 from users.email_tokens import account_activation_token
 
 
@@ -42,6 +47,7 @@ class UserView(APIView):
         email = request.data.get("email")
         password = request.data.get("password")
         password2 = request.data.get("second_password")
+        username = request.data.get("username")
         if not password or not password2:
             return Response(
                 {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
@@ -58,7 +64,11 @@ class UserView(APIView):
             return Response(
                 {"error": "해당 이메일을 가진 유저가 이미 있습니다!"}, status=status.HTTP_400_BAD_REQUEST
             )
-        serializer = serializers.UserSerializer(
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {"error": "해당 닉네임을 가진 유저가 이미 있습니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer = UserSerializer(
             data=request.data,
             context={"request": request},
         )
@@ -106,9 +116,10 @@ class UserSignUpPermitView(APIView):
                 User.objects.filter(pk=uid).update(is_active=True)
 
                 html = render_to_string(
-                    "users/success_register_email.html",
+                    "users/register_email.html",
                     {
                         "front_base_url": settings.FRONT_BASE_URL,
+                        "user": user,
                     },
                 )
                 to_email = user.email
@@ -119,7 +130,7 @@ class UserSignUpPermitView(APIView):
                     [to_email],
                     html_message=html,
                 )
-                return redirect(f"{settings.FRONT_BASE_URL}/users/login.html")
+                return redirect(f"{settings.FRONT_BASE_URL}/login.html")
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except:
             return Response({"error": "KEY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
@@ -132,7 +143,7 @@ class UserResetPasswordPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 return redirect(
-                    f"{settings.FRONT_BASE_URL}/users/password_change.html?uid={uid}"
+                    f"{settings.FRONT_BASE_URL}/users/password_change.html?uid={uid}&uidb64={uidb64}&token={token}"
                 )
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
@@ -232,13 +243,10 @@ class NaverLoginView(APIView):
                 },
             )
             user_data = user_data.json().get("response")
-            birthyear = user_data.get("birthyear")
-            birthday = user_data.get("birthday")
             data = {
                 "avatar": user_data.get("profile_image"),
                 "email": user_data.get("email"),
                 "username": user_data.get("nickname"),
-                "age": f"{birthyear}-{birthday}",
                 "login_type": "naver",
                 "is_active": True,
             }
@@ -285,6 +293,7 @@ def social_login_validate(**kwargs):
 
 class ResetPasswordView(APIView):
     # """비밀번호 찾기. 이메일 인증하면 비밀번호 재설정할 기회를 준다. 주석추가에정,이메일 인증 추가예정"""
+
     def post(self, request):
         try:
             user_email = request.data.get("email")
@@ -323,29 +332,60 @@ class ResetPasswordView(APIView):
             )
 
     def put(self, request):
+        uidb64 = request.data.get("uidb64")
+        token = request.data.get("token")
+        user_id = request.data.get("user_id")
+        new_first_password = request.data.get("new_first_password")
+        new_second_password = request.data.get("new_second_password")
         try:
-            new_first_password = request.data.get("new_first_password")
-            new_second_password = request.data.get("new_second_password")
-            user_id = request.data.get("user_id")
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "일치하는 유저가 존재하지 않습니다!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not uidb64 or not token:
+            return Response({"error": "잘못된 접근입니다!"}, status=status.HTTP_403_FORBIDDEN)
+        if not new_first_password or not new_second_password:
+            return Response(
+                {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if new_first_password != new_second_password:
+            return Response(
+                {"error": "비밀번호가 일치하지 않습니다!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if len(new_second_password) < 8:
+            return Response(
+                {"error": "비밀번호는 8자리 이상이어야 합니다."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if not re.search(r"[a-zA-Z]", new_second_password):
+            return Response(
+                {"error": "비밀번호는 하나 이상의 영문이 포함되어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not re.search(r"\d", new_second_password):
+            return Response(
+                {"error": "비밀번호는 하나 이상의 숫자가 포함되어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not re.search(r"[!@#$%^&*()]", new_second_password):
+            return Response(
+                {"error": "비밀번호는 적어도 하나 이상의 특수문자(!@#$%^&*())가 포함되어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if account_activation_token.check_token(user, token):
             try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
+                user.set_password(new_second_password)
+                user.is_active = True
+                user.save()
                 return Response(
-                    {"error": "일치하는 유저가 존재하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+                    {"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK
                 )
-            if not new_first_password or not new_second_password:
-                return Response(
-                    {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
-                )
-            if new_first_password != new_second_password:
-                return Response(
-                    {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
-                )
-            user.set_password(new_second_password)
-            user.save()
-            return Response({"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK)
-        except Exception:
-            raise ParseError
+            except Exception:
+                raise ParseError
+        else:
+            return Response({"error": "잘못된 접근입니다!"}, status=status.HTTP_403_FORBIDDEN)
 
 
 class ChangePasswordView(APIView):
