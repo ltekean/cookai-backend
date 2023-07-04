@@ -47,6 +47,7 @@ class UserView(APIView):
         email = request.data.get("email")
         password = request.data.get("password")
         password2 = request.data.get("second_password")
+        username = request.data.get("username")
         if not password or not password2:
             return Response(
                 {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
@@ -62,6 +63,10 @@ class UserView(APIView):
         if User.objects.filter(email=email).exists():
             return Response(
                 {"error": "해당 이메일을 가진 유저가 이미 있습니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {"error": "해당 닉네임을 가진 유저가 이미 있습니다!"}, status=status.HTTP_400_BAD_REQUEST
             )
         serializer = UserSerializer(
             data=request.data,
@@ -111,9 +116,10 @@ class UserSignUpPermitView(APIView):
                 User.objects.filter(pk=uid).update(is_active=True)
 
                 html = render_to_string(
-                    "users/success_register_email.html",
+                    "users/register_email.html",
                     {
                         "front_base_url": settings.FRONT_BASE_URL,
+                        "user": user,
                     },
                 )
                 to_email = user.email
@@ -137,7 +143,7 @@ class UserResetPasswordPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 return redirect(
-                    f"{settings.FRONT_BASE_URL}/users/password_change.html?uid={uid}"
+                    f"{settings.FRONT_BASE_URL}/users/password_change.html?uid={uid}&uidb64={uidb64}&token={token}"
                 )
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
@@ -326,31 +332,60 @@ class ResetPasswordView(APIView):
             )
 
     def put(self, request):
+        uidb64 = request.data.get("uidb64")
+        token = request.data.get("token")
+        user_id = request.data.get("user_id")
+        new_first_password = request.data.get("new_first_password")
+        new_second_password = request.data.get("new_second_password")
         try:
-            new_first_password = request.data.get("new_first_password")
-            new_second_password = request.data.get("new_second_password")
-            user_id = request.data.get("user_id")
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "일치하는 유저가 존재하지 않습니다!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not uidb64 or not token:
+            return Response({"error": "잘못된 접근입니다!"}, status=status.HTTP_403_FORBIDDEN)
+        if not new_first_password or not new_second_password:
+            return Response(
+                {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if new_first_password != new_second_password:
+            return Response(
+                {"error": "비밀번호가 일치하지 않습니다!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if len(new_second_password) < 8:
+            return Response(
+                {"error": "비밀번호는 8자리 이상이어야 합니다."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if not re.search(r"[a-zA-Z]", new_second_password):
+            return Response(
+                {"error": "비밀번호는 하나 이상의 영문이 포함되어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not re.search(r"\d", new_second_password):
+            return Response(
+                {"error": "비밀번호는 하나 이상의 숫자가 포함되어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not re.search(r"[!@#$%^&*()]", new_second_password):
+            return Response(
+                {"error": "비밀번호는 적어도 하나 이상의 특수문자(!@#$%^&*())가 포함되어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if account_activation_token.check_token(user, token):
             try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
+                user.set_password(new_second_password)
+                user.is_active = True
+                user.save()
                 return Response(
-                    {"error": "일치하는 유저가 존재하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+                    {"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK
                 )
-            if not new_first_password or not new_second_password:
-                return Response(
-                    {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
-                )
-            if new_first_password != new_second_password:
-                return Response(
-                    {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
-                )
-            print("a")
-            user.set_password(new_second_password)
-            user.is_active = True
-            user.save()
-            return Response({"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK)
-        except Exception:
-            raise ParseError
+            except Exception:
+                raise ParseError
+        else:
+            return Response({"error": "잘못된 접근입니다!"}, status=status.HTTP_403_FORBIDDEN)
 
 
 class ChangePasswordView(APIView):
