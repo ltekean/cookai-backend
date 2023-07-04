@@ -269,21 +269,6 @@ def social_login_validate(**kwargs):
         if login_type == user.login_type:
             refresh = RefreshToken.for_user(user)
             access_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
-            html = render_to_string(
-                "users/email_welcome.html",
-                {
-                    "front_base_url": settings.FRONT_BASE_URL,
-                    "user": user,
-                },
-            )
-            to_email = user.email
-            send_mail(
-                "안녕하세요 Cookai입니다. 회원가입을 축하드립니다!",
-                "_",
-                settings.DEFAULT_FROM_MAIL,
-                [to_email],
-                html_message=html,
-            )
             return Response(
                 {"refresh": str(refresh), "access": str(access_token.access_token)},
                 status=status.HTTP_200_OK,
