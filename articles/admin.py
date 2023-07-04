@@ -120,7 +120,12 @@ class IngredientAdmin(admin.ModelAdmin):
 
 @admin.register(IngredientLink)
 class IngredientLinkAdmin(admin.ModelAdmin):
-    pass
+    list_display = (
+        "link",
+        "link_img",
+        "created_at",
+    )
+    list_filter = ("link", "link_img", "created_at")
 
 
 @admin.register(RecipeIngredient)

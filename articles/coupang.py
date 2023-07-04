@@ -33,13 +33,7 @@ class CoupangManage:
             accessKey, current_datetime, signature
         )
 
-    def get_productsdata(self, request_method, authorization, keyword, limit):
-        query = {"keyword": keyword, "limit": limit}
-        encoded_query = urlencode(query)
-
-        URL = f"/v2/providers/affiliate_open_api/apis/openapi/products/search?{encoded_query}"
-        url = "{}{}".format(self.DOMAIN, URL)
-
+    def get_productsdata(self, request_method, authorization, url):
         response = requests.request(
             method=request_method,
             url=url,
@@ -56,24 +50,30 @@ class CoupangManage:
 
         return productdata
 
-    def get_products_by_keyword(self, keyword, limit=10):
+    def get_products_by_keyword(self, keyword, limit=10, subld="cookaicookai"):
         request_method = "GET"
         method = "GET"
 
-        query = {"keyword": keyword, "limit": limit}
+        query = {"keyword": keyword, "limit": limit, "subId": subld}
         encoded_query = urlencode(query)
 
+        # API 요청 URL
         request_url = (
             "/v2/providers/affiliate_open_api/apis/openapi/products/search?{}".format(
                 encoded_query
             )
         )
 
+        # HMAC 생성
         authorization = self.generateHmac(method, request_url, SECRET_KEY, ACCESS_KEY)
-        product_data = self.get_productsdata(
-            request_method, authorization, keyword, limit
-        )
 
+        # 요청 URL
+        full_url = "{}{}".format(self.DOMAIN, request_url)
+
+        # 상품 데이터 받기
+        product_data = self.get_productsdata(request_method, authorization, full_url)
+
+        # 딕셔너리 생성
         products = [
             {
                 "product_url": product["productUrl"],
@@ -103,6 +103,13 @@ def save_coupang_links_to_ingredient_links(ingredient_name):
     except Ingredient.DoesNotExist:
         print(f"{ingredient_name} 은(는) 데이터베이스에 없습니다.")
         return
+
+    # 기존에 저장된 5일 전의 IngredientLinks 삭제
+    old_links = IngredientLink.objects.filter(
+        ingredient=ingredient,
+        created_at__lt=timezone.now() - timezone.timedelta(days=5),
+    )
+    old_links.delete()
 
     for link_data in product_links:
         link = link_data["product_url"]
