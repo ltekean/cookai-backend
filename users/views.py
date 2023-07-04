@@ -116,7 +116,7 @@ class UserSignUpPermitView(APIView):
                 User.objects.filter(pk=uid).update(is_active=True)
 
                 html = render_to_string(
-                    "users/register_email.html",
+                    "users/email_welcome.html",
                     {
                         "front_base_url": settings.FRONT_BASE_URL,
                         "user": user,
@@ -269,6 +269,21 @@ def social_login_validate(**kwargs):
         if login_type == user.login_type:
             refresh = RefreshToken.for_user(user)
             access_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
+            html = render_to_string(
+                "users/email_welcome.html",
+                {
+                    "front_base_url": settings.FRONT_BASE_URL,
+                    "user": user,
+                },
+            )
+            to_email = user.email
+            send_mail(
+                "안녕하세요 Cookai입니다. 회원가입을 축하드립니다!",
+                "_",
+                settings.DEFAULT_FROM_MAIL,
+                [to_email],
+                html_message=html,
+            )
             return Response(
                 {"refresh": str(refresh), "access": str(access_token.access_token)},
                 status=status.HTTP_200_OK,
@@ -285,6 +300,21 @@ def social_login_validate(**kwargs):
         new_user.save()
         refresh = RefreshToken.for_user(new_user)
         access_token = serializers.CustomTokenObtainPairSerializer.get_token(new_user)
+        html = render_to_string(
+            "users/email_welcome.html",
+            {
+                "front_base_url": settings.FRONT_BASE_URL,
+                "user": new_user,
+            },
+        )
+        to_email = new_user.email
+        send_mail(
+            "안녕하세요 Cookai입니다. 회원가입을 축하드립니다!",
+            "_",
+            settings.DEFAULT_FROM_MAIL,
+            [to_email],
+            html_message=html,
+        )
         return Response(
             {"refresh": str(refresh), "access": str(access_token.access_token)},
             status=status.HTTP_200_OK,
@@ -301,13 +331,14 @@ class ResetPasswordView(APIView):
             if user:
                 if user.login_type == "normal":
                     html = render_to_string(
-                        "users/reset_password_email.html",
+                        "users/email_password_reset.html",
                         {
                             "backend_base_url": settings.BACKEND_BASE_URL,
                             "uidb64": urlsafe_base64_encode(force_bytes(user.id))
                             .encode()
                             .decode(),
                             "token": account_activation_token.make_token(user),
+                            "user": user,
                         },
                     )
                     to_email = user.email
