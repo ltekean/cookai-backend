@@ -344,7 +344,6 @@ class ResetPasswordView(APIView):
                 return Response(
                     {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
                 )
-            print("a")
             user.set_password(new_second_password)
             user.is_active = True
             user.save()
