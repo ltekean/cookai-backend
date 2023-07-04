@@ -16,7 +16,6 @@ from rest_framework.exceptions import (
     NotFound,
     PermissionDenied,
     ParseError,
-    ValidationError,
 )
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -26,14 +25,13 @@ from users.serializers import (
     UserFridgeSerializer,
     CustomTokenObtainPairSerializer,
     PublicUserSerializer,
-    UserPasswordSerializer,
 )
+from users import serializers
 from articles.serializers import ArticleListSerializer, CommentSerializer
 from articles.models import Article, Comment
 from articles.paginations import ArticlePagination
 from users.models import User, Fridge
 from users.users_paginations import UserCommentPagination, UserFollowPagination
-from users import serializers
 from users.email_tokens import account_activation_token
 
 
@@ -65,7 +63,7 @@ class UserView(APIView):
             return Response(
                 {"error": "해당 이메일을 가진 유저가 이미 있습니다!"}, status=status.HTTP_400_BAD_REQUEST
             )
-        serializer = serializers.UserSerializer(
+        serializer = UserSerializer(
             data=request.data,
             context={"request": request},
         )
@@ -346,15 +344,11 @@ class ResetPasswordView(APIView):
                 return Response(
                     {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
                 )
-            serializer = UserPasswordSerializer(password=new_second_password)
-            if serializer.is_valid():
-                user.set_password(new_second_password)
-                user.save(is_active=True)
-                return Response(
-                    {"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK
-                )
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            print("a")
+            user.set_password(new_second_password)
+            user.is_active = True
+            user.save()
+            return Response({"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK)
         except Exception:
             raise ParseError
 
