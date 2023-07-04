@@ -47,6 +47,7 @@ class UserView(APIView):
         email = request.data.get("email")
         password = request.data.get("password")
         password2 = request.data.get("second_password")
+        username = request.data.get("username")
         if not password or not password2:
             return Response(
                 {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
@@ -62,6 +63,10 @@ class UserView(APIView):
         if User.objects.filter(email=email).exists():
             return Response(
                 {"error": "해당 이메일을 가진 유저가 이미 있습니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {"error": "해당 닉네임을 가진 유저가 이미 있습니다!"}, status=status.HTTP_400_BAD_REQUEST
             )
         serializer = UserSerializer(
             data=request.data,
@@ -111,9 +116,10 @@ class UserSignUpPermitView(APIView):
                 User.objects.filter(pk=uid).update(is_active=True)
 
                 html = render_to_string(
-                    "users/success_register_email.html",
+                    "users/email.html",
                     {
                         "front_base_url": settings.FRONT_BASE_URL,
+                        "user": user,
                     },
                 )
                 to_email = user.email
@@ -137,7 +143,7 @@ class UserResetPasswordPermitView(APIView):
             user = User.objects.get(pk=uid)
             if account_activation_token.check_token(user, token):
                 return redirect(
-                    f"{settings.FRONT_BASE_URL}/users/password_change.html?uid={uid}"
+                    f"{settings.FRONT_BASE_URL}/users/password_change.html?uid={uid}&uidb64={uidb64}%token={token}"
                 )
             return Response({"error": "AUTH_FAIL"}, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
@@ -326,6 +332,11 @@ class ResetPasswordView(APIView):
             )
 
     def put(self, request):
+        try:
+            uidb64 = request.data.get("uidb64")
+            token = request.data.get("token")
+        except:
+            return Response({"error": "잘못된 접근입니다!"}, status=status.HTTP_403_FORBIDDEN)
         try:
             new_first_password = request.data.get("new_first_password")
             new_second_password = request.data.get("new_second_password")
