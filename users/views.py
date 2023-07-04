@@ -332,35 +332,43 @@ class ResetPasswordView(APIView):
             )
 
     def put(self, request):
-        try:
-            uidb64 = request.data.get("uidb64")
-            token = request.data.get("token")
-        except:
+        uidb64 = request.data.get("uidb64")
+        token = request.data.get("token")
+        if not uidb64 or not token:
             return Response({"error": "잘못된 접근입니다!"}, status=status.HTTP_403_FORBIDDEN)
-        try:
-            new_first_password = request.data.get("new_first_password")
-            new_second_password = request.data.get("new_second_password")
-            user_id = request.data.get("user_id")
+
+        if account_activation_token.check_token(user, token):
             try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
+                new_first_password = request.data.get("new_first_password")
+                new_second_password = request.data.get("new_second_password")
+                user_id = request.data.get("user_id")
+                try:
+                    user = User.objects.get(id=user_id)
+                except User.DoesNotExist:
+                    return Response(
+                        {"error": "일치하는 유저가 존재하지 않습니다!"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                if not new_first_password or not new_second_password:
+                    return Response(
+                        {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+                    )
+                if new_first_password != new_second_password:
+                    return Response(
+                        {"error": "비밀번호가 일치하지 않습니다!"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                user.set_password(new_second_password)
+                user.is_active = True
+                user.save()
                 return Response(
-                    {"error": "일치하는 유저가 존재하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+                    {"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK
                 )
-            if not new_first_password or not new_second_password:
-                return Response(
-                    {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
-                )
-            if new_first_password != new_second_password:
-                return Response(
-                    {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
-                )
-            user.set_password(new_second_password)
-            user.is_active = True
-            user.save()
-            return Response({"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK)
-        except Exception:
-            raise ParseError
+            except Exception:
+                raise ParseError
+        else:
+            return Response({"error": "잘못된 접근입니다!"}, status=status.HTTP_403_FORBIDDEN)
 
 
 class ChangePasswordView(APIView):
