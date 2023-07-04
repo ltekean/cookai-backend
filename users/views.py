@@ -1,3 +1,4 @@
+import re
 import requests
 from django.db import transaction
 from django.db.models import Count
@@ -11,7 +12,12 @@ from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
+from rest_framework.exceptions import (
+    NotFound,
+    PermissionDenied,
+    ParseError,
+    ValidationError,
+)
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -20,6 +26,7 @@ from users.serializers import (
     UserFridgeSerializer,
     CustomTokenObtainPairSerializer,
     PublicUserSerializer,
+    UserPasswordSerializer,
 )
 from articles.serializers import ArticleListSerializer, CommentSerializer
 from articles.models import Article, Comment
@@ -282,6 +289,7 @@ def social_login_validate(**kwargs):
 
 class ResetPasswordView(APIView):
     # """비밀번호 찾기. 이메일 인증하면 비밀번호 재설정할 기회를 준다. 주석추가에정,이메일 인증 추가예정"""
+
     def post(self, request):
         try:
             user_email = request.data.get("email")
@@ -338,9 +346,15 @@ class ResetPasswordView(APIView):
                 return Response(
                     {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
                 )
-            user.set_password(new_second_password)
-            user.save(is_active=True)
-            return Response({"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK)
+            serializer = UserPasswordSerializer(password=new_second_password)
+            if serializer.is_valid():
+                user.set_password(new_second_password)
+                user.save(is_active=True)
+                return Response(
+                    {"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK
+                )
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception:
             raise ParseError
 
