@@ -78,6 +78,7 @@ class CoupangManage:
             {
                 "product_url": product["productUrl"],
                 "product_image_url": product["productImage"],
+                "product_price": product["productPrice"],
             }
             for product in product_data
         ]
@@ -114,10 +115,11 @@ def save_coupang_links_to_ingredient_links(ingredient_name):
     for link_data in product_links:
         link = link_data["product_url"]
         link_img = link_data["product_image_url"]
+        price = link_data["product_price"]
 
         # 생성된 link 와 link_img를 IngredientLink DB에 저장
         ingredient_link = IngredientLink(
-            ingredient=ingredient, link=link, link_img=link_img
+            ingredient=ingredient, link=link, link_img=link_img, price=price
         )
         ingredient_link.save()
         ingredient.save()

@@ -216,6 +216,11 @@ class IngredientLink(models.Model):
         blank=True,
         max_length=100000,
     )
+    price = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         null=True,

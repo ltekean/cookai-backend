@@ -123,9 +123,10 @@ class IngredientLinkAdmin(admin.ModelAdmin):
     list_display = (
         "link",
         "link_img",
+        "price",
         "created_at",
     )
-    list_filter = ("link", "link_img", "created_at")
+    list_filter = ("link", "link_img", "created_at", "price")
 
 
 @admin.register(RecipeIngredient)
