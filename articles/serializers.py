@@ -217,7 +217,7 @@ class IngredientLinkSerializer(ModelSerializer):
 
     class Meta:
         model = IngredientLink
-        fields = ("ingredient_name", "link", "link_img")
+        fields = ("ingredient_name", "link", "link_img", "price")
 
     def get_ingredient_name(self, obj):
         return obj.ingredient.ingredient_name

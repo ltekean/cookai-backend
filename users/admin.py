@@ -17,6 +17,8 @@ class UserAdmin(BaseUserAdmin):
     ]
     list_filter = [
         "is_admin",
+        "created_at",
+        "updated_at",
     ]
     fieldsets = [
         (
