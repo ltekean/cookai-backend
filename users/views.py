@@ -334,22 +334,20 @@ class ResetPasswordView(APIView):
     def put(self, request):
         uidb64 = request.data.get("uidb64")
         token = request.data.get("token")
+        user_id = request.data.get("user_id")
         if not uidb64 or not token:
             return Response({"error": "잘못된 접근입니다!"}, status=status.HTTP_403_FORBIDDEN)
-
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "일치하는 유저가 존재하지 않습니다!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if account_activation_token.check_token(user, token):
             try:
                 new_first_password = request.data.get("new_first_password")
                 new_second_password = request.data.get("new_second_password")
-                user_id = request.data.get("user_id")
-                try:
-                    user = User.objects.get(id=user_id)
-                except User.DoesNotExist:
-                    return Response(
-                        {"error": "일치하는 유저가 존재하지 않습니다!"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
                 if not new_first_password or not new_second_password:
                     return Response(
                         {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
