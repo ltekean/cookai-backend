@@ -1,4 +1,3 @@
-import re
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode
@@ -148,12 +147,6 @@ class PublicUserSerializer(ModelSerializer):
 
     def get_total_followers(self, user):
         return user.followers.count()
-
-
-class UserPasswordSerializer(ModelSerializer):
-    class Meta:
-        model = User
-        fields = "password"
 
 
 class UserFridgeSerializer(ModelSerializer):
