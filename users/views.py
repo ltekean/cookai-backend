@@ -289,30 +289,6 @@ def social_login_validate(**kwargs):
 
 class ResetPasswordView(APIView):
     # """비밀번호 찾기. 이메일 인증하면 비밀번호 재설정할 기회를 준다. 주석추가에정,이메일 인증 추가예정"""
-    def check_password(self, request):
-        try:
-            new_first_password = request.data.get("new_first_password")
-            new_second_password = request.data.get("new_second_password")
-        except Exception:
-            raise ParseError
-        if not new_first_password or not new_second_password:
-            return Response(
-                {"error": "비밀번호 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
-            )
-        if new_first_password != new_second_password:
-            return Response(
-                {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
-            )
-        if len(new_first_password or new_second_password) < 8:
-            raise ValidationError({"password": "비밀번호는 8자리 이상이어야 합니다."})
-        if not re.search(r"[a-zA-Z]", new_first_password or new_second_password):
-            raise ValidationError({"password": "비밀번호는 하나 이상의 영문이 포함되어야 합니다."})
-        if not re.search(r"\d", new_first_password or new_second_password):
-            raise ValidationError({"password": "비밀번호는 하나 이상의 숫자가 포함되어야 합니다."})
-        if not re.search(r"[!@#$%^&*()]", new_first_password or new_second_password):
-            raise ValidationError(
-                {"password": "비밀번호는 적어도 하나 이상의 특수문자(!@#$%^&*())가 포함되어야 합니다."}
-            )
 
     def post(self, request):
         try:
@@ -352,7 +328,6 @@ class ResetPasswordView(APIView):
             )
 
     def put(self, request):
-        self.check_password(request)
         try:
             new_first_password = request.data.get("new_first_password")
             new_second_password = request.data.get("new_second_password")
@@ -371,9 +346,15 @@ class ResetPasswordView(APIView):
                 return Response(
                     {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
                 )
-            user.set_password(new_second_password)
-            user.save(is_active=True)
-            return Response({"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK)
+            serializer = UserPasswordSerializer(password=new_second_password)
+            if serializer.is_valid():
+                user.set_password(new_second_password)
+                user.save(is_active=True)
+                return Response(
+                    {"message": "비밀번호가 재설정 되었습니다!"}, status=status.HTTP_200_OK
+                )
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception:
             raise ParseError
 
