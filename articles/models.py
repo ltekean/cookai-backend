@@ -134,6 +134,13 @@ class Comment(models.Model):
     comment = models.TextField(
         max_length=300,
     )
+    # recomment = models.ForeignKey(
+    #     "self",
+    #     related_name="recomments",
+    #     on_delete=models.CASCADE,
+    #     null=True,
+    #     blank=True,
+    # )
     like = models.ManyToManyField(
         User,
         related_name="like_comments",
@@ -148,6 +155,39 @@ class Comment(models.Model):
 
     def __str__(self):
         return str(self.article)
+
+
+class Recomment(models.Model):
+    class meta:
+        db_table = "Recomment"
+
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="recomments",
+    )
+    article = models.ForeignKey(
+        Article,
+        on_delete=models.CASCADE,
+    )
+    comment = models.ForeignKey(
+        Comment,
+        on_delete=models.CASCADE,
+    )
+    recomment = models.TextField(
+        max_length=300,
+    )
+    like = models.ManyToManyField(
+        User,
+        related_name="like_recomments",
+        blank=True,
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
 
 
 # 재료 DB 모델
