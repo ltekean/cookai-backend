@@ -496,7 +496,7 @@ class UserDetailView(APIView):
                 return Response({"message": "삭제되었습니다!"}, status=status.HTTP_200_OK)
             else:
                 return Response(
-                    {"error": "권한이 없습니다!"}, status=status.HTTP_403_FORBIDDEN
+                    {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_403_FORBIDDEN
                 )
         else:
             if request.user.id == user_id:
