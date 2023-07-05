@@ -486,16 +486,28 @@ class UserDetailView(APIView):
     def patch(self, request, user_id):
         """유저 삭제, 주석 추가 예정"""
         user = get_object_or_404(User, id=user_id)
-
-        if request.user.id == user_id and user.check_password(
-            request.data.get("password")
-        ):
-            user = request.user
-            user.is_active = False
-            user.save()
-            return Response({"message": "삭제되었습니다!"}, status=status.HTTP_200_OK)
+        if user.login_type == "normal":
+            if request.user.id == user_id and user.check_password(
+                request.data.get("password")
+            ):
+                user = request.user
+                user.is_active = False
+                user.save()
+                return Response({"message": "삭제되었습니다!"}, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"error": "권한이 없습니다!"}, status=status.HTTP_403_FORBIDDEN
+                )
         else:
-            return Response({"error": "권한이 없습니다!"}, status=status.HTTP_403_FORBIDDEN)
+            if request.user.id == user_id:
+                user = request.user
+                user.is_active = False
+                user.save()
+                return Response({"message": "삭제되었습니다!"}, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"error": "권한이 없습니다!"}, status=status.HTTP_403_FORBIDDEN
+                )
 
 
 class UserDetailArticlesView(generics.ListAPIView):
