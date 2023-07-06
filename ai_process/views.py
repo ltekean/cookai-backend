@@ -15,6 +15,7 @@ from articles.models import (
 from articles.serializers import ArticleListSerializer
 from ai_process.recommend import collaborative_filtering, content_base
 from .labels import LABELS
+from django.db.models import Count
 
 
 class ImageUploadView(APIView):
@@ -51,17 +52,25 @@ class ImageUploadView(APIView):
 
 
 class RecommendView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
     def get(self, request):
         func_dict = {"0": collaborative_filtering, "1": content_base}
-        select = request.GET.get("recommend", "0")
-        list_of_pk, dictionary = func_dict[select](request.user.id)
-        articles = sorted(
-            Article.objects.filter(id__in=list_of_pk),
-            key=lambda x: dictionary[x.id],
-            reverse=True,
-        )
+        if request.user.is_anonymous:
+            articles = (
+                Article.objects.annotate(
+                    score=Count("comment") + Count("like") * 3 + Count("bookmark") * 4
+                )
+                .filter(score__gt=0)
+                .order_by("-score")
+            )
+            articles = articles[:10]
+        else:
+            select = request.GET.get("recommend", "0")
+            list_of_pk, dictionary = func_dict[select](request.user.id)
+            articles = sorted(
+                Article.objects.filter(id__in=list_of_pk),
+                key=lambda x: dictionary[x.id],
+                reverse=True,
+            )
         serializer = ArticleListSerializer(
             articles, many=True, context={"request": request}
         )

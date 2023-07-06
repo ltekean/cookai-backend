@@ -49,7 +49,6 @@ def recommend_by_collabo(
 
 def collaborative_filtering(user_id):
     """ """
-    print("coll")
     users = User.objects.prefetch_related("likes").values("pk", "likes__pk")
     user_list = User.objects.all().values("pk")
     user_list = pd.DataFrame(list(user_list))
@@ -94,12 +93,10 @@ def collaborative_filtering(user_id):
         np.dot(u, sigma), vt
     ) + user_ratings_mean.reshape(-1, 1)
     df_svd_preds = pd.DataFrame(svd_user_predicted_ratings, columns=pvt.columns)
-    print(df_svd_preds)
     df = df.groupby(["index", "article"]).sum()
     df = df.reset_index()
     # user_list={}
     user_list = user_list.set_index("pk").T.to_dict()
-    print(user_list)
     already_rated, predictions = recommend_by_collabo(
         df_svd_preds, user_id, user_list, df3, df, 10
     )
@@ -133,7 +130,6 @@ def recommend_by_ingredient(matrix, items, k=10):
 
 
 def content_base(user_id):
-    print("cont")
     articles = Article.objects.exclude(author_id=user_id).values(
         "pk", "recipeingredient__ingredient"
     )
@@ -157,7 +153,6 @@ def content_base(user_id):
         ).sort_index()
         # .reset_index()
     )
-    print(tfidf_matrix)
     my_vector = list(tfidf_matrix.loc[0, :])
     list_ = []
     dict_ = {}
@@ -166,5 +161,5 @@ def content_base(user_id):
     dict_ = {
         key: value[0] for value, key in zip(cosine_sim[1:], tfidf_matrix.index[1:])
     }
-    print(dict_)
+    dict_ = dict(sorted(dict_.items(), key=lambda x: x[1], reverse=True))
     return [k for k in dict_.keys()][:10], dict_
