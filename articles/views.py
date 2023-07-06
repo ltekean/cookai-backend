@@ -87,6 +87,16 @@ class ArticleView(generics.ListCreateAPIView):
         selector = self.request.GET.get("selector")
         return Q(tags__name__in=[selector])
 
+    def weekly_best(self):
+        q = Q(created_at__gt=timezone.now() - timedelta(weeks=1))
+        q.add(Q(like__isnull=False), q.AND)
+        return q
+
+    def daily_best(self):
+        q = Q(created_at__gt=timezone.now() - timedelta(days=1))
+        q.add(Q(like__isnull=False), q.AND)
+        return q
+
     def search(self, type_key):
         types = {
             "0": self.search_author,  # author 통과
@@ -94,6 +104,8 @@ class ArticleView(generics.ListCreateAPIView):
             "2": self.search_ingredient,  # ingredient 통과
             "3": self.search_ingredient_title_content,  # title+con+ingredient 통과
             "4": self.search_tag,  # tag 통과
+            "5": self.weekly_best,
+            "6": self.daily_best,
         }
         query_filter = types.get(type_key, Q)()
         return query_filter
@@ -116,7 +128,7 @@ class ArticleView(generics.ListCreateAPIView):
                 Article.objects.annotate(counts=Count("recipeingredient"))
                 .filter(q)
                 .annotate(like_count=Count("like"))
-                .order_by("-like_count", "-created_at")
+                .order_by("-like_count")
             )
         else:
             Article.objects.annotate(counts=Count("recipeingredient"))
