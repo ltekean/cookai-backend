@@ -82,10 +82,14 @@ class ArticleView(generics.ListCreateAPIView):
         return Q(tags__name__in=[selector])
 
     def weekly_best(self):
-        return Q(created_at__gt=timezone.now() - timedelta(weeks=1))
+        q = Q(created_at__gt=timezone.now() - timedelta(weeks=1))
+        q.add(Q(like__isnull=False), q.AND)
+        return q
 
     def daily_best(self):
-        return Q(created_at__gt=timezone.now() - timedelta(days=1))
+        q = Q(created_at__gt=timezone.now() - timedelta(days=1))
+        q.add(Q(like__isnull=False), q.AND)
+        return q
 
     def search(self, type_key):
         types = {
