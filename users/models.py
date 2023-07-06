@@ -75,7 +75,7 @@ class User(AbstractUser):
         unique=True,
     )
     username = models.CharField(
-        max_length=150,
+        max_length=23,
         unique=True,
     )
     password = models.CharField(max_length=256, validators=[validate_password])
