@@ -74,6 +74,11 @@ urlpatterns = [
         name="comment_like",
     ),
     path(
+        "recomment/<int:recomment_id>/like/",
+        views.ReCommentLikeView.as_view(),
+        name="recomment_like",
+    ),
+    path(
         "<int:article_id>/bookmark/",
         views.BookmarkView.as_view(),
         name="article_bookmark",

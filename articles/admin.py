@@ -6,6 +6,7 @@ from articles.models import (
     Ingredient,
     IngredientLink,
     RecipeIngredient,
+    Recomment,
 )
 
 
@@ -97,6 +98,11 @@ class CommentAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+
+
+@admin.register(Recomment)
+class RecommentAdmin(admin.ModelAdmin):
+    pass
 
 
 @admin.register(Category)

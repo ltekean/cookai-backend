@@ -189,6 +189,9 @@ class Recomment(models.Model):
         auto_now_add=True,
     )
 
+    def __str__(self):
+        return str(self.comment)
+
 
 # 재료 DB 모델
 class Ingredient(models.Model):

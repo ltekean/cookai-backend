@@ -2,7 +2,11 @@ from rest_framework.generics import get_object_or_404
 from rest_framework import status, permissions, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from articles.paginations import ArticlePagination, CommentPagination
+from articles.paginations import (
+    ArticlePagination,
+    CommentPagination,
+    ReCommentPagination,
+)
 from users.models import Fridge
 from articles.models import (
     Article,
@@ -273,6 +277,7 @@ class CommentDetailView(APIView):
 
 class RecommentView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = ReCommentPagination
     serializer_class = RecommentSerializer
     queryset = None
 
@@ -404,6 +409,20 @@ class CommentLikeView(APIView):
             return Response("dislike", status=status.HTTP_200_OK)
         else:
             comment.like.add(request.user)
+            return Response("like", status=status.HTTP_200_OK)
+
+
+class ReCommentLikeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, recomment_id):
+        """댓글 좋아요 누르기"""
+        recomment = get_object_or_404(Recomment, id=recomment_id)
+        if request.user in recomment.like.all():
+            recomment.like.remove(request.user)
+            return Response("dislike", status=status.HTTP_200_OK)
+        else:
+            recomment.like.add(request.user)
             return Response("like", status=status.HTTP_200_OK)
 
 
