@@ -69,6 +69,26 @@ class UserView(APIView):
             return Response(
                 {"error": "해당 닉네임을 가진 유저가 이미 있습니다!"}, status=status.HTTP_400_BAD_REQUEST
             )
+        if len(password) < 8:
+            return Response(
+                {"error": "비밀번호는 8자리 이상이어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not re.search(r"[a-zA-Z]", password):
+            return Response(
+                {"error": "비밀번호는 하나 이상의 영문이 포함되어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not re.search(r"\d", password):
+            return Response(
+                {"error": "비밀번호는 하나 이상의 숫자가 포함되어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not re.search(r"[!@#$%^&*()]", password):
+            return Response(
+                {"error": "비밀번호는 적어도 하나 이상의 특수문자(!@#$%^&*())가 포함되어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         serializer = UserSerializer(
             data=request.data,
             context={"request": request},
