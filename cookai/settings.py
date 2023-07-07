@@ -136,6 +136,9 @@ if DEBUG == "1":
         "https://cookai.today",
         "https://www.backend.cookai.today",
     ]
+    LOG_DIR = os.path.join(BASE_DIR, "log")
+    LOG_FILE = "/debug.log"
+    LOG_PATH = LOG_DIR + LOG_FILE
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
@@ -143,7 +146,7 @@ if DEBUG == "1":
             "file": {
                 "level": "ERROR",  # 로그 레벨
                 "class": "logging.FileHandler",
-                "filename": os.path.join(BASE_DIR, "/debug.log"),
+                "filename": LOG_PATH,  # 로그 경로
             },
         },
         "loggers": {
