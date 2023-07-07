@@ -62,6 +62,7 @@ class CategorySerializer(ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     is_author = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     # recomments = serializers.SerializerMethodField()
@@ -79,6 +80,7 @@ class CommentSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "likes_count",
+            "is_liked",
             # "recomments",
         ]  # author, created_at 등 조회에 필요한 것들
         extra_kwargs = {
@@ -92,6 +94,9 @@ class CommentSerializer(serializers.ModelSerializer):
                 "read_only": True,
             },
             "is_author": {
+                "read_only": True,
+            },
+            "is_liked": {
                 "read_only": True,
             },
             "likes_count": {
@@ -112,6 +117,12 @@ class CommentSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         return article.author == request.user
 
+    def get_is_liked(self, obj):
+        request = self.context["request"]
+        if request.user.is_anonymous:
+            return False
+        return request.user in obj.like.all() or False
+
     # def get_recomments(self, instance):
     #     serializer = self.__class__(instance.recomments, many=True)
     #     serializer.bind("", self)
@@ -120,6 +131,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class RecommentSerializer(serializers.ModelSerializer):
     is_author = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
 
@@ -137,6 +149,7 @@ class RecommentSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "likes_count",
+            "is_liked",
         ]
         extra_kwargs = {
             "author": {
@@ -149,6 +162,9 @@ class RecommentSerializer(serializers.ModelSerializer):
                 "read_only": True,
             },
             "is_author": {
+                "read_only": True,
+            },
+            "is_liked": {
                 "read_only": True,
             },
             "likes_count": {
@@ -171,6 +187,12 @@ class RecommentSerializer(serializers.ModelSerializer):
     def get_is_author(self, article):
         request = self.context["request"]
         return article.author == request.user
+
+    def get_is_liked(self, obj):
+        request = self.context["request"]
+        if request.user.is_anonymous:
+            return False
+        return request.user in obj.like.all() or False
 
 
 # 레시피 재료 가져오기
