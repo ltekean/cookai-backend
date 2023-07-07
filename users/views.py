@@ -372,26 +372,25 @@ class ResetPasswordView(APIView):
                 {"error": "비밀번호가 일치하지 않습니다!"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        validate_password(new_first_password)
-        # if len(new_second_password) < 8:
-        #     return Response(
-        #         {"error": "비밀번호는 8자리 이상이어야 합니다."}, status=status.HTTP_400_BAD_REQUEST
-        #     )
-        # if not re.search(r"[a-zA-Z]", new_second_password):
-        #     return Response(
-        #         {"error": "비밀번호는 하나 이상의 영문이 포함되어야 합니다."},
-        #         status=status.HTTP_400_BAD_REQUEST,
-        #     )
-        # if not re.search(r"\d", new_second_password):
-        #     return Response(
-        #         {"error": "비밀번호는 하나 이상의 숫자가 포함되어야 합니다."},
-        #         status=status.HTTP_400_BAD_REQUEST,
-        #     )
-        # if not re.search(r"[!@#$%^&*()]", new_second_password):
-        #     return Response(
-        #         {"error": "비밀번호는 적어도 하나 이상의 특수문자(!@#$%^&*())가 포함되어야 합니다."},
-        #         status=status.HTTP_400_BAD_REQUEST,
-        #     )
+        if len(new_second_password) < 8:
+            return Response(
+                {"error": "비밀번호는 8자리 이상이어야 합니다."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if not re.search(r"[a-zA-Z]", new_second_password):
+            return Response(
+                {"error": "비밀번호는 하나 이상의 영문이 포함되어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not re.search(r"\d", new_second_password):
+            return Response(
+                {"error": "비밀번호는 하나 이상의 숫자가 포함되어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not re.search(r"[!@#$%^&*()]", new_second_password):
+            return Response(
+                {"error": "비밀번호는 적어도 하나 이상의 특수문자(!@#$%^&*())가 포함되어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if account_activation_token.check_token(user, token):
             try:
                 user.set_password(new_second_password)
@@ -430,7 +429,26 @@ class ChangePasswordView(APIView):
                 return Response(
                     {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
                 )
-            validate_password(new_password)
+            if len(new_password) < 8:
+                return Response(
+                    {"error": "비밀번호는 8자리 이상이어야 합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not re.search(r"[a-zA-Z]", new_password):
+                return Response(
+                    {"error": "비밀번호는 하나 이상의 영문이 포함되어야 합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not re.search(r"\d", new_password):
+                return Response(
+                    {"error": "비밀번호는 하나 이상의 숫자가 포함되어야 합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not re.search(r"[!@#$%^&*()]", new_password):
+                return Response(
+                    {"error": "비밀번호는 적어도 하나 이상의 특수문자(!@#$%^&*())가 포함되어야 합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             if user.check_password(old_password):
                 user.set_password(new_password)
                 user.save()
