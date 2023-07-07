@@ -138,22 +138,6 @@ if DEBUG == "1":
         "https://cookai.today",
         "https://www.backend.cookai.today",
     ]
-    GC_API_KEY = os.environ.get("GC_DEPLOY_API_KEY")
-    GC_ID = os.environ.get("GC_DEPLOY_ID")
-    GC_SECRET = os.environ.get("GC_DEPLOY_SECRET")
-    NC_ID = os.environ.get("NC_DEPLOY_ID")
-    NC_SECRET = os.environ.get("NC_DEPLOY_SECRET")
-    KK_API_KEY = os.environ.get("KK_DEPLOY_API_KEY")
-    FRONT_BASE_URL = "https://cookai.today"
-    BACKEND_BASE_URL = "https://www.backend.cookai.today"
-    CORS_ALLOWED_ORIGINS = [
-        "https://cookai.today",
-        "https://www.backend.cookai.today",
-    ]
-    CSRF_TRUSTED_ORIGINS = [
-        "https://cookai.today",
-        "https://www.backend.cookai.today",
-    ]
     LOG_DIR = os.path.join(BASE_DIR, "log")
     LOG_FILE = "/debug.log"
     LOG_PATH = LOG_DIR + LOG_FILE
@@ -173,11 +157,24 @@ if DEBUG == "1":
                 "filename": LOG_PATH,  # 로그 경로
             },
         },
-        "root": {
-            "handlers": ["console"],
-            "level": "WARNING",
-        },
     }
+    GC_API_KEY = os.environ.get("GC_DEPLOY_API_KEY")
+    GC_ID = os.environ.get("GC_DEPLOY_ID")
+    GC_SECRET = os.environ.get("GC_DEPLOY_SECRET")
+    NC_ID = os.environ.get("NC_DEPLOY_ID")
+    NC_SECRET = os.environ.get("NC_DEPLOY_SECRET")
+    KK_API_KEY = os.environ.get("KK_DEPLOY_API_KEY")
+    FRONT_BASE_URL = "https://cookai.today"
+    BACKEND_BASE_URL = "https://www.backend.cookai.today"
+    CORS_ALLOWED_ORIGINS = [
+        "https://cookai.today",
+        "https://www.backend.cookai.today",
+    ]
+    CSRF_TRUSTED_ORIGINS = [
+        "https://cookai.today",
+        "https://www.backend.cookai.today",
+    ]
+
     sentry_sdk.init(
         dsn="https://6be453a3236e479a92d9075af506bf41@o4505487737815040.ingest.sentry.io/4505487742402560",
         integrations=[
