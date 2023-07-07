@@ -16,7 +16,6 @@ def deactivate_users(model_admin, request, articles):
         user = article.author
         user.is_active = False
         user.save()
-        print("비활성화 완료!")
 
 
 class WordFilter(admin.SimpleListFilter):
