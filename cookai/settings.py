@@ -1,8 +1,6 @@
 import os
-import sentry_sdk
 from pathlib import Path
 from datetime import timedelta
-from sentry_sdk.integrations.django import DjangoIntegration
 
 # 배포 루틴
 # poetry install > poetry export -f requirements.txt > requirements.txt
@@ -174,15 +172,6 @@ if DEBUG == "1":
         "https://cookai.today",
         "https://www.backend.cookai.today",
     ]
-
-    sentry_sdk.init(
-        dsn="https://6be453a3236e479a92d9075af506bf41@o4505487737815040.ingest.sentry.io/4505487742402560",
-        integrations=[
-            DjangoIntegration(),
-        ],
-        traces_sample_rate=1.0,
-        send_default_pii=True,
-    )
 
 elif DEBUG == "0":
     DEBUG = True

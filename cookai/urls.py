@@ -11,5 +11,5 @@ urlpatterns = [
     path("users/", include("users.urls")),
     path("articles/", include("articles.urls")),
     path("ai_process/", include("ai_process.urls")),
-    path("sentry-debug/", trigger_error),
+    path("debug/", trigger_error),
 ]
