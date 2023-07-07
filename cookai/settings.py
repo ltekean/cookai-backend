@@ -150,7 +150,7 @@ if DEBUG == "1":
         "disable_existing_loggers": False,
         "handlers": {
             "file": {
-                "level": "DEBUG",  # 로그 레벨
+                "level": "ERROR",  # 로그 레벨
                 "class": "logging.FileHandler",
                 "filename": LOG_PATH,  # 로그 경로
             },
