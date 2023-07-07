@@ -1,5 +1,5 @@
-from pathlib import Path
 import os
+from pathlib import Path
 from datetime import timedelta
 
 # 배포 루틴
@@ -129,11 +129,34 @@ DEBUG = os.environ.get("DEBUG", "0")
 # DEBUG == "1" 이면 배포환경 "0" 이면 개발환경.
 if DEBUG == "1":
     DEBUG = False
+
     ALLOWED_HOSTS = [
+        "localhost",
         "backend",
         "https://cookai.today",
         "https://www.backend.cookai.today",
     ]
+    LOG_DIR = os.path.join(BASE_DIR, "log")
+    LOG_FILE = "/debug.log"
+    LOG_PATH = LOG_DIR + LOG_FILE
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "file": {
+                "level": "ERROR",  # 로그 레벨
+                "class": "logging.FileHandler",
+                "filename": LOG_PATH,  # 로그 경로
+            },
+        },
+        "loggers": {
+            "django": {
+                "handlers": ["file"],
+                "level": "ERROR",
+                "propagate": True,
+            },
+        },
+    }
     GC_API_KEY = os.environ.get("GC_DEPLOY_API_KEY")
     GC_ID = os.environ.get("GC_DEPLOY_ID")
     GC_SECRET = os.environ.get("GC_DEPLOY_SECRET")
