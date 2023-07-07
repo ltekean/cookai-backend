@@ -491,21 +491,22 @@ class RecipeIngredientDetailView(APIView):
 
 
 class LinkPlusView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, article_id):
-        # 로그인된 사용자의 Fridge 조회
-        user_fridge_ingredients = Fridge.objects.filter(user=request.user).values_list(
-            "ingredient", flat=True
-        )
-
         # article_id와 연결된 RecipeIngredient 조회
         recipe_ingredients = RecipeIngredient.objects.filter(
             article_id=article_id
         ).values_list("ingredient", flat=True)
-
-        # 사용자의 Fridge에 없는 Ingredient 찾기
-        missing_ingredients = set(recipe_ingredients) - set(user_fridge_ingredients)
+        # 로그인된 사용자의 Fridge 조회
+        if not request.user.is_anonymous:
+            user_fridge_ingredients = Fridge.objects.filter(
+                user=request.user
+            ).values_list("ingredient", flat=True)
+            # 사용자의 Fridge에 없는 Ingredient 찾기
+            missing_ingredients = set(recipe_ingredients) - set(user_fridge_ingredients)
+        else:
+            missing_ingredients = set(recipe_ingredients)
 
         # 없는 Ingredient와 연결된 IngredientLink 조회
         # column_name+__in : 리스트 안에 지정한 문자열들 중에 하나라도 포함된 데이터를 찾을 때 사용
