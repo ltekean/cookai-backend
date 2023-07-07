@@ -79,6 +79,7 @@ class CommentSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "likes_count",
+            "like",
             # "recomments",
         ]  # author, created_at 등 조회에 필요한 것들
         extra_kwargs = {
@@ -137,6 +138,7 @@ class RecommentSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "likes_count",
+            "like",
         ]
         extra_kwargs = {
             "author": {
