@@ -15,6 +15,7 @@ class UserAdmin(BaseUserAdmin):
     actions = (deactivated_users,)
     readonly_fields = ("last_login", "followers_list")
     list_display = [
+        "is_active",
         "username",
         "age",
         "gender",
