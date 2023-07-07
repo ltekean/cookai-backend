@@ -3,10 +3,19 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from users.models import User, Fridge
 
 
+@admin.action(description="유저를 비활성화 시킵니다")
+def deactivated_users(model_admin, request, users):
+    for user in User.objects.all():
+        user.is_active = False
+        user.save()
+
+
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
+    actions = (deactivated_users,)
     readonly_fields = ("last_login", "followers_list")
     list_display = [
+        "is_active",
         "username",
         "age",
         "gender",
@@ -19,6 +28,7 @@ class UserAdmin(BaseUserAdmin):
         "is_admin",
         "created_at",
         "updated_at",
+        "is_active",
     ]
     fieldsets = [
         (
