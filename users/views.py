@@ -31,6 +31,7 @@ from articles.serializers import ArticleListSerializer, CommentSerializer
 from articles.models import Article, Comment
 from articles.paginations import ArticlePagination
 from users.models import User, Fridge
+from users.validators import validate_password
 from users.users_paginations import UserCommentPagination, UserFollowPagination
 from users.email_tokens import account_activation_token
 
@@ -427,6 +428,26 @@ class ChangePasswordView(APIView):
             if new_password != new_password2:
                 return Response(
                     {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
+                )
+            if len(new_password) < 8:
+                return Response(
+                    {"error": "비밀번호는 8자리 이상이어야 합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not re.search(r"[a-zA-Z]", new_password):
+                return Response(
+                    {"error": "비밀번호는 하나 이상의 영문이 포함되어야 합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not re.search(r"\d", new_password):
+                return Response(
+                    {"error": "비밀번호는 하나 이상의 숫자가 포함되어야 합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not re.search(r"[!@#$%^&*()]", new_password):
+                return Response(
+                    {"error": "비밀번호는 적어도 하나 이상의 특수문자(!@#$%^&*())가 포함되어야 합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             if user.check_password(old_password):
                 user.set_password(new_password)

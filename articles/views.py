@@ -2,11 +2,16 @@ from rest_framework.generics import get_object_or_404
 from rest_framework import status, permissions, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from articles.paginations import ArticlePagination, CommentPagination
+from articles.paginations import (
+    ArticlePagination,
+    CommentPagination,
+    ReCommentPagination,
+)
 from users.models import Fridge
 from articles.models import (
     Article,
     Comment,
+    Recomment,
     Category,
     Ingredient,
     IngredientLink,
@@ -21,6 +26,7 @@ from articles.serializers import (
     CategorySerializer,
     ArticleDetailSerializer,
     CommentSerializer,
+    RecommentSerializer,
     IngredientSerializer,
     RecipeIngredientCreateSerializer,
     IngredientLinkSerializer,
@@ -81,6 +87,16 @@ class ArticleView(generics.ListCreateAPIView):
         selector = self.request.GET.get("selector")
         return Q(tags__name__in=[selector])
 
+    def weekly_best(self):
+        q = Q(created_at__gt=timezone.now() - timedelta(weeks=1))
+        q.add(Q(like__isnull=False), q.AND)
+        return q
+
+    def daily_best(self):
+        q = Q(created_at__gt=timezone.now() - timedelta(days=1))
+        q.add(Q(like__isnull=False), q.AND)
+        return q
+
     def search(self, type_key):
         types = {
             "0": self.search_author,  # author 통과
@@ -88,6 +104,8 @@ class ArticleView(generics.ListCreateAPIView):
             "2": self.search_ingredient,  # ingredient 통과
             "3": self.search_ingredient_title_content,  # title+con+ingredient 통과
             "4": self.search_tag,  # tag 통과
+            "5": self.weekly_best,
+            "6": self.daily_best,
         }
         query_filter = types.get(type_key, Q)()
         return query_filter
@@ -110,7 +128,7 @@ class ArticleView(generics.ListCreateAPIView):
                 Article.objects.annotate(counts=Count("recipeingredient"))
                 .filter(q)
                 .annotate(like_count=Count("like"))
-                .order_by("-like_count", "-created_at")
+                .order_by("-like_count")
             )
         else:
             Article.objects.annotate(counts=Count("recipeingredient"))
@@ -269,6 +287,67 @@ class CommentDetailView(APIView):
         return Response("본인이 작성한 댓글만 삭제할수 있습니다", status=status.HTTP_403_FORBIDDEN)
 
 
+class RecommentView(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = ReCommentPagination
+    serializer_class = RecommentSerializer
+    queryset = None
+
+    def get_queryset(self):
+        queryset = Recomment.objects.filter(
+            article_id=self.article_id, comment_id=self.comment_id
+        )
+        order = self.request.GET.get("order", None)
+        if order == "1":
+            return queryset.order_by("-like_count")
+        if order == "2":
+            return queryset.order_by("created_at")
+        return queryset.order_by("-created_at")
+
+    def get(self, request, *args, **kwargs):
+        self.article_id = kwargs.get("article_id")
+        self.comment_id = kwargs.get("comment_id")
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, article_id, comment_id):
+        serializer = self.serializer_class(
+            data=request.data, context={"request": request}
+        )
+        if serializer.is_valid():
+            serializer.save(
+                author=request.user, article_id=article_id, comment_id=comment_id
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RecommentDetailView(APIView):
+    def put(self, request, article_id, comment_id, recomment_id):
+        recomment = get_object_or_404(Recomment, id=recomment_id)
+        if request.user == recomment.author:
+            serializer = RecommentSerializer(
+                recomment, data=request.data, context={"request": request}
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": "본인이 작성한 대댓글만 수정할수 있습니다"}, status=status.HTTP_403_FORBIDDEN
+        )
+
+    def delete(self, request, article_id, comment_id, recomment_id):
+        recomment = get_object_or_404(Recomment, id=recomment_id)
+        if request.user == recomment.author:
+            recomment.delete()
+            return Response(
+                {"message": "대댓글이 삭제되었습니다"}, status=status.HTTP_204_NO_CONTENT
+            )
+        return Response(
+            {"error": "본인이 작성한 댓글만 삭제할수 있습니다"}, status=status.HTTP_403_FORBIDDEN
+        )
+
+
 class ArticleGetUploadURLView(APIView):
     def post(self, request):
         """GetUploadURL.post
@@ -342,6 +421,20 @@ class CommentLikeView(APIView):
             return Response("dislike", status=status.HTTP_200_OK)
         else:
             comment.like.add(request.user)
+            return Response("like", status=status.HTTP_200_OK)
+
+
+class ReCommentLikeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, recomment_id):
+        """댓글 좋아요 누르기"""
+        recomment = get_object_or_404(Recomment, id=recomment_id)
+        if request.user in recomment.like.all():
+            recomment.like.remove(request.user)
+            return Response("dislike", status=status.HTTP_200_OK)
+        else:
+            recomment.like.add(request.user)
             return Response("like", status=status.HTTP_200_OK)
 
 
