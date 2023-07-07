@@ -154,6 +154,21 @@ if DEBUG == "1":
         "https://cookai.today",
         "https://www.backend.cookai.today",
     ]
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "file": {
+                "level": "DEBUG",  # 로그 레벨
+                "class": "logging.FileHandler",
+                "filename": "/log/debug.log",  # 로그 경로
+            },
+        },
+        "root": {
+            "handlers": ["console"],
+            "level": "WARNING",
+        },
+    }
     sentry_sdk.init(
         dsn="https://6be453a3236e479a92d9075af506bf41@o4505487737815040.ingest.sentry.io/4505487742402560",
         integrations=[
