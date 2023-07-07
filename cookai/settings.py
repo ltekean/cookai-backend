@@ -155,6 +155,13 @@ if DEBUG == "1":
                 "filename": LOG_PATH,  # 로그 경로
             },
         },
+        "loggers": {
+            "django": {
+                "handlers": ["file"],
+                "level": "ERROR",
+                "propagate": True,
+            },
+        },
     }
     GC_API_KEY = os.environ.get("GC_DEPLOY_API_KEY")
     GC_ID = os.environ.get("GC_DEPLOY_ID")
