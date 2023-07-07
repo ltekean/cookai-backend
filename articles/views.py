@@ -125,15 +125,17 @@ class ArticleView(generics.ListCreateAPIView):
         order = self.request.GET.get("order")
         if order == "1":
             queryset = (
-                Article.objects.annotate(counts=Count("recipeingredient"))
+                Article.objects.annotate(like_count=Count("like", distinct=True))
+                .annotate(counts=Count("recipeingredient", distinct=True))
                 .filter(q)
-                .annotate(like_count=Count("like"))
                 .order_by("-like_count")
             )
         else:
             Article.objects.annotate(counts=Count("recipeingredient"))
             queryset = (
-                Article.objects.annotate(counts=Count("recipeingredient"))
+                Article.objects.annotate(
+                    counts=Count("recipeingredient", distinct=True)
+                )
                 .filter(q)
                 .order_by("-created_at")
             )
