@@ -136,7 +136,6 @@ class UserSignUpTestCase(UserBaseTestCase):
             path=self.url,
             data=data,
         )
-        print(response.status_code)
         self.assertEqual(response.status_code, 400)
 
 
