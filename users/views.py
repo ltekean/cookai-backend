@@ -57,6 +57,10 @@ class UserView(APIView):
             return Response(
                 {"error": "이메일 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
             )
+        if not username:
+            return Response(
+                {"error": "닉네임 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
         if password != password2:
             return Response(
                 {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
