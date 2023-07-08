@@ -129,7 +129,6 @@ DEBUG = os.environ.get("DEBUG", "0")
 # DEBUG == "1" 이면 배포환경 "0" 이면 개발환경.
 if DEBUG == "1":
     DEBUG = False
-
     ALLOWED_HOSTS = [
         "localhost",
         "backend",
@@ -222,29 +221,17 @@ if DEBUG == "1":
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
-        "filters": {
-            "require_debug_false": {
-                "()": "django.utils.log.RequireDebugFalse",
-            },
-        },
         "formatters": {
-            "django.server": {
-                "()": "django.utils.log.ServerFormatter",
-                "format": "[{server_time}] {message}",
-                "style": "{",
+            "verbose": {
+                "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+                "datefmt": "%d/%b/%Y %H:%M:%S",
             },
-            "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
+            "simple": {"format": "%(levelname)s %(message)s"},
         },
         "handlers": {
-            "mail_admins": {
-                "level": "ERROR",
-                "filters": ["require_debug_false"],
-                "class": "django.utils.log.AdminEmailHandler",
-            },
             "file": {
                 "level": "ERROR",
                 "encoding": "utf-8",
-                "filters": ["require_debug_false"],
                 "class": "logging.handlers.RotatingFileHandler",
                 "filename": LOG_PATH,
                 "maxBytes": 1024 * 1024 * 5,  # 5 MB
@@ -254,12 +241,9 @@ if DEBUG == "1":
         },
         "loggers": {
             "django": {
-                "handlers": ["mail_admins", "file"],
-                "level": "INFO",
-            },
-            "my": {
                 "handlers": ["file"],
-                "level": "INFO",
+                "propagate": True,
+                "level": "ERROR",
             },
         },
     }
