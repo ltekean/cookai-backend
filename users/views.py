@@ -335,7 +335,7 @@ class ResetPasswordView(APIView):
             user_email = request.data.get("email")
             user = User.objects.get(email=user_email)
             if user:
-                if user.login_type == "normal":
+                if user.login_type == "normal" or user.is_active == False:
                     html = render_to_string(
                         "users/email_password_reset.html",
                         {
@@ -423,6 +423,22 @@ class ResetPasswordView(APIView):
                 raise ParseError
         else:
             return Response({"error": "잘못된 접근입니다!"}, status=status.HTTP_403_FORBIDDEN)
+
+    def patch(self, request):
+        uidb64 = request.data.get("uidb64")
+        token = request.data.get("token")
+        user_id = request.data.get("user_id")
+        user = get_object_or_404(User, id=user_id)
+        if not uidb64 or not token:
+            return Response({"error": "잘못된 접근입니다!"}, status=status.HTTP_403_FORBIDDEN)
+        if user.login_type != "normal":
+            user.is_active = True
+            user.save()
+            return Response({"message": "복구되었습니다!"}, status=status.HTTP_200_OK)
+        else:
+            return Response(
+                {"error": "해당 회원은 소셜 계정이 아닙니다!"}, status=status.HTTP_403_FORBIDDEN
+            )
 
 
 class ChangePasswordView(APIView):
