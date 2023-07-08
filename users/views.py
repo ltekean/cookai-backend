@@ -287,6 +287,11 @@ def social_login_validate(**kwargs):
         )
     try:
         user = User.objects.get(email=email)
+        if user.is_active == False:
+            return Response(
+                {"error": "해당 유저는 휴면계정입니다!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if login_type == user.login_type:
             refresh = RefreshToken.for_user(user)
             access_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
