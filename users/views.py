@@ -335,7 +335,7 @@ class ResetPasswordView(APIView):
             user_email = request.data.get("email")
             user = User.objects.get(email=user_email)
             if user:
-                if user.login_type == "normal":
+                if user.login_type == "normal" or user.is_active == False:
                     html = render_to_string(
                         "users/email_password_reset.html",
                         {
