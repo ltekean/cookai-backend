@@ -378,6 +378,10 @@ class ArticleGetUploadURLView(APIView):
 class TagSearchView(APIView):
     def get(self, request):
         tag_condition = request.query_params.get("tag", None)
+        if tag_condition == None:
+            return Response(
+                {"error": "선택된 태그가 없습니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
         tag_list = Tag.objects.filter(name__contains=tag_condition)
         serializer = TagSerializer(tag_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
