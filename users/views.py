@@ -296,7 +296,7 @@ def social_login_validate(**kwargs):
             )
         else:
             return Response(
-                {"error": f"{user.login_type}으로 이미 가입된 계정이 있습니다!"},
+                {"error": "같은 이메일로 이미 가입된 계정이 있습니다!"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
     except User.DoesNotExist:
