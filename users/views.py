@@ -57,6 +57,10 @@ class UserView(APIView):
             return Response(
                 {"error": "이메일 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
             )
+        if not username:
+            return Response(
+                {"error": "닉네임 입력은 필수입니다!"}, status=status.HTTP_400_BAD_REQUEST
+            )
         if password != password2:
             return Response(
                 {"error": "비밀번호가 일치하지 않습니다!"}, status=status.HTTP_400_BAD_REQUEST
@@ -287,6 +291,11 @@ def social_login_validate(**kwargs):
         )
     try:
         user = User.objects.get(email=email)
+        if user.is_active == False:
+            return Response(
+                {"error": "해당 유저는 휴면계정입니다!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if login_type == user.login_type:
             refresh = RefreshToken.for_user(user)
             access_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
@@ -296,7 +305,7 @@ def social_login_validate(**kwargs):
             )
         else:
             return Response(
-                {"error": f"{user.login_type}으로 이미 가입된 계정이 있습니다!"},
+                {"error": "같은 이메일로 이미 가입된 계정이 있습니다!"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
     except User.DoesNotExist:

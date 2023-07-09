@@ -320,7 +320,7 @@ class RecommentView(generics.ListCreateAPIView):
                 author=request.user, article_id=article_id, comment_id=comment_id
             )
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "내용을 입력해주세요!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RecommentDetailView(APIView):
