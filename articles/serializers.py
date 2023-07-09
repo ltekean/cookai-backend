@@ -286,3 +286,14 @@ class IngredientLinkSerializer(ModelSerializer):
 
     def get_ingredient_name(self, obj):
         return obj.ingredient.ingredient_name
+
+
+class ArticleLikeCountSerializer(serializers.ModelSerializer):
+    likes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Article
+        fields = ("likes_count",)
+
+    def get_likes_count(self, obj):
+        return obj.like.count()

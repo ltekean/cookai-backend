@@ -31,6 +31,7 @@ from articles.serializers import (
     RecipeIngredientCreateSerializer,
     IngredientLinkSerializer,
     TagSerializer,
+    ArticleLikeCountSerializer,
 )
 from django.conf import settings
 import requests
@@ -410,10 +411,19 @@ class ArticleLikeView(APIView):
         article = get_object_or_404(Article, id=article_id)
         if request.user in article.like.all():
             article.like.remove(request.user)
-            return Response("dislike", status=status.HTTP_200_OK)
+            article.save()
+            serializer = ArticleLikeCountSerializer(article)
+            flag = False
+
         else:
             article.like.add(request.user)
-            return Response("like", status=status.HTTP_200_OK)
+            serializer = ArticleLikeCountSerializer(article)
+            flag = True
+        print(serializer.data)
+        return Response(
+            {"flag": flag, "result": serializer.data},
+            status=status.HTTP_200_OK,
+        )
 
 
 class CommentLikeView(APIView):
