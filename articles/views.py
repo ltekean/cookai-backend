@@ -120,9 +120,10 @@ class ArticleView(generics.ListCreateAPIView):
         if category_id:
             try:
                 category_id = list(map(int, category_id.split(",")))
-                q.add(Q(category_id__in=category_id), q.AND)
             except:
-                pass
+                category_id = []
+            print(category_id)
+            q.add(Q(category_id__in=category_id), q.AND)
         order = self.request.GET.get("order")
         if order == "1":
             queryset = (
