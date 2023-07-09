@@ -119,8 +119,8 @@ class ArticleView(generics.ListCreateAPIView):
         category_id = self.request.GET.get("category")
         if category_id:
             try:
-                category_id = int(category_id)
-                q.add(Q(category_id=category_id), q.AND)
+                category_id = list(map(int, category_id.split(",")))
+                q.add(Q(category_id__in=category_id), q.AND)
             except:
                 pass
         order = self.request.GET.get("order")
