@@ -419,7 +419,6 @@ class ArticleLikeView(APIView):
             article.like.add(request.user)
             serializer = ArticleLikeCountSerializer(article)
             flag = True
-        print(serializer.data)
         return Response(
             {"flag": flag, "result": serializer.data},
             status=status.HTTP_200_OK,
