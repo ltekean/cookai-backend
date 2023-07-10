@@ -11,6 +11,7 @@ from articles.models import Ingredient, IngredientLink
 from django.conf import settings
 from ratelimiter import RateLimiter
 from datetime import datetime
+import re
 
 
 ACCESS_KEY = settings.COUPANG_ACCESS_KEY
@@ -86,24 +87,27 @@ class CoupangManage:
         return products
 
 
+# ingredient_name에서 필요없는 형태소 제거하기
+def extract_words(text):
+    clean = re.compile("[^가-힣A-Za-z0-9_]+", re.UNICODE)
+    return re.sub(clean, " ", text).strip()
+
+
 # 전역 변수로 RateLimiter 객체 생성 (60초에 50회 제한)
 coupang_api_limiter = RateLimiter(max_calls=50, period=60)
 
 
 def save_coupang_links_to_ingredient_links(ingredient_name):
+    clean_ingredient_name = extract_words(ingredient_name)
     # CoupangManage 객체 생성
     coupang_api = CoupangManage()
 
     # ratelimiter 적용하여 키워드를 기반으로 상품 정보 검색
     with coupang_api_limiter:
-        product_links = coupang_api.get_products_by_keyword(ingredient_name, 10)
+        product_links = coupang_api.get_products_by_keyword(clean_ingredient_name, 10)
 
     # Ingredient DB에서 Ingredient_name 찾기
-    try:
-        ingredient = Ingredient.objects.get(ingredient_name=ingredient_name)
-    except Ingredient.DoesNotExist:
-        print(f"{ingredient_name} 은(는) 데이터베이스에 없습니다.")
-        return
+    ingredient = Ingredient.objects.get(ingredient_name=ingredient_name)
 
     # 기존에 저장된 5일 전의 IngredientLinks 삭제
     old_links = IngredientLink.objects.filter(
