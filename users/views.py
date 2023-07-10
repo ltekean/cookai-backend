@@ -606,6 +606,7 @@ class UserDetailArticlesView(generics.ListAPIView):
             self.request.user.id != user.id
             and (not user.is_open_likes)
             and query_key != "0"
+            and query_key
         ):
             return Article.objects.none()
         order = self.request.GET.get("order", None)
@@ -645,6 +646,7 @@ class UserDetailCommentsView(generics.ListAPIView):
             self.request.user.id != user.id
             and (not user.is_open_likes)
             and query_key != "0"
+            and query_key
         ):
             return Comment.objects.none()
         order = self.request.GET.get("order", None)
