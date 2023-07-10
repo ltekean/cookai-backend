@@ -601,6 +601,13 @@ class UserDetailArticlesView(generics.ListAPIView):
             "3": self.follow_article,
         }
         query_key = self.request.GET.get("filter", None)
+        user = get_object_or_404(User, id=self.user_id)
+        if (
+            self.request.user.id != user.id
+            and (not user.is_open_likes)
+            and query_key != "0"
+        ):
+            return Article.objects.none()
         order = self.request.GET.get("order", None)
         queryset = query_types.get(query_key, self.my_article)()
         if order == "1":
@@ -633,6 +640,13 @@ class UserDetailCommentsView(generics.ListAPIView):
             "1": self.liked_comment,
         }
         query_key = self.request.GET.get("filter", None)
+        user = get_object_or_404(User, id=self.user_id)
+        if (
+            self.request.user.id != user.id
+            and (not user.is_open_likes)
+            and query_key != "0"
+        ):
+            return Comment.objects.none()
         order = self.request.GET.get("order", None)
         queryset = query_types.get(query_key, self.my_comment)()
         if order == "1":

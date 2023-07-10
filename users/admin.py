@@ -29,6 +29,7 @@ class UserAdmin(BaseUserAdmin):
         "created_at",
         "updated_at",
         "is_active",
+        "is_open_likes",
     ]
     fieldsets = [
         (
@@ -53,6 +54,7 @@ class UserAdmin(BaseUserAdmin):
                 "fields": (
                     "is_admin",
                     "is_active",
+                    "is_open_likes",
                     "is_superuser",
                     "groups",
                     "user_permissions",
