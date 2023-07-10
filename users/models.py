@@ -30,7 +30,6 @@ class UserManager(BaseUserManager):
         )
         user.is_active = True
         user.is_admin = True
-        user.is_open_likes = False
         user.is_superuser = True
         user.is_staff = True
         user.save(using=self._db)
@@ -54,7 +53,6 @@ class UserManager(BaseUserManager):
         created_at (date): 가입시간
         login_type (str): 회원가입 유형의 종류를 지정
         is_active (bool): 활성 여부
-        is_open_likes (bool): 좋아요/북마크 게시글 및 댓글 공개여부
         is_admin (bool): 관리자 여부
         is_host(bool): 본인 여부
         followings(ManyToMany) : 팔로잉 목록
@@ -115,7 +113,6 @@ class User(AbstractUser):
     is_host = models.BooleanField(
         default=False,
     )
-    is_open_likes = models.BooleanField(default=False, blank=True)
     followings = models.ManyToManyField(
         "self",
         symmetrical=False,
