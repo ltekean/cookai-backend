@@ -1,0 +1,55 @@
+
+name: deploy_main
+
+on:
+    push:
+        branches:
+            - main
+jobs:
+    deploy:
+        name: Deploy django project to EC2
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository				# Repo checkout
+              uses: actions/checkout@v2
+            - name: Get Github Actions IP			# Actions Runner IP확인
+              id: ip
+              uses: haythem/public-ip@v1.3
+            - name: Log in to Docker Hub			# docker hub 로그인
+              uses: docker/login-action@v2
+              with:
+                username: ${{ secrets.DOCKERHUB_USERNAME }}
+                password: ${{ secrets.DOCKERHUB_TOKEN }}
+            - name: Create .env file
+              run: |
+                touch .env
+                echo "${{ secrets.DOTENV_MAIN }}" >> .env
+            - name: Build Docker image				# docker image 빌드
+              run: docker build . -t ${{ secrets.DOCKERHUB_USERNAME }}/gamst-web:latest
+            - name: Push Docker image to docker hub		# 빌드한 이미지 hub에 push
+              run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/gamst-web:latest
+            
+            - name: Configure AWS Credentials			# 보안그룹 변경을 위한 AWS Credential 설정
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                aws-region: ap-northeast-2
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            - name: Add Ip to SG				# Runner IP를 보안그룹에 추가
+              run: |
+                aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+            - name: Connect to EC2				# Runner가 해당 인스턴스에 접근
+              uses: appleboy/ssh-action@master
+              with:
+                host: ${{ secrets.REMOTE_IP }}
+                username: ${{ secrets.REMOTE_SSH_USERNAME }}
+                key: ${{ secrets.REMOTE_SSH_PRIVKEY }}
+                script_stop: true
+                script: |
+                    cd /home/ubuntu/GAMST
+                    docker pull ${{ secrets.DOCKERHUB_USERNAME }}/gamst-web:latest 
+                    docker-compose up -d
+
+            - name: Revoke IP from SG			# 작업이 끝나면, 추가해주었던 Runner IP 삭제
+              run: |
+                aws ec2 revoke-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
