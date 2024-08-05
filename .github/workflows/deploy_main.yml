@@ -25,9 +25,9 @@ jobs:
                 touch .env
                 echo "${{ secrets.DOTENV_MAIN }}" >> .env
             - name: Build Docker image				# docker image 빌드
-              run: docker build . -t ${{ secrets.DOCKERHUB_USERNAME }}/gamst-web:latest
+              run: docker build . -t ${{ secrets.DOCKERHUB_USERNAME }}/cookai---backend:latest
             - name: Push Docker image to docker hub		# 빌드한 이미지 hub에 push
-              run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/gamst-web:latest
+              run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/cookai---backend:latest
             
             - name: Configure AWS Credentials			# 보안그룹 변경을 위한 AWS Credential 설정
               uses: aws-actions/configure-aws-credentials@v4
