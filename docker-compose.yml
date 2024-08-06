@@ -1,0 +1,11 @@
+# docker-compose.yml
+version: "3"
+services:
+  web:
+    container_name: cookai
+    image: ltekean/docker-cookai
+    volumes:
+      - .env:/app/.env # Application에 사용할 환경변수가 등록된 .env
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - 8000:8000
