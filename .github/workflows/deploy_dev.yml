@@ -19,6 +19,8 @@ jobs:
               with:
                 username: ${{ secrets.DOCKERHUB_USERNAME }}
                 password: ${{ secrets.DOCKERHUB_TOKEN }}
+            - name: Debug Docker tag
+              run: echo ${{ secrets.DOCKERHUB_USERNAME }}/gamst-web:latest
             - name: Build Docker image				# docker image 빌드
               run: docker build . -t ${{ secrets.DOCKERHUB_USERNAME }}/gamst-web:latest
             - name: Push Docker image to docker hub		# 빌드한 이미지 hub에 push
