@@ -132,7 +132,7 @@ if DEBUG == "1":
     ALLOWED_HOSTS = [
         "localhost",
         "backend",
-        "https://cookai.today",
+        "https://cookaiwork.com",
         "https://www.backend.cookai.today",
     ]
     LOG_DIR = os.path.join(BASE_DIR, "log")
@@ -256,11 +256,11 @@ if DEBUG == "1":
     FRONT_BASE_URL = "https://cookai.today"
     BACKEND_BASE_URL = "https://www.backend.cookai.today"
     CORS_ALLOWED_ORIGINS = [
-        "https://cookai.today",
+        "https://cookaiwork.com",
         "https://www.backend.cookai.today",
     ]
     CSRF_TRUSTED_ORIGINS = [
-        "https://cookai.today",
+        "https://cookaiwork.com",
         "https://www.backend.cookai.today",
     ]
 
