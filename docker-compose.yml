@@ -1,11 +1,25 @@
 # docker-compose.yml
-version: "3"
 services:
   web:
     container_name: cookai
     image: ltekean/docker-cookai
-    volumes:
-      - .env:/app/.env # Application에 사용할 환경변수가 등록된 .env
+    build: .
     command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .env:/app/.env
     ports:
-      - 8000:8000
+      - "8000:8000"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+
+volumes:
+  postgres_data:

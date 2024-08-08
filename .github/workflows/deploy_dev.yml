@@ -20,11 +20,11 @@ jobs:
                 username: ${{ secrets.DOCKERHUB_USERNAME }}
                 password: ${{ secrets.DOCKERHUB_TOKEN }}
             - name: Debug Docker tag
-              run: echo ${{ secrets.DOCKERHUB_USERNAME }}/gamst-web:latest
+              run: echo ${{ secrets.DOCKERHUB_USERNAME }}/docker-cookai:latest
             - name: Build Docker image				# docker image 빌드
-              run: docker build . -t ${{ secrets.DOCKERHUB_USERNAME }}/gamst-web:latest
+              run: docker build . -t ${{ secrets.DOCKERHUB_USERNAME }}/docker-cookai:latest
             - name: Push Docker image to docker hub		# 빌드한 이미지 hub에 push
-              run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/gamst-web:latest
+              run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/docker-cookai:latest
             
             - name: Configure AWS Credentials			# 보안그룹 변경을 위한 AWS Credential 설정
               uses: aws-actions/configure-aws-credentials@v4
@@ -43,8 +43,8 @@ jobs:
                 key: ${{ secrets.REMOTE_SSH_PRIVKEY }}
                 script_stop: true
                 script: |
-                    cd /home/ubuntu/GAMST
-                    docker pull ${{ secrets.DOCKERHUB_USERNAME }}/gamst-web:latest 
+                    cd /home/ubuntu/cookai
+                    docker pull ${{ secrets.DOCKERHUB_USERNAME }}/docker-cookai:latest 
                     docker-compose up -d
 
             - name: Revoke IP from SG			# 작업이 끝나면, 추가해주었던 Runner IP 삭제
