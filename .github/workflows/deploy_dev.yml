@@ -17,6 +17,7 @@ jobs:
             REMOTE_IP: ${{ secrets.REMOTE_IP }}
             REMOTE_SSH_USERNAME: ${{ secrets.REMOTE_SSH_USERNAME }}
             REMOTE_SSH_PRIVKEY: ${{ secrets.REMOTE_SSH_PRIVKEY }}
+            DOTENV: ${{ secrets.DOTENV }}
         steps:
             - name: Checkout Repository
               uses: actions/checkout@v4
@@ -30,6 +31,9 @@ jobs:
                 password: ${{ secrets.DOCKERHUB_TOKEN }}
             - name: Debug Docker tag
               run: echo ${{ env.DOCKERHUB_USERNAME }}/docker-cookai:latest
+            - name: Copy .env
+              run: |
+                echo ${{ env.DOTENV }} >> .env
             - name: Build Docker image
               run: docker build -t ltekean/docker-cookai .
             - name: Push Docker image to docker hub
