@@ -8,45 +8,55 @@ jobs:
     deploy:
         name: Deploy django project to EC2
         runs-on: ubuntu-latest
+        env:
+            DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+            DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_SG_ID: ${{ secrets.AWS_SG_ID }}
+            REMOTE_IP: ${{ secrets.REMOTE_IP }}
+            REMOTE_SSH_USERNAME: ${{ secrets.REMOTE_SSH_USERNAME }}
+            REMOTE_SSH_PRIVKEY: ${{ secrets.REMOTE_SSH_PRIVKEY }}
         steps:
-            - name: Checkout Repository				# Repo checkout
-              uses: actions/checkout@v2
-            - name: Get Github Actions IP			# Actions Runner IP확인
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+            - name: Get Github Actions IP
               id: ip
               uses: haythem/public-ip@v1.3
-            - name: Log in to Docker Hub			# docker hub 로그인
-              uses: docker/login-action@v2
+            - name: Log in to Docker Hub
+              uses: docker/login-action@v3
               with:
                 username: ${{ secrets.DOCKERHUB_USERNAME }}
                 password: ${{ secrets.DOCKERHUB_TOKEN }}
             - name: Debug Docker tag
-              run: echo ${{ secrets.DOCKERHUB_USERNAME }}/docker-cookai:latest
-            - name: Build Docker image				# docker image 빌드
-              run: docker build . -t ${{ secrets.DOCKERHUB_USERNAME }}/docker-cookai:latest
-            - name: Push Docker image to docker hub		# 빌드한 이미지 hub에 push
-              run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/docker-cookai:latest
+              run: echo ${{ env.DOCKERHUB_USERNAME }}/docker-cookai:latest
+            - name: Build Docker image
+              run: docker build -t ltekean/docker-cookai .
+            - name: Push Docker image to docker hub
+              run: docker push ltekean/docker-cookai:latest
             
-            - name: Configure AWS Credentials			# 보안그룹 변경을 위한 AWS Credential 설정
+            - name: Configure AWS Credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
                 aws-region: ap-northeast-2
                 aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
                 aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            - name: Add Ip to SG				# Runner IP를 보안그룹에 추가
+            - name: Add IP to SG
               run: |
-                aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
-            - name: Connect to EC2				# Runner가 해당 인스턴스에 접근
+                aws ec2 authorize-security-group-ingress --group-id ${{ env.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+            - name: Connect to EC2
               uses: appleboy/ssh-action@master
               with:
+                key: ${{ secrets.REMOTE_SSH_PRIVKEY }}
                 host: ${{ secrets.REMOTE_IP }}
                 username: ${{ secrets.REMOTE_SSH_USERNAME }}
-                key: ${{ secrets.REMOTE_SSH_PRIVKEY }}
-                script_stop: true
+                # script_stop: true
                 script: |
-                    cd /home/ubuntu/cookai
-                    docker pull ${{ secrets.DOCKERHUB_USERNAME }}/docker-cookai:latest 
+                    whoami
+                    cd /home/ec2-user
+                    docker pull ${{ env.DOCKERHUB_USERNAME }}/docker-cookai:latest
                     docker-compose up -d
 
-            - name: Revoke IP from SG			# 작업이 끝나면, 추가해주었던 Runner IP 삭제
+            - name: Revoke IP from SG
               run: |
-                aws ec2 revoke-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+                aws ec2 revoke-security-group-ingress --group-id ${{ env.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
