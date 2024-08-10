@@ -254,7 +254,7 @@ if DEBUG == "1":
     NC_SECRET = os.environ.get("NC_DEPLOY_SECRET")
     KK_API_KEY = os.environ.get("KK_DEPLOY_API_KEY")
     FRONT_BASE_URL = "https://cookai.today"
-    BACKEND_BASE_URL = "https://www.backend.cookai.today"
+    BACKEND_BASE_URL = "https://cookaiwork.com"
     CORS_ALLOWED_ORIGINS = [
         "https://cookaiwork.com",
         "https://www.backend.cookai.today",
