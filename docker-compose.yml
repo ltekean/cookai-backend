@@ -5,14 +5,14 @@ services:
     image: ltekean/docker-cookai
     build: .
     command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .env:/app
+    # volumes:
+    #   - .env:/app
     ports:
       - "8000:8000"
     depends_on:
       - db
-    # env_file:
-    #   - .env
+    env_file:
+      - /root/.env
 
   db:
     image: postgres:13
