@@ -33,7 +33,7 @@ jobs:
               run: echo ${{ env.DOCKERHUB_USERNAME }}/docker-cookai:latest
             - name: Copy .env
               run: |
-                # touch .env
+                touch .env
                 echo "${{ env.DOTENV }}" >> .env
             - name: Build Docker image
               run: docker build -t ltekean/docker-cookai .
