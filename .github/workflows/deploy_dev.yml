@@ -32,9 +32,7 @@ jobs:
             - name: Debug Docker tag
               run: echo ${{ env.DOCKERHUB_USERNAME }}/docker-cookai:latest
             - name: Copy .env
-              run: |
-                touch .env
-                echo "${{ env.DOTENV }}" >> .env
+              run: echo "${{ env.DOTENV }}" >> ./.env
             - name: Build Docker image
               run: docker build -t ltekean/docker-cookai .
             - name: Push Docker image to docker hub
