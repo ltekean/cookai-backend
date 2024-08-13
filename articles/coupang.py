@@ -9,7 +9,7 @@ from django.utils import timezone
 from urllib.parse import urlencode
 from articles.models import Ingredient, IngredientLink
 from django.conf import settings
-from ratelimiter import RateLimiter
+# from ratelimiter import RateLimiter
 from datetime import datetime
 import re
 
@@ -94,7 +94,7 @@ def extract_words(text):
 
 
 # 전역 변수로 RateLimiter 객체 생성 (60초에 50회 제한)
-coupang_api_limiter = RateLimiter(max_calls=50, period=60)
+# coupang_api_limiter = RateLimiter(max_calls=50, period=60)
 
 
 def save_coupang_links_to_ingredient_links(ingredient_name):
@@ -103,8 +103,8 @@ def save_coupang_links_to_ingredient_links(ingredient_name):
     coupang_api = CoupangManage()
 
     # ratelimiter 적용하여 키워드를 기반으로 상품 정보 검색
-    with coupang_api_limiter:
-        product_links = coupang_api.get_products_by_keyword(clean_ingredient_name, 10)
+    # with coupang_api_limiter:
+    product_links = coupang_api.get_products_by_keyword(clean_ingredient_name, 10)
 
     # Ingredient DB에서 Ingredient_name 찾기
     ingredient = Ingredient.objects.get(ingredient_name=ingredient_name)
