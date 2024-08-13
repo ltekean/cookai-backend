@@ -33,7 +33,7 @@ jobs:
               run: echo ${{ env.DOCKERHUB_USERNAME }}/docker-cookai:latest
             - name: Create .env file from DOTENV environment variable
               run: |
-                echo "${{ secrets.PRODPY }}" > ./cookai/prod.py
+                echo "${{ env.PRODPY }}" > ./cookai/prod.py
             - name: Build Docker image
               run: docker build -t ltekean/docker-cookai .
             - name: Push Docker image to docker hub
