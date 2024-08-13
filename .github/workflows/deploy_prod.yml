@@ -59,7 +59,7 @@ jobs:
                     echo "Start to deploy docker"
                     whoami
                     cd /home/ec2-user
-                    docker pull ${{ env.DOCKERHUB_USERNAME }}/docker-cookai:latest
+                    docker pull ltekean/docker-cookai:latest
                     #
                     # docker compose up --build -d
 
