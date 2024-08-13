@@ -34,7 +34,6 @@ jobs:
               run: echo ${{ env.DOCKERHUB_USERNAME }}/docker-cookai:latest
             - name: Create .env file from DOTENV environment variable
               run: |
-                echo "${{ env.DOTENV }}" > ./.env
                 echo "${{ env.PRODPY }}" > ./cookai/prod.py
             - name: Build Docker image
               run: docker build -t ltekean/docker-cookai .
@@ -62,6 +61,7 @@ jobs:
                     cd /home/ec2-user
                     docker pull ltekean/docker-cookai:latest
                     docker compose up -d
+                    docker system prune -af
 
             - name: Revoke IP from SG
               run: |
