@@ -60,8 +60,7 @@ jobs:
                     whoami
                     cd /home/ec2-user
                     docker pull ${{ env.DOCKERHUB_USERNAME }}/docker-cookai:latest
-                    #
-                    # docker compose up --build -d
+                    docker compose up --build -d
 
             - name: Revoke IP from SG
               run: |
