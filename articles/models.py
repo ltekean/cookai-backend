@@ -1,5 +1,5 @@
 from django.db import models
-from taggit.managers import TaggableManager
+# from taggit.managers import TaggableManager
 from users.models import User
 from django.utils import timezone
 from .validators import validate_gt0
@@ -89,9 +89,9 @@ class Article(models.Model):
         related_name="bookmarks",
         blank=True,
     )
-    tags = TaggableManager(
-        blank=True,
-    )
+    # tags = TaggableManager(
+    #     blank=True,
+    # )
 
     def __str__(self):
         return str(self.title)

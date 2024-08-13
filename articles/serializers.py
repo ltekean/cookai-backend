@@ -1,7 +1,7 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from taggit.serializers import TagListSerializerField, TaggitSerializer
+# from taggit.serializers import TagListSerializerField, TaggitSerializer
 from .models import (
     Category,
     Article,
@@ -11,11 +11,12 @@ from .models import (
     IngredientLink,
     RecipeIngredient,
 )
-from taggit.models import Tag
+# from taggit.models import Tag
 
 
-class ArticleSerializer(TaggitSerializer, serializers.ModelSerializer):
-    tags = TagListSerializerField(required=False)
+# class ArticleSerializer(TaggitSerializer, serializers.ModelSerializer):
+class ArticleSerializer(serializers.ModelSerializer):
+    # tags = TagListSerializerField(required=False)
     is_author = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
 
@@ -192,8 +193,9 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 # 상세게시글 R
-class ArticleDetailSerializer(serializers.ModelSerializer, TaggitSerializer):
-    tags = TagListSerializerField()
+# class ArticleDetailSerializer(serializers.ModelSerializer, TaggitSerializer):
+class ArticleDetailSerializer(serializers.ModelSerializer):
+    # tags = TagListSerializerField()
     is_author = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
@@ -244,15 +246,15 @@ class ArticleListSerializer(ArticleDetailSerializer):
         }
 
 
-class TagSerializer(serializers.ModelSerializer):
-    article_count = serializers.SerializerMethodField()
+# class TagSerializer(serializers.ModelSerializer):
+#     article_count = serializers.SerializerMethodField()
 
-    def get_article_count(self, obj):
-        return obj.taggit_taggeditem_items.count()
+#     def get_article_count(self, obj):
+#         return obj.taggit_taggeditem_items.count()
 
-    class Meta:
-        model = Tag
-        fields = "__all__"
+#     class Meta:
+#         model = Tag
+#         fields = "__all__"
 
 
 class RecipeIngredientCreateSerializer(ModelSerializer):

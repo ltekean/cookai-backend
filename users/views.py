@@ -27,7 +27,8 @@ from users.serializers import (
     PublicUserSerializer,
 )
 from users import serializers
-from articles.serializers import ArticleListSerializer, CommentSerializer
+# from articles.serializers import ArticleListSerializer, CommentSerializer
+from articles.serializers import CommentSerializer
 from articles.models import Article, Comment
 from articles.paginations import ArticlePagination
 from users.models import User, Fridge
@@ -578,7 +579,7 @@ class UserDetailView(APIView):
 
 class UserDetailArticlesView(generics.ListAPIView):
     pagination_class = ArticlePagination
-    serializer_class = ArticleListSerializer
+    # serializer_class = ArticleListSerializer
     queryset = Article.objects.none()
 
     def my_article(self):

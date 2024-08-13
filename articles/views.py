@@ -30,13 +30,12 @@ from articles.serializers import (
     IngredientSerializer,
     RecipeIngredientCreateSerializer,
     IngredientLinkSerializer,
-    TagSerializer,
+    # TagSerializer
     ArticleLikeCountSerializer,
 )
 from django.conf import settings
 import requests
 from django.db.models import Q
-from taggit.models import Tag
 from articles.coupang import save_coupang_links_to_ingredient_links
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -143,13 +142,13 @@ class ArticleView(generics.ListCreateAPIView):
             )
         return queryset
 
-    def post(self, request):
-        serializer = ArticleSerializer(data=request.data, context={"request": request})
-        if serializer.is_valid():
-            serializer.save(author=request.user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # def post(self, request):
+    #     serializer = ArticleSerializer(data=request.data, context={"request": request})
+    #     if serializer.is_valid():
+    #         serializer.save(author=request.user)
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+    #     else:
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # # 카테고리 띄우기
@@ -188,16 +187,16 @@ class ArticleDetailView(APIView):
         )
         return Response(serializer.data)
 
-    def put(self, request, article_id):
-        art_put = get_object_or_404(Article, id=article_id)
-        if request.user == art_put.author:
-            serializer = ArticleSerializer(
-                art_put, data=request.data, context={"request": request}
-            )
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # def put(self, request, article_id):
+    #     art_put = get_object_or_404(Article, id=article_id)
+    #     if request.user == art_put.author:
+    #         serializer = ArticleSerializer(
+    #             art_put, data=request.data, context={"request": request}
+    #         )
+    #         if serializer.is_valid():
+    #             serializer.save()
+    #             return Response(serializer.data, status=status.HTTP_200_OK)
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, article_id):
         art_del = get_object_or_404(Article, id=article_id)
@@ -377,16 +376,16 @@ class ArticleGetUploadURLView(APIView):
         return Response(result)
 
 
-class TagSearchView(APIView):
-    def get(self, request):
-        tag_condition = request.query_params.get("tag", None)
-        if tag_condition == None:
-            return Response(
-                {"error": "선택된 태그가 없습니다!"}, status=status.HTTP_400_BAD_REQUEST
-            )
-        tag_list = Tag.objects.filter(name__contains=tag_condition)
-        serializer = TagSerializer(tag_list, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+# class TagSearchView(APIView):
+#     def get(self, request):
+#         tag_condition = request.query_params.get("tag", None)
+#         if tag_condition == None:
+#             return Response(
+#                 {"error": "선택된 태그가 없습니다!"}, status=status.HTTP_400_BAD_REQUEST
+#             )
+#         tag_list = Tag.objects.filter(name__contains=tag_condition)
+#         serializer = TagSerializer(tag_list, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # class TagArticleView(APIView):

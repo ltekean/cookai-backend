@@ -43,11 +43,11 @@ urlpatterns = [
         views.ArticleGetUploadURLView.as_view(),
         name="get_url",
     ),
-    path(
-        "tags/",
-        views.TagSearchView.as_view(),
-        name="tags",
-    ),
+    # path(
+    #     "tags/",
+    #     views.TagSearchView.as_view(),
+    #     name="tags",
+    # ),
     path(
         "<int:article_id>/recipeingredient/",
         views.RecipeIngredientView.as_view(),

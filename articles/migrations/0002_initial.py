@@ -3,7 +3,7 @@
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import taggit.managers
+# import taggit.managers
 
 
 class Migration(migrations.Migration):
@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('articles', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('taggit', '0005_auto_20220424_2025'),
+        # ('taggit', '0005_auto_20220424_2025'),
     ]
 
     operations = [
@@ -82,9 +82,9 @@ class Migration(migrations.Migration):
             name='like',
             field=models.ManyToManyField(blank=True, related_name='likes', to=settings.AUTH_USER_MODEL),
         ),
-        migrations.AddField(
-            model_name='article',
-            name='tags',
-            field=taggit.managers.TaggableManager(blank=True, help_text='A comma-separated list of tags.', through='taggit.TaggedItem', to='taggit.Tag', verbose_name='Tags'),
-        ),
+        # migrations.AddField(
+        #     model_name='article',
+        #     name='tags',
+        #     field=taggit.managers.TaggableManager(blank=True, help_text='A comma-separated list of tags.', through='taggit.TaggedItem', to='taggit.Tag', verbose_name='Tags'),
+        # ),
     ]
