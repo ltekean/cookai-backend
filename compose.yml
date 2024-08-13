@@ -3,7 +3,6 @@ services:
   web:
     container_name: cookai
     image: ltekean/docker-cookai
-    build: .
     ports:
       - "8000:8000"
     depends_on:

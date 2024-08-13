@@ -59,7 +59,7 @@ jobs:
                     echo "Start to deploy docker"
                     cd /home/ec2-user
                     docker pull ltekean/docker-cookai:latest
-                    docker compose up --build -d
+                    docker compose up -d
 
             - name: Revoke IP from SG
               run: |
