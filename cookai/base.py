@@ -121,7 +121,6 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": False,
 }
-# 환경변수에 따라 DEBUG모드 여부를 결정합니다.
 DEBUG = os.environ.get("DEBUG", "0")
 
 # DEBUG == "1" 이면 배포환경 "0" 이면 개발환경. 
@@ -269,6 +268,7 @@ elif DEBUG == "0":
         "backend",
         "localhost",
         "127.0.0.1",
+        "0"
     ]
     GC_API_KEY = os.environ.get("GC_API_KEY")
     GC_ID = os.environ.get("GC_ID")
