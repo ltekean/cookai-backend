@@ -7,6 +7,8 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
+    volumes:
+      - ./cookai:/app/cookai
 
   postgres:
     container_name: postgres
