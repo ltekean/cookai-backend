@@ -132,6 +132,7 @@ if DEBUG == "1":
         "backend",
         "https://cookaiwork.com",
         "https://www.backend.cookai.today",
+        "*"
     ]
     LOG_DIR = os.path.join(BASE_DIR, "log")
     LOG_FILE = "/debug.log"
