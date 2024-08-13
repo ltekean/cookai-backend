@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code to the container
 COPY . /app/
 
-ENV DJANGO_SETTINGS_MODULE=cookai.prod
+ENV DJANGO_SETTINGS_MODULE=cookai.docker
 
 # Expose port 8000 for the Django application
 EXPOSE 8000

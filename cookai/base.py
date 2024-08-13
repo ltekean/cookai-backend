@@ -320,3 +320,4 @@ APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 # etc. See: https://djangopackages.org/grids/g/workers-queues-tasks/ for popular options).
 APSCHEDULER_RUN_NOW_TIMEOUT = 100  # Seconds
 SCHEDULER_DEFAULT = True  # apps.py 참고
+from .base import *
