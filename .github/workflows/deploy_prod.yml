@@ -61,7 +61,7 @@ jobs:
                     cd /home/ec2-user
                     docker pull ltekean/docker-cookai:latest
                     docker compose up -d
-                    docker system prune -af
+                    docker image prune -af
 
             - name: Revoke IP from SG
               run: |
