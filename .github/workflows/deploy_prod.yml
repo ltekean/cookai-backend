@@ -58,9 +58,9 @@ jobs:
                 script: |
                     echo "Start to deploy docker"
                     whoami
-                    cd /home/ec2-user
-                    docker pull ${{ env.DOCKERHUB_USERNAME }}/docker-cookai:latest
-                    docker compose up --build -d
+                    # cd /home/ec2-user
+                    # docker pull ${{ env.DOCKERHUB_USERNAME }}/docker-cookai:latest
+                    # docker compose up --build -d
 
             - name: Revoke IP from SG
               run: |
