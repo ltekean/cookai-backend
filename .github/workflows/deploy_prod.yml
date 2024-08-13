@@ -17,6 +17,7 @@ jobs:
             REMOTE_IP: ${{ secrets.REMOTE_IP }}
             REMOTE_SSH_USERNAME: ${{ secrets.REMOTE_SSH_USERNAME }}
             REMOTE_SSH_PRIVKEY: ${{ secrets.REMOTE_SSH_PRIVKEY }}
+            DOTENV: ${{ secrets.DOTENV }}
             PRODPY: ${{ secrets.PRODPY }}
         steps:
             - name: Checkout Repository
@@ -33,6 +34,7 @@ jobs:
               run: echo ${{ env.DOCKERHUB_USERNAME }}/docker-cookai:latest
             - name: Create .env file from DOTENV environment variable
               run: |
+                echo "${{ env.DOTENV }}" > ./.env
                 echo "${{ env.PRODPY }}" > ./cookai/prod.py
             - name: Build Docker image
               run: docker build -t ltekean/docker-cookai .
